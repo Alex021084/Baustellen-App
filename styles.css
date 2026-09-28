@@ -635,3 +635,95 @@ body:has(#home.active) > header{display:none}
   .startChoice{min-height:84px;padding:12px}
   .startChoice .startIcon{width:42px;height:42px}
 }
+
+/* FINAL STARTSEITE */
+body:has(#home.active), body:has(#home.active) #home {
+  background: #fff !important;
+}
+body:has(#home.active) .bottom-nav,
+body:has(#home.active) nav.bottom-nav,
+body:has(#home.active) .tabbar {
+  display: none !important;
+}
+#home.active .welcome {
+  background: #fff !important;
+  padding: 18px 20px 4px !important;
+}
+#home.active .companyLogoWrap {
+  background: #fff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  min-height: 145px !important;
+  height: 145px !important;
+  margin: 0 auto 30px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+#home.active .companyLogo {
+  width: 88vw !important;
+  max-width: 520px !important;
+  max-height: 140px !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+#home.active .welcome small {
+  display: block !important;
+  color: #8b929b !important;
+  font-size: 15px !important;
+  letter-spacing: .18em !important;
+  font-weight: 800 !important;
+  margin-bottom: 14px !important;
+}
+#home.active .welcome h2 {
+  color: #17212b !important;
+  font-size: clamp(32px, 8vw, 46px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.035em !important;
+  margin: 0 0 14px !important;
+}
+#home.active .welcome p {
+  color: #727b86 !important;
+  font-size: 19px !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+}
+#home.active .home-options > *,
+#home.active .start-options > * {
+  background: #f1f3f5 !important;
+  border: 1px solid #e2e5e8 !important;
+  box-shadow: 0 7px 22px rgba(20,30,40,.055) !important;
+  border-radius: 28px !important;
+  color: #17212b !important;
+}
+#home.active .home-options > *:first-child,
+#home.active .start-options > *:first-child {
+  border-color: #e2e5e8 !important;
+}
+#home.active .home-options > *:hover,
+#home.active .start-options > *:hover,
+#home.active .home-options > *:focus,
+#home.active .start-options > *:focus {
+  background: #e9ecef !important;
+  border-color: #d8dde2 !important;
+}
+#home.active .home-options .icon,
+#home.active .start-options .icon,
+#home.active .home-options svg,
+#home.active .start-options svg {
+  color: #17212b !important;
+}
+@media (max-width: 600px) {
+  #home.active .welcome { padding: 16px 20px 4px !important; }
+  #home.active .companyLogoWrap {
+    min-height: 135px !important;
+    height: 135px !important;
+    margin-bottom: 26px !important;
+  }
+  #home.active .companyLogo { max-height: 130px !important; }
+  #home.active .welcome h2 { font-size: 34px !important; }
+  #home.active .welcome p { font-size: 18px !important; }
+}
