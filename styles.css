@@ -2130,17 +2130,18 @@ body:has(.screen.active:not(#home)) .title {
 
 /* V5: Baustellen-Symbol auf der Tagelohn-Startseite */
 #archiveBtn .constructionCardIcon {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  flex: 0 0 28px;
   display: inline-grid;
   place-items: center;
   color: #d88a16;
-  margin-right: 8px;
+  margin: 0;
 }
 #archiveBtn .constructionCardIcon svg {
-  width: 42px;
-  height: 42px;
+  width: 28px;
+  height: 28px;
   display: block;
 }
 
