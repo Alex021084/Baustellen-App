@@ -727,3 +727,142 @@ body:has(#home.active) .tabbar {
   #home.active .welcome h2 { font-size: 34px !important; }
   #home.active .welcome p { font-size: 18px !important; }
 }
+
+/* === STARTSEITE – 1:1 an die gewünschte Vorlage angenähert === */
+#home.active,
+#home.active * {
+  box-sizing: border-box;
+}
+#home.active {
+  background: #ffffff !important;
+  min-height: 100dvh !important;
+  padding-bottom: 32px !important;
+}
+#home.active .welcome {
+  background: #fff !important;
+  padding: 22px 20px 0 !important;
+  margin: 0 !important;
+}
+#home.active .companyLogoWrap {
+  width: 100% !important;
+  height: 150px !important;
+  min-height: 150px !important;
+  margin: 0 0 34px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+#home.active .companyLogo {
+  width: 86vw !important;
+  max-width: 500px !important;
+  height: auto !important;
+  max-height: 145px !important;
+  object-fit: contain !important;
+}
+#home.active .welcome small {
+  color: #8d949d !important;
+  font-size: 15px !important;
+  letter-spacing: .19em !important;
+  font-weight: 800 !important;
+  margin: 0 0 14px !important;
+}
+#home.active .welcome h2 {
+  color: #17212b !important;
+  font-size: clamp(34px, 9vw, 48px) !important;
+  line-height: 1.06 !important;
+  letter-spacing: -.045em !important;
+  margin: 0 0 16px !important;
+  max-width: 680px !important;
+}
+#home.active .welcome p {
+  color: #737c87 !important;
+  font-size: 20px !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+  max-width: 680px !important;
+}
+
+/* Cards: remove the old orange active styling on the start page. */
+#home.active a,
+#home.active button,
+#home.active .home-option,
+#home.active .home-card,
+#home.active .choice-card,
+#home.active .start-option,
+#home.active .option-card,
+#home.active .menu-card {
+  background: #f1f3f5 !important;
+  border: 1px solid #e0e4e8 !important;
+  border-radius: 28px !important;
+  box-shadow: 0 8px 24px rgba(20,30,40,.055) !important;
+  color: #17212b !important;
+}
+#home.active a:hover,
+#home.active button:hover,
+#home.active .home-option:hover,
+#home.active .home-card:hover,
+#home.active .choice-card:hover,
+#home.active .start-option:hover,
+#home.active .option-card:hover,
+#home.active .menu-card:hover {
+  background: #f1f3f5 !important;
+  border-color: #d9dde1 !important;
+}
+
+/* Neutral icon boxes. */
+#home.active .home-option .icon,
+#home.active .home-card .icon,
+#home.active .choice-card .icon,
+#home.active .start-option .icon,
+#home.active .option-card .icon,
+#home.active .menu-card .icon,
+#home.active .home-option svg,
+#home.active .home-card svg,
+#home.active .choice-card svg,
+#home.active .start-option svg,
+#home.active .option-card svg,
+#home.active .menu-card svg {
+  color: #17212b !important;
+  background: #e8ebee !important;
+}
+
+/* Hide ALL known bottom navigation variants while home is active. */
+body:has(#home.active) .bottom-nav,
+body:has(#home.active) .bottomNav,
+body:has(#home.active) .bottom-navigation,
+body:has(#home.active) .tab-bar,
+body:has(#home.active) .tabbar,
+body:has(#home.active) .app-nav,
+body:has(#home.active) footer,
+body:has(#home.active) nav[role="navigation"] {
+  display: none !important;
+}
+
+/* Mobile proportions matching the reference. */
+@media (max-width: 600px) {
+  #home.active .welcome {
+    padding: 18px 20px 0 !important;
+  }
+  #home.active .companyLogoWrap {
+    height: 150px !important;
+    min-height: 150px !important;
+    margin-bottom: 32px !important;
+  }
+  #home.active .companyLogo {
+    width: 86vw !important;
+    max-height: 145px !important;
+  }
+  #home.active .welcome h2 {
+    font-size: 34px !important;
+    line-height: 1.07 !important;
+  }
+  #home.active .welcome p {
+    font-size: 18px !important;
+  }
+}
