@@ -2360,3 +2360,14 @@ body.tagelohn-clean #appNav button small {
 #home.active #openEmployeesGlobal .startIcon {
   color:#76508f !important;
 }
+
+/* Baustellen-Karte: gewünschtes Warnwesten-Symbol */
+.constructionCardIcon{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:56px !important;
+  min-width:56px !important;
+  font-size:32px !important;
+  line-height:1 !important;
+}
