@@ -68,6 +68,22 @@ function addService(){
   services.push(value);persistServices();$('serviceName').value='';renderServices();
 }
 let previousScreen='home';
+
+function updateCleanLayout(id){
+  const isHome=id==='home';
+  const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','editor','summaryScreen','signatureScreen'];
+  const isTagelohn=tagelohnIds.includes(id);
+  document.body.classList.toggle('home-screen',isHome);
+  document.body.classList.toggle('tagelohn-clean',isTagelohn);
+  const header=document.querySelector('body > header');
+  const moduleHeader=document.querySelector('#tagelohnHome .moduleHeader');
+  const oldStart=document.querySelector('#tagelohnHome #backToStartFromTagelohn');
+  if(header) header.style.display=(isTagelohn||isHome)?'none':'';
+  if(moduleHeader) moduleHeader.style.display=isTagelohn?'none':'';
+  if(oldStart) oldStart.style.display=isTagelohn?'none':'';
+  const nav=document.getElementById('appNav');
+  if(nav) nav.style.display=isHome?'none':'flex';
+}
 function show(id){
   const current=document.querySelector('.screen.active')?.id;
   if(current && current!==id) previousScreen=current;
@@ -81,6 +97,7 @@ function show(id){
   document.body.classList.toggle('home-screen',id==='home');
   const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','editor','summaryScreen','signatureScreen'];
   document.body.classList.toggle('tagelohn-clean',tagelohnIds.includes(id));
+  updateCleanLayout(id);
   scrollTo(0,0);
 }
 function today(){return new Date().toISOString().slice(0,10)}
@@ -660,4 +677,9 @@ document.getElementById('navBack')?.addEventListener('click',()=>{
   const current=document.querySelector('.screen.active')?.id;
   if(current==='tagelohnHome') show('home');
   else show(previousScreen && previousScreen!==current ? previousScreen : 'tagelohnHome');
+});
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const active=document.querySelector('.screen.active')?.id||'home';
+  updateCleanLayout(active);
 });
