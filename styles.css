@@ -1659,31 +1659,156 @@ body.tagelohn-clean #appNav {
   }
 }
 
-/* === TAGELohn: oberer Bereich komplett entfernen === */
-/* Gilt ausschließlich, wenn #tagelohnHome aktiv ist. */
+/* =========================================================
+   STARTSEITE – direkt an #home.active gebunden
+   Damit funktioniert das Layout auch ohne body.home-screen.
+   ========================================================= */
 
-body:has(#tagelohnHome.active) > header {
-  display: none !important;
-  height: 0 !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
+html, body {
+  overflow-x: hidden !important;
+}
+
+body:has(#home.active) {
   overflow: hidden !important;
 }
 
-body:has(#tagelohnHome.active) #tagelohnHome > .moduleHeader {
+/* Keine App-Navigation auf der Startseite. */
+body:has(#home.active) #appNav,
+body:has(#home.active) > nav {
   display: none !important;
 }
 
-body:has(#tagelohnHome.active) #tagelohnHome {
-  padding-top: 18px !important;
-}
-
-body:has(#tagelohnHome.active) #tagelohnHome #new2 {
-  margin-top: 0 !important;
-}
-
-/* Die beiden gewünschten unteren Buttons bleiben sichtbar. */
-body:has(#tagelohnHome.active) #appNav {
+/* Die Startseite nutzt exakt die verfügbare Hochformat-Höhe. */
+#home.active {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  padding: max(8px, env(safe-area-inset-top)) 20px 12px !important;
   display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Logo kompakt genug, damit alles auf einen Bildschirm passt. */
+#home.active .welcome {
+  flex: 0 0 auto !important;
+}
+
+#home.active .companyLogoWrap {
+  height: clamp(105px, 18dvh, 145px) !important;
+  min-height: 105px !important;
+  margin: 0 0 clamp(18px, 3dvh, 28px) !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+#home.active .companyLogo {
+  width: min(88vw, 520px) !important;
+  height: auto !important;
+  max-height: clamp(105px, 17.5dvh, 140px) !important;
+  object-fit: contain !important;
+}
+
+/* Überschrift etwas tiefer unter dem Logo. */
+#home.active .welcome > small {
+  display: block !important;
+  font-size: clamp(11px, 1.8dvh, 15px) !important;
+  line-height: 1 !important;
+  margin: 0 0 10px !important;
+}
+
+#home.active .welcome h2 {
+  font-size: clamp(30px, 5.2dvh, 42px) !important;
+  line-height: 1.05 !important;
+  margin: 0 0 10px !important;
+}
+
+#home.active .welcome p {
+  font-size: clamp(15px, 2.35dvh, 19px) !important;
+  line-height: 1.28 !important;
+  margin: 0 !important;
+}
+
+/* Zwei Karten bleiben komplett sichtbar. */
+#home.active .startChoices {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: clamp(10px, 1.8dvh, 16px) !important;
+  margin-top: clamp(14px, 2.5dvh, 24px) !important;
+  padding: 0 !important;
+}
+
+#home.active .startChoice {
+  box-sizing: border-box !important;
+  height: clamp(94px, 15.5dvh, 130px) !important;
+  min-height: 0 !important;
+  max-height: 130px !important;
+  flex: 0 1 auto !important;
+  padding: 14px 16px !important;
+  border-radius: 22px !important;
+  gap: 14px !important;
+}
+
+#home.active .startChoice .startIcon {
+  width: clamp(54px, 8.5dvh, 68px) !important;
+  min-width: clamp(54px, 8.5dvh, 68px) !important;
+  height: clamp(54px, 8.5dvh, 68px) !important;
+  border-radius: 15px !important;
+}
+
+#home.active .startChoice .startIcon svg {
+  width: clamp(34px, 5.8dvh, 46px) !important;
+  height: clamp(34px, 5.8dvh, 46px) !important;
+}
+
+#home.active .startChoice b {
+  font-size: clamp(17px, 2.8dvh, 21px) !important;
+  line-height: 1.15 !important;
+}
+
+#home.active .startChoice small {
+  font-size: clamp(12px, 2.0dvh, 16px) !important;
+  line-height: 1.25 !important;
+}
+
+#home.active .startChoice > strong {
+  font-size: clamp(30px, 5dvh, 40px) !important;
+}
+
+@media (max-height: 700px) {
+  #home.active {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  #home.active .companyLogoWrap {
+    height: 100px !important;
+    min-height: 100px !important;
+    margin-bottom: 14px !important;
+  }
+  #home.active .companyLogo {
+    max-height: 96px !important;
+  }
+  #home.active .welcome h2 {
+    font-size: 28px !important;
+    margin-bottom: 6px !important;
+  }
+  #home.active .welcome p {
+    font-size: 14px !important;
+  }
+  #home.active .startChoices {
+    margin-top: 9px !important;
+    gap: 8px !important;
+  }
+  #home.active .startChoice {
+    height: 86px !important;
+    padding: 10px 13px !important;
+  }
 }
