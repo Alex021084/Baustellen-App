@@ -315,6 +315,12 @@ function show(id, options={}){
 function goBackOneStep(){
   const current=document.querySelector('.screen.active')?.id;
 
+  // Tagesbericht hat seinen eigenen, festen Schrittverlauf.
+  // Dadurch kann die globale Tagelohn-Historie nicht mehr dazwischenfunken.
+  if(current==='tagesberichtWorks'){ show('tagesberichtEmployees',{replaceHistory:true}); return; }
+  if(current==='tagesberichtEmployees'){ show('tagesbericht',{replaceHistory:true}); return; }
+  if(current==='tagesbericht'){ navigationHistory=[]; show('home',{replaceHistory:true}); return; }
+
   // Im Archiv immer genau eine Ebene zurück.
   if(current==='archive'){
     if(archiveSelectedProject){
@@ -916,10 +922,19 @@ $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('e
 $('openTagelohn').onclick=()=>show('tagelohnHome');
 $('openCustomersGlobal').onclick=openCustomers;
 $('openEmployeesGlobal').onclick=openEmployees;
-$('openTagesbericht').onclick=()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=['home']};
+$('openTagesbericht').onclick=()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=[]};
 $('reportNext')?.addEventListener('click',()=>{initTagesberichtEmployees();show('tagesberichtEmployees')});
 $('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
-$('reportEmployeeNext')?.addEventListener('click',()=>{const entries=collectReportEmployees();if(!entries.length||entries.some(e=>!e.name||!e.role||!e.start||!e.end)){alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.');return;}reportEmployeeEntries=entries;initTagesberichtWorks();show('tagesberichtWorks')});
+function continueTagesberichtEmployees(){
+  const entries=collectReportEmployees();
+  if(!entries.length){ alert('Bitte mindestens einen Mitarbeiter auswählen.'); return; }
+  const incomplete=entries.some(e=>!e.name||!e.role||!e.start||!e.end);
+  if(incomplete){ alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.'); return; }
+  reportEmployeeEntries=entries;
+  initTagesberichtWorks();
+  show('tagesberichtWorks',{replaceHistory:false});
+}
+$('reportEmployeeNext')?.addEventListener('click',continueTagesberichtEmployees);
 $('reportAddWork')?.addEventListener('click',()=>addReportListEntry('reportWorksEntries'));
 $('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportMaterialsEntries'));
 $('backToStartFromTagelohn').onclick=()=>show('home');
