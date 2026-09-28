@@ -60,7 +60,7 @@ function renderReportCustomerSelect(selectedName=''){
   s.value=c?c.id:'';
   renderReportProjectSelect();
 }
-function renderReportProjectSelect(selectedProject=''){
+function renderReportProjectSelect(selectedProject='') {
   const s=$('reportProjectSelect');
   if(!s)return;
   const c=customers.find(x=>x.id===$('reportCustomerSelect')?.value);
@@ -68,6 +68,7 @@ function renderReportProjectSelect(selectedProject=''){
   s.innerHTML='<option value="">— Bauvorhaben auswählen —</option>'+
     projects.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
   s.value=projects.includes(selectedProject)?selectedProject:'';
+  loadReportWeather();
 }
 function initTagesbericht(){
   const d=$('reportDate');
@@ -75,13 +76,82 @@ function initTagesbericht(){
   if(d){
     if(!d.value)d.value=today();
     if(display)display.value=formatLongDate(d.value);
-    d.onchange=()=>{if(display)display.value=formatLongDate(d.value)};
+    d.onchange=()=>{if(display)display.value=formatLongDate(d.value);loadReportWeather()};
   }
   renderReportCustomerSelect();
   const c=$('reportCustomerSelect');
   if(c)c.onchange=()=>renderReportProjectSelect();
+  const p=$('reportProjectSelect');
+  if(p)p.onchange=()=>loadReportWeather();
+  loadReportWeather();
 }
 
+function setReportWeather(temp='—', precipitation='—', status=''){
+  const t=$('reportTemperature'), p=$('reportPrecipitation'), s=$('reportWeatherStatus');
+  if(t)t.textContent=temp;
+  if(p)p.textContent=precipitation;
+  if(s)s.textContent=status;
+}
+function normalizeAddress(address){
+  return String(address||'').replaceAll('\n',' ').replace(/\s+/g,' ').trim();
+}
+async function geocodeCustomerAddress(address){
+  const q=normalizeAddress(address);
+  if(!q)return null;
+  const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=1&language=de&format=json';
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('Geocoding fehlgeschlagen');
+  const data=await res.json();
+  const r=data?.results?.[0];
+  return r?{latitude:r.latitude,longitude:r.longitude,name:r.name,country:r.country}:null;
+}
+async function fetchDailyWeather(lat,lon,date){
+  const todayDate=today();
+  const params=new URLSearchParams({
+    latitude:String(lat),longitude:String(lon),
+    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    temperature_unit:'celsius',precipitation_unit:'mm',timezone:'auto',
+    start_date:date,end_date:date
+  });
+  const endpoint=date < todayDate
+    ? 'https://archive-api.open-meteo.com/v1/archive'
+    : 'https://api.open-meteo.com/v1/forecast';
+  const res=await fetch(endpoint+'?'+params.toString());
+  if(!res.ok)throw new Error('Wetterabfrage fehlgeschlagen');
+  const data=await res.json();
+  const idx=Array.isArray(data?.daily?.time)?data.daily.time.indexOf(date):-1;
+  if(idx<0)throw new Error('Für diesen Tag liegen keine Wetterdaten vor');
+  return {
+    min:data.daily.temperature_2m_min?.[idx],
+    max:data.daily.temperature_2m_max?.[idx],
+    precipitation:data.daily.precipitation_sum?.[idx]
+  };
+}
+let weatherRequestToken=0;
+async function loadReportWeather(){
+  const token=++weatherRequestToken;
+  const date=$('reportDate')?.value;
+  const customerId=$('reportCustomerSelect')?.value;
+  if(!date||!customerId){setReportWeather('—','—','');return;}
+  const customer=customers.find(c=>c.id===customerId);
+  if(!customer?.address){setReportWeather('—','—','Keine Anschrift für den Kunden hinterlegt.');return;}
+  setReportWeather('…','…','Wetterdaten werden geladen …');
+  try{
+    const geo=await geocodeCustomerAddress(customer.address);
+    if(token!==weatherRequestToken)return;
+    if(!geo)throw new Error('Baustellenanschrift konnte nicht gefunden werden');
+    const weather=await fetchDailyWeather(geo.latitude,geo.longitude,date);
+    if(token!==weatherRequestToken)return;
+    const min=Number.isFinite(weather.min)?Math.round(weather.min):null;
+    const max=Number.isFinite(weather.max)?Math.round(weather.max):null;
+    const temp=min!==null&&max!==null?`${min}–${max} °C`:max!==null?`${max} °C`:min!==null?`${min} °C`:'—';
+    const precip=Number.isFinite(weather.precipitation)?`${weather.precipitation.toLocaleString('de-DE',{maximumFractionDigits:1})} mm`:'—';
+    setReportWeather(temp,precip,`Automatisch für ${date.split('-').reverse().join('.')} geladen.`);
+  }catch(err){
+    if(token!==weatherRequestToken)return;
+    setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.');
+  }
+}
 function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
 function persistServices(){localStorage.tagelohnServices=JSON.stringify(services)}
 function persistEmployees(){localStorage.tagelohnEmployees=JSON.stringify(employees)}
