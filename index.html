@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=logo2"></head><body>
+<link rel="stylesheet" href="styles.css?v=overview1"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -37,13 +37,13 @@
 </section>
 
 <section id="services" class="screen">
-<div class="title"><h2>Leistungen verwalten</h2><button id="homeFromServices">Zurück</button></div>
+<div class="title"><h2>Leistungen verwalten</h2><button id="homeFromServices">Baustellen</button></div>
 <div class="panel addPanel"><div class="addBar"><input id="serviceName" placeholder="Neue Leistung..." aria-label="Neue Leistung"><button id="addService" class="primary saveManage">Speichern</button></div></div>
 <div class="panel"><h2>Vorhandene Leistungen</h2><div id="serviceList"></div></div>
 </section>
 
 <section id="employeeManager" class="screen">
-<div class="title"><h2>Mitarbeiter verwalten</h2><button id="homeFromEmployees">Zurück</button></div>
+<div class="title"><h2>Mitarbeiter verwalten</h2><button id="homeFromEmployees">Baustellen</button></div>
 <div class="panel addPanel"><div class="addBar"><input id="employeeName" placeholder="Neuen Mitarbeiter..." aria-label="Neuer Mitarbeiter"><button id="addEmployee" class="primary saveManage">Speichern</button></div></div>
 <div class="panel"><h2>Vorhandene Mitarbeiter</h2><div id="employeeList"></div></div>
 </section>
@@ -65,13 +65,13 @@
 </section>
 
 <section id="summaryScreen" class="screen">
-<div class="title"><div><small>Kundenprüfung</small><h2>Tagelohnnachweis prüfen</h2></div><button id="backToEditorFromSummary">Zurück</button></div>
+<div class="title"><div><small>Kundenprüfung</small><h2>Tagelohnnachweis prüfen</h2></div><button id="backToEditorFromSummary">Baustellen</button></div>
 <div id="summaryContent" class="summaryContent"></div>
 <div class="actions"><button id="signNow" class="primary">Unterschreiben</button></div>
 </section>
 
 <section id="signatureScreen" class="screen">
-<div class="title"><div><small>Unterschrift Auftraggeber</small><h2>Unterschrift</h2></div><button id="backToSummary">Zurück</button></div>
+<div class="title"><div><small>Unterschrift Auftraggeber</small><h2>Unterschrift</h2></div><button id="backToSummary">Baustellen</button></div>
 <div class="panel signaturePanel">
 <p class="hint">Bitte im Feld mit Finger, Maus oder Stift unterschreiben.</p>
 <canvas id="sig" width="900" height="360"></canvas>
@@ -82,7 +82,7 @@
 
 
 <section id="customers" class="screen">
-<div class="title"><h2>Meine Kunden</h2><button id="homeFromCustomers">Zurück</button></div>
+<div class="title"><h2>Meine Kunden</h2><button id="homeFromCustomers">Baustellen</button></div>
 <div class="panel"><h2>Neuen Kunden anlegen</h2>
 <label>Kundenname<input id="customerName" placeholder="z. B. Muster GmbH"></label>
 <label>Anschrift<textarea id="customerAddress" placeholder="Straße Hausnummer&#10;PLZ Ort"></textarea></label>
@@ -91,7 +91,7 @@
 <div id="customerList"></div>
 </section>
 
-<section id="archive" class="screen"><div class="title"><h2>Meine Nachweise</h2><button id="homeBtn">Zurück</button></div><div id="list"></div></section>
+<section id="archive" class="screen"><div class="title"><h2>Meine Nachweise</h2><button id="homeBtn">Baustellen</button></div><div id="list"></div></section>
 </main>
 <nav><button data-s="home">⌂<small>Start</small></button><button data-s="tagelohnHome">▣<small>Tagelohn</small></button><button data-s="archive">▤<small>Nachweise</small></button><button data-s="editor">＋<small>Neu</small></button></nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
