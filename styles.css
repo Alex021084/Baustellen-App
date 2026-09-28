@@ -1864,3 +1864,97 @@ body:has(.screen.active:not(#home)) #backToSummary {
 body:has(.screen.active:not(#home)) .title {
   justify-content: flex-start !important;
 }
+
+/* =========================================================
+   ARCHIV: Kunden → Bauvorhaben → Nachweise
+   ========================================================= */
+
+#archive .archiveTopBack {
+  display: none !important;
+}
+
+#archive .title {
+  margin-bottom: 4px;
+}
+
+#archive .archiveHint {
+  margin: 0 0 14px;
+  font-size: 15px;
+  color: #727b86;
+}
+
+.projectSelectButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  border: 1px solid #dde2e6;
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  margin: 10px 0;
+  box-shadow: 0 5px 16px rgba(23,35,47,.045);
+  color: #17212b;
+  font: inherit;
+}
+
+.projectSelectIcon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #eef1f4;
+  color: #17212b;
+  font-size: 23px;
+}
+
+.projectSelectButton span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.projectSelectButton strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.projectSelectButton small {
+  display: block;
+  color: #7a838c;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.projectSelectButton > b {
+  color: #8d969e;
+  font-size: 34px;
+  font-weight: 300;
+}
+
+#archive .reportRow {
+  border: 1px solid #e1e1e6;
+  border-radius: 14px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(23,35,47,.035);
+}
+
+#archive .reportStatus.isDraft {
+  background: #fff1e8;
+  color: #a34d18;
+}
+
+#archive .reportStatus.isSigned {
+  background: #e9f7ed;
+  color: #19723a;
+}
+
+@media(max-width:520px){
+  #archive .archiveHint {font-size:14px;margin-bottom:12px}
+  .projectSelectButton{padding:14px}
+  .projectSelectIcon{width:48px;height:48px;min-width:48px}
+}

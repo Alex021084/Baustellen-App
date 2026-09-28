@@ -2,6 +2,7 @@ const $=x=>document.getElementById(x);
 let reports=JSON.parse(localStorage.tagelohn||'[]');
 let editingReportIndex=null;
 let archiveSelectedContractor=null;
+let archiveSelectedProject=null;
 const defaultCustomers=[{id:'dreyer',name:'Dreyer Hochbau GmbH & Co. KG',address:'Mühlenberg 12\n27404 Elsdorf'}];
 let customers=JSON.parse(localStorage.tagelohnCustomers||'null')||defaultCustomers;
 if(!Array.isArray(customers)) customers=[...defaultCustomers];
@@ -430,11 +431,24 @@ function removeContractor(contractor){
 function render(){
   const l=$('list');
   const title=$('archiveTitle'), hint=$('archiveHint'), back=$('homeBtn');
-  if(title) title.textContent=archiveSelectedContractor ? archiveSelectedContractor : 'Baustellen';
-  if(hint) hint.textContent=archiveSelectedContractor
-    ? 'Baustellen und Nachweise dieses Kunden'
-    : 'Kunden mit vorhandenen Tagelohnnachweisen';
-  if(back) back.textContent=archiveSelectedContractor ? 'Baustellen' : 'Tagelohn';
+
+  if(title){
+    title.textContent = archiveSelectedProject
+      ? archiveSelectedProject
+      : (archiveSelectedContractor ? archiveSelectedContractor : 'Kunden');
+  }
+
+  if(hint){
+    hint.textContent = archiveSelectedProject
+      ? 'Nachweise dieses Bauvorhabens'
+      : (archiveSelectedContractor ? 'Bauvorhaben dieses Kunden' : 'Kunden mit vorhandenen Tagelohnnachweisen');
+  }
+
+  if(back){
+    back.textContent = archiveSelectedProject
+      ? 'Bauvorhaben'
+      : (archiveSelectedContractor ? 'Kunden' : 'Tagelohn');
+  }
 
   if(!reports.length){
     l.innerHTML='<div class="panel emptyState"><div class="emptyIcon">▤</div><b>Noch keine Nachweise</b><small>Gespeicherte Tagelohnnachweise erscheinen hier.</small></div>';
@@ -452,50 +466,77 @@ function render(){
 
   l.innerHTML='';
 
+  /* Ebene 1: Nur Kunden */
   if(!archiveSelectedContractor){
-    const heading=document.createElement('div');
-    heading.className='archiveSelectHeading';
-    heading.innerHTML='<strong>Kunde auswählen</strong><small>Nur Kunden mit gespeicherten Nachweisen werden angezeigt.</small>';
-    l.append(heading);
-
-    [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'de')).forEach(([contractor,projects])=>{
-      const total=[...projects.values()].reduce((n,a)=>n+a.length,0);
-      const btn=document.createElement('button');
-      btn.type='button';
-      btn.className='customerArchiveButton';
-      btn.innerHTML=`<span class="customerArchiveIcon">▣</span><span><strong>${esc(contractor)}</strong><small>${total} ${total===1?'Nachweis':'Nachweise'}</small></span><b>›</b>`;
-      btn.onclick=()=>{archiveSelectedContractor=contractor;render();show('archive');};
-      l.append(btn);
-    });
+    [...groups.entries()]
+      .sort((a,b)=>a[0].localeCompare(b[0],'de'))
+      .forEach(([contractor,projects])=>{
+        const total=[...projects.values()].reduce((n,a)=>n+a.length,0);
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='customerArchiveButton';
+        btn.innerHTML=`<span class="customerArchiveIcon">▣</span><span><strong>${esc(contractor)}</strong><small>${total} ${total===1?'Nachweis':'Nachweise'}</small></span><b>›</b>`;
+        btn.onclick=()=>{
+          archiveSelectedContractor=contractor;
+          archiveSelectedProject=null;
+          render();
+          show('archive');
+        };
+        l.append(btn);
+      });
     return;
   }
 
   const projects=groups.get(archiveSelectedContractor);
   if(!projects){
-    archiveSelectedContractor=null; render(); return;
+    archiveSelectedContractor=null;
+    archiveSelectedProject=null;
+    render();
+    return;
   }
 
-  [...projects.entries()].sort((a,b)=>a[0].localeCompare(b[0],'de')).forEach(([project,items])=>{
-    const box=document.createElement('section');box.className='projectCard archiveProjectButton';
-    const ph=document.createElement('div');ph.className='projectHead';ph.setAttribute('role','button');ph.tabIndex=0;
-    const projectStateKey=archiveKey('project',archiveSelectedContractor,project);
-    const projectIsOpen=getArchiveState()[projectStateKey] !== false;
-    ph.setAttribute('aria-expanded',String(projectIsOpen));
-    ph.innerHTML=`<span class="projectIconBig">▣</span><span class="projectTitle"><strong>${esc(project)}</strong><small>${items.length} ${items.length===1?'Nachweis':'Nachweise'}</small></span><span class="projectArrow">${projectIsOpen?'⌃':'⌄'}</span>`;
-    const pb=document.createElement('div');pb.className='projectBody';pb.hidden=!projectIsOpen;
-    ph.onclick=()=>{const next=pb.hidden;pb.hidden=!next;ph.setAttribute('aria-expanded',String(next));ph.querySelector('.projectArrow').textContent=next?'⌃':'⌄';setArchiveState(projectStateKey,next);};
-    items.sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{
-      const row=document.createElement('div');row.className='reportRow';const signed=!!r.signed;
-      row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Entwurf'}</span></div><button type="button" class="openReport">Öffnen</button>`;
-      row.querySelector('.openReport').onclick=()=>{editingReportIndex=i;fill(r);show('editor');};
-      enableSwipeDelete(row,()=>removeReport(i));
-      pb.append(row);
-    });
-    box.append(ph,pb);
-    l.append(box);
-  });
-}
+  /* Ebene 2: Bauvorhaben des gewählten Kunden */
+  if(!archiveSelectedProject){
+    [...projects.entries()]
+      .sort((a,b)=>a[0].localeCompare(b[0],'de'))
+      .forEach(([project,items])=>{
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='projectSelectButton';
+        btn.innerHTML=`<span class="projectSelectIcon">▣</span><span><strong>${esc(project)}</strong><small>${items.length} ${items.length===1?'Nachweis':'Nachweise'}</small></span><b>›</b>`;
+        btn.onclick=()=>{
+          archiveSelectedProject=project;
+          render();
+          show('archive');
+        };
+        l.append(btn);
+      });
+    return;
+  }
 
+  /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
+  const items=projects.get(archiveSelectedProject)||[];
+  items
+    .slice()
+    .sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')))
+    .forEach(({r,i})=>{
+      const row=document.createElement('div');
+      row.className='reportRow';
+      const signed=!!r.signed;
+      row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
+      row.querySelector('.openReport').onclick=()=>{
+        editingReportIndex=i;
+        fill(r);
+        show('editor');
+      };
+      enableSwipeDelete(row,()=>removeReport(i));
+      l.append(row);
+    });
+
+  if(!items.length){
+    l.innerHTML='<div class="panel emptyState"><div class="emptyIcon">▤</div><b>Noch keine Nachweise</b><small>Für dieses Bauvorhaben wurden noch keine Nachweise erstellt.</small></div>';
+  }
+}
 
 function formatDate(iso){if(!iso)return '';let d=new Date(iso+'T12:00:00');return new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(d).replace(/^./,m=>m.toUpperCase())}
 function shortDate(iso){if(!iso)return '';let d=new Date(iso+'T12:00:00');return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`}
@@ -615,7 +656,7 @@ $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht').onclick=()=>show('home');
 $('designTagesbericht').onclick=()=>alert('Den Tagesbericht gestalten wir im nächsten Schritt gemeinsam.');
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
-$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedContractor){archiveSelectedContractor=null;render();}else show('tagelohnHome')};$('customersBtn').onclick=openCustomers;$('homeFromCustomers').onclick=()=>show('tagelohnHome');
+$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('customersBtn').onclick=openCustomers;$('homeFromCustomers').onclick=()=>show('tagelohnHome');
 $('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;$('homeFromServices').onclick=()=>show('tagelohnHome');$('addService').onclick=addService;$('employeesBtn').onclick=openEmployees;$('homeFromEmployees').onclick=()=>show('tagelohnHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
 $('date').addEventListener('change',syncDateDisplay);
