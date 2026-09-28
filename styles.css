@@ -2206,3 +2206,21 @@ body:has(.screen.active:not(#home)) .title {
   .workflowItem{padding:14px;margin-top:12px}
   .workflowHead b{font-size:17px}
 }
+
+
+/* Tagesbericht / Navigation: einheitliche helle Grünoptik */
+.bottomNav button,
+.navButtons button,
+#navHome,
+#navBack {
+  background: #eaf7ee !important;
+  color: #2f7d4a !important;
+  border-color: #b9dfc5 !important;
+}
+.bottomNav button svg,
+.navButtons button svg,
+#navHome svg,
+#navBack svg {
+  stroke: #2f7d4a !important;
+  color: #2f7d4a !important;
+}
