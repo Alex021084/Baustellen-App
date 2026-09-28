@@ -866,3 +866,196 @@ body:has(#home.active) nav[role="navigation"] {
     font-size: 18px !important;
   }
 }
+
+/* === Startseite exakt nach freigegebener Skizze === */
+body.home-screen,
+body:has(#home.active) {
+  background:#fff !important;
+}
+body.home-screen {
+  padding-bottom:0 !important;
+}
+body.home-screen > nav,
+body:has(#home.active) > nav {
+  display:none !important;
+}
+#home.active {
+  background:#fff !important;
+  max-width:760px !important;
+  padding:20px 20px 34px !important;
+  margin:0 auto !important;
+  min-height:100dvh !important;
+}
+#home.active .welcome {
+  padding:0 !important;
+  margin:0 !important;
+  background:#fff !important;
+}
+#home.active .companyLogoWrap {
+  height:245px !important;
+  min-height:245px !important;
+  margin:0 0 34px !important;
+  padding:0 !important;
+  background:#fff !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+}
+#home.active .companyLogo {
+  width:min(94vw,650px) !important;
+  max-width:650px !important;
+  max-height:235px !important;
+  height:auto !important;
+  object-fit:contain !important;
+}
+#home.active .welcome small {
+  display:block !important;
+  color:#8c939c !important;
+  font-size:15px !important;
+  line-height:1 !important;
+  letter-spacing:.18em !important;
+  font-weight:800 !important;
+  margin:0 0 18px !important;
+}
+#home.active .welcome h2 {
+  color:#17212b !important;
+  font-size:clamp(36px,9vw,52px) !important;
+  line-height:1.05 !important;
+  letter-spacing:-.045em !important;
+  margin:0 0 18px !important;
+  max-width:690px !important;
+}
+#home.active .welcome p {
+  color:#747d87 !important;
+  font-size:21px !important;
+  line-height:1.35 !important;
+  margin:0 !important;
+  max-width:690px !important;
+}
+#home.active .startChoices {
+  display:grid !important;
+  gap:18px !important;
+  margin-top:34px !important;
+}
+#home.active .startChoice {
+  width:100% !important;
+  min-height:154px !important;
+  padding:24px 25px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:22px !important;
+  background:#f1f3f5 !important;
+  border:1px solid #e1e5e8 !important;
+  border-radius:28px !important;
+  box-shadow:0 7px 24px rgba(23,35,47,.055) !important;
+  color:#17212b !important;
+}
+#home.active .startChoicePrimary {
+  border:1px solid #e1e5e8 !important;
+}
+#home.active .startChoice .startIcon {
+  width:72px !important;
+  height:72px !important;
+  min-width:72px !important;
+  border-radius:18px !important;
+  display:grid !important;
+  place-items:center !important;
+  background:#e5e8eb !important;
+  color:#17212b !important;
+  font-size:0 !important;
+}
+#home.active .startChoice .startIcon svg {
+  width:47px !important;
+  height:47px !important;
+  display:block !important;
+}
+#home.active .startChoicePrimary .startIcon {
+  background:#e5e8eb !important;
+  color:#17212b !important;
+}
+#home.active .startChoice span:nth-child(2) {
+  flex:1 !important;
+  min-width:0 !important;
+}
+#home.active .startChoice b {
+  display:block !important;
+  color:#17212b !important;
+  font-size:22px !important;
+  line-height:1.15 !important;
+  margin:0 0 8px !important;
+}
+#home.active .startChoice small {
+  display:block !important;
+  color:#737c86 !important;
+  font-size:17px !important;
+  line-height:1.35 !important;
+}
+#home.active .startChoice > strong {
+  color:#8f98a1 !important;
+  font-size:42px !important;
+  line-height:1 !important;
+  font-weight:300 !important;
+  flex:none !important;
+}
+#home.active .startChoice:hover,
+#home.active .startChoice:focus {
+  transform:none !important;
+  background:#f1f3f5 !important;
+  border-color:#dce0e4 !important;
+  box-shadow:0 7px 24px rgba(23,35,47,.055) !important;
+}
+@media (max-width:600px) {
+  #home.active {
+    padding:18px 20px 30px !important;
+  }
+  #home.active .companyLogoWrap {
+    height:225px !important;
+    min-height:225px !important;
+    margin-bottom:30px !important;
+  }
+  #home.active .companyLogo {
+    width:94vw !important;
+    max-height:220px !important;
+  }
+  #home.active .welcome h2 {
+    font-size:35px !important;
+    line-height:1.07 !important;
+  }
+  #home.active .welcome p {
+    font-size:18px !important;
+  }
+  #home.active .startChoices {
+    margin-top:28px !important;
+    gap:14px !important;
+  }
+  #home.active .startChoice {
+    min-height:126px !important;
+    padding:19px 18px !important;
+    gap:16px !important;
+    border-radius:24px !important;
+  }
+  #home.active .startChoice .startIcon {
+    width:62px !important;
+    min-width:62px !important;
+    height:62px !important;
+    border-radius:16px !important;
+  }
+  #home.active .startChoice .startIcon svg {
+    width:40px !important;
+    height:40px !important;
+  }
+  #home.active .startChoice b {
+    font-size:19px !important;
+    margin-bottom:5px !important;
+  }
+  #home.active .startChoice small {
+    font-size:14px !important;
+  }
+  #home.active .startChoice > strong {
+    font-size:34px !important;
+  }
+}

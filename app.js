@@ -66,7 +66,15 @@ function addService(){
   if(services.some(s=>s.toLowerCase()===value.toLowerCase())){alert('Diese Leistung gibt es bereits.');return}
   services.push(value);persistServices();$('serviceName').value='';renderServices();
 }
-function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');scrollTo(0,0)}
+function show(id){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  const screen=$(id);
+  if(screen) screen.classList.add('active');
+  const nav=document.querySelector('nav');
+  if(nav) nav.style.display=id==='home'?'none':'flex';
+  document.body.classList.toggle('home-screen',id==='home');
+  scrollTo(0,0);
+}
 function today(){return new Date().toISOString().slice(0,10)}
 function formatLongDate(value){
   if(!value)return '';
@@ -607,3 +615,5 @@ $('saveSignature').onclick=async()=>{
   }catch(err){console.error(err);alert('Der unterschriebene Nachweis konnte nicht vollständig gespeichert werden: '+err.message)}
   finally{btn.disabled=false;btn.textContent='➜'}
 };
+
+window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector('nav');if(nav)nav.style.display=document.getElementById('home')?.classList.contains('active')?'none':'flex';document.body.classList.toggle('home-screen',document.getElementById('home')?.classList.contains('active'));});
