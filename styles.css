@@ -2382,10 +2382,10 @@ body.tagelohn-clean #appNav button small {
   margin-bottom: 18px !important;
 }
 
-.weatherGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.weatherValue{border:1px solid rgba(31,93,61,.18);border-radius:14px;padding:11px 12px;background:#f7fbf8;min-width:0}
-.weatherValue small{display:block;font-size:.78rem;opacity:.68;margin-bottom:4px}
-.weatherValue b{font-size:1.02rem;color:#1f5d3d}
-.weatherStatus{min-height:1.1em;margin-top:8px;font-size:.76rem;opacity:.62}
-.weatherSource{margin-top:4px;font-size:.68rem;opacity:.5}
-@media (max-width:420px){.weatherGrid{gap:8px}.weatherValue{padding:10px}}
+.weatherGrid{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;margin:14px 0 0 !important;width:100% !important}
+.weatherValue{display:grid !important;grid-template-columns:auto 1fr !important;grid-template-rows:auto auto !important;align-items:center !important;column-gap:7px !important;row-gap:1px !important;border:1px solid rgba(31,93,61,.18) !important;border-radius:14px !important;padding:10px 11px !important;background:#f7fbf8 !important;min-width:0 !important;box-sizing:border-box !important}
+.weatherIcon{grid-row:1 / span 2 !important;font-size:22px !important;line-height:1 !important}
+.weatherLabel{font-size:.74rem !important;color:#5f6875 !important;font-weight:600 !important;line-height:1.1 !important}
+.weatherValue b{font-size:1.02rem !important;color:#1f5d3d !important;line-height:1.15 !important;white-space:nowrap !important}
+.weatherStatus,.weatherSource{display:none !important}
+@media (max-width:420px){.weatherGrid{gap:8px !important}.weatherValue{padding:9px 10px !important}.weatherIcon{font-size:20px !important}.weatherLabel{font-size:.7rem !important}.weatherValue b{font-size:.98rem !important}}
