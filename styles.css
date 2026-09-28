@@ -1833,3 +1833,34 @@ body:has(#home.active) > nav {
     max-height: 104px !important;
   }
 }
+
+/* =========================================================
+   UNTERKATEGORIEN – kein "Baustelle" oben
+   Die Startseite bleibt unverändert.
+   ========================================================= */
+
+/* Den globalen oberen "Baustelle / Tagelohnnachweis / +"-Balken
+   auf allen Unterseiten ausblenden. */
+body:has(.screen.active:not(#home)) > header {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Die alten "Baustellen"-Zurück-Buttons oben in den Unterkategorien
+   werden nicht mehr angezeigt. Unten gibt es bereits Startseite/Zurück. */
+body:has(.screen.active:not(#home)) #homeFromServices,
+body:has(.screen.active:not(#home)) #homeFromEmployees,
+body:has(.screen.active:not(#home)) #homeFromCustomers,
+body:has(.screen.active:not(#home)) #backToEditorFromSummary,
+body:has(.screen.active:not(#home)) #backToSummary {
+  display: none !important;
+}
+
+/* Dadurch bleibt der jeweilige Titel sauber links stehen. */
+body:has(.screen.active:not(#home)) .title {
+  justify-content: flex-start !important;
+}
