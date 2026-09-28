@@ -618,7 +618,6 @@ $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMa
 $('archiveBtn').onclick=()=>{archiveSelectedContractor=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedContractor){archiveSelectedContractor=null;render();}else show('tagelohnHome')};$('customersBtn').onclick=openCustomers;$('homeFromCustomers').onclick=()=>show('tagelohnHome');
 $('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;$('homeFromServices').onclick=()=>show('tagelohnHome');$('addService').onclick=addService;$('employeesBtn').onclick=openEmployees;$('homeFromEmployees').onclick=()=>show('tagelohnHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
-}show(b.dataset.s)});
 $('date').addEventListener('change',syncDateDisplay);
 syncDateDisplay();
 persistCustomers();persistServices();persistEmployees();renderCustomerSelect('');save();
