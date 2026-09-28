@@ -693,9 +693,28 @@ window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector
 document.getElementById('navStart')?.addEventListener('click',()=>show('home'));
 document.getElementById('navBack')?.addEventListener('click',()=>{
   const current=document.querySelector('.screen.active')?.id;
+
+  // Im Nachweis-Archiv immer genau eine Ebene zurück:
+  // Nachweis -> Bauvorhaben -> Kunde -> Tagelohn-Startseite.
+  if(current==='archive'){
+    if(archiveSelectedProject){
+      archiveSelectedProject=null;
+      render();
+      show('archive');
+      return;
+    }
+    if(archiveSelectedContractor){
+      archiveSelectedContractor=null;
+      render();
+      show('archive');
+      return;
+    }
+    show('tagelohnHome');
+    return;
+  }
+
   const backTargets={
     tagelohnHome:'home',
-    archive:'tagelohnHome',
     customers:'tagelohnHome',
     services:'tagelohnHome',
     employeeManager:'tagelohnHome',
@@ -704,6 +723,5 @@ document.getElementById('navBack')?.addEventListener('click',()=>{
     signatureScreen:'summaryScreen',
     tagesbericht:'home'
   };
-  const target=backTargets[current] || 'tagelohnHome';
-  show(target);
+  show(backTargets[current] || 'tagelohnHome');
 });
