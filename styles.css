@@ -2297,3 +2297,14 @@ body:has(.screen.active:not(#home)) .title {
 @media(max-width:600px){
   #appNav button { flex-basis:135px !important; }
 }
+
+
+/* v19: Tagelohn-Navigation exakt wie bisher, aber mit grünem Hintergrund */
+body.tagelohn-clean #appNav button {
+  background:#eaf7ee !important;
+  border-color:#b9dfc5 !important;
+  color:#2f7d4a !important;
+}
+body.tagelohn-clean #appNav button small {
+  color:#2f7d4a !important;
+}
