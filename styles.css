@@ -2105,3 +2105,25 @@ body:has(.screen.active:not(#home)) .title {
   flex: 1;
   min-width: 0;
 }
+
+/* V4: Archiv ohne Zusatzhinweis und ohne Symbole */
+#archive .archiveHint,
+#archive .archiveHint:empty {
+  display: none !important;
+}
+
+#archive .customerArchiveIcon,
+#archive .projectSelectIcon {
+  display: none !important;
+}
+
+#archive .customerArchiveButton,
+#archive .projectSelectButton {
+  gap: 18px;
+}
+
+#archive .customerArchiveButton > span,
+#archive .projectSelectButton > span {
+  flex: 1;
+  min-width: 0;
+}
