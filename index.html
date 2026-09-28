@@ -66,20 +66,9 @@
 <section id="tagesberichtEmployees" class="screen reportDesign">
 <div class="moduleHeader"><div><h2>Mitarbeiter</h2></div></div>
 <div class="panel reportHeaderPanel">
-  <h2>Mitarbeiter auswählen</h2>
-  <label>Mitarbeiter
-    <select id="reportEmployeeSelect" aria-label="Mitarbeiter auswählen"></select>
-  </label>
-  <label>Funktion
-    <select id="reportEmployeeRoleSelect" aria-label="Funktion auswählen">
-      <option value="">— Funktion auswählen —</option>
-      <option>Vorarbeiter</option>
-      <option>Facharbeiter</option>
-      <option>Maschinist</option>
-      <option>LKW</option>
-      <option>Praktikant</option>
-    </select>
-  </label>
+  <h2>Mitarbeiter</h2>
+  <div id="reportEmployeeEntries" class="reportEmployeeEntries"></div>
+  <button id="reportAddEmployee" type="button" class="secondary reportAddEmployee">＋ Mitarbeiter</button>
   <button id="reportEmployeeNext" class="primary reportNextButton">Weiter</button>
 </div>
 </section>

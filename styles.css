@@ -2396,3 +2396,18 @@ body.tagelohn-clean #appNav button small {
 #tagesberichtEmployees .reportHeaderPanel{padding-bottom:22px}
 #tagesberichtEmployees label{font-size:15px;font-weight:700;color:#5f6872}
 #tagesberichtEmployees select{font-size:17px;font-weight:600;min-height:52px;background:#f8f9fa}
+
+/* Tagesbericht – Mitarbeiter wie im Tagelohn: Mitarbeiter + Funktion + Zeiten + Gesamt */
+.reportEmployeeEntries{display:grid;gap:14px;margin-top:4px}
+.reportEmployeeCard{position:relative;border:1px solid #d9dee4;border-radius:18px;background:#f8fafb;padding:16px 14px 14px;box-sizing:border-box}
+.reportEmployeeTitle{font-size:18px;font-weight:800;color:#1f2732;margin:0 0 12px}
+.reportEmployeeCard label{display:block;margin:0 0 12px}
+.reportEmployeeCard select,.reportEmployeeCard input{width:100%;box-sizing:border-box;min-height:50px;border:1px solid #cfd6dd;border-radius:12px;background:#fff;padding:10px 12px;font-size:16px;font-weight:600;color:#1f2732}
+.reportEmployeeCard .reportTimeGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:2px}
+.reportEmployeeCard .reportTimeGrid label{font-size:12px;font-weight:700;color:#5f6875}
+.reportEmployeeCard .reportTimeGrid select{margin-top:5px;padding-left:8px;padding-right:8px}
+.reportEmployeeCard .reportHoursLabel{font-size:12px;font-weight:700;color:#5f6875;margin-bottom:0}
+.reportEmployeeCard .reportHours{background:#eef7f0;color:#1f5d3d;font-weight:800}
+.reportEmployeeDelete{position:absolute;right:10px;top:10px;width:32px;height:32px;border:0;border-radius:50%;background:#fff;color:#7b838d;font-size:22px;line-height:1;cursor:pointer}
+.reportAddEmployee{width:100%;min-height:50px;margin-top:12px;border:1px solid rgba(31,93,61,.25);border-radius:14px;background:#f1f8f3;color:#1f5d3d;font-size:17px;font-weight:800}
+@media(max-width:420px){.reportEmployeeCard{padding:15px 12px 12px}.reportEmployeeCard .reportTimeGrid{gap:6px}.reportEmployeeCard .reportTimeGrid select{font-size:14px;padding-left:6px;padding-right:6px}}

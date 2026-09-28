@@ -175,16 +175,65 @@ async function loadReportWeather(){
   }
 }
 
-function renderReportEmployeeSelect(selected=''){
-  const s=$('reportEmployeeSelect');
-  if(!s)return;
-  s.innerHTML='<option value="">— Mitarbeiter auswählen —</option>'+employees.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
-  s.value=employees.includes(selected)?selected:'';
+let reportEmployeeEntries=[];
+const reportEmployeeRoles=['Vorarbeiter','Facharbeiter','Maschinist','LKW','Praktikant'];
+function reportEmployeeOptions(selected=''){
+  return '<option value="">— Mitarbeiter auswählen —</option>'+employees.map(e=>`<option value="${esc(e)}"${e===selected?' selected':''}>${esc(e)}</option>`).join('');
+}
+function reportRoleOptions(selected=''){
+  return '<option value="">— Funktion auswählen —</option>'+reportEmployeeRoles.map(r=>`<option value="${esc(r)}"${r===selected?' selected':''}>${esc(r)}</option>`).join('');
+}
+function reportTimeOptions(selected=''){
+  return timeOptions(selected);
+}
+function reportPauseOptions(selected=0){
+  return pauseOptions(selected);
+}
+function calcReportEmployeeCard(card){
+  const s=card.querySelector('.reportStart')?.value||'', e=card.querySelector('.reportEnd')?.value||'', p=+(card.querySelector('.reportPause')?.value||0);
+  const out=card.querySelector('.reportHours');
+  if(!out)return;
+  if(s&&e){
+    const a=s.split(':').map(Number), b=e.split(':').map(Number);
+    const m=b[0]*60+b[1]-a[0]*60-a[1]-p;
+    out.value=m>=0?(m/60).toFixed(2):'';
+  }else out.value='';
+}
+function addReportEmployee(entry={}){
+  const wrap=$('reportEmployeeEntries');
+  if(!wrap)return;
+  const d=document.createElement('div'); d.className='reportEmployeeCard';
+  d.innerHTML=`<button type="button" class="reportEmployeeDelete" aria-label="Mitarbeiter entfernen">×</button>
+    <div class="reportEmployeeTitle">Mitarbeiter</div>
+    <label>Mitarbeiter<select class="reportName" aria-label="Mitarbeiter auswählen">${reportEmployeeOptions(entry.name||'')}</select></label>
+    <label>Funktion<select class="reportRole" aria-label="Funktion auswählen">${reportRoleOptions(entry.role||'')}</select></label>
+    <div class="grid grid3 reportTimeGrid">
+      <label>Arbeitsbeginn<select class="reportStart timeSelect" aria-label="Arbeitsbeginn auswählen">${reportTimeOptions(entry.start||'')}</select></label>
+      <label>Arbeitsende<select class="reportEnd timeSelect" aria-label="Arbeitsende auswählen">${reportTimeOptions(entry.end||'')}</select></label>
+      <label>Pause<select class="reportPause" aria-label="Pause auswählen">${reportPauseOptions(entry.pause??0)}</select></label>
+    </div>
+    <label class="reportHoursLabel">Gesamt (Std.)<input class="reportHours" type="number" step="0.25" readonly value="${entry.hours??''}"></label>`;
+  d.querySelector('.reportEmployeeDelete').onclick=()=>{d.remove(); if(!document.querySelector('#reportEmployeeEntries .reportEmployeeCard')) addReportEmployee();};
+  ['reportStart','reportEnd','reportPause'].forEach(c=>d.querySelector('.'+c).oninput=()=>calcReportEmployeeCard(d));
+  wrap.appendChild(d);
+  calcReportEmployeeCard(d);
 }
 function initTagesberichtEmployees(){
-  renderReportEmployeeSelect();
-  const role=$('reportEmployeeRoleSelect');
-  if(role && !role.value) role.value='';
+  const wrap=$('reportEmployeeEntries');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  reportEmployeeEntries=[];
+  addReportEmployee();
+}
+function collectReportEmployees(){
+  return [...document.querySelectorAll('#reportEmployeeEntries .reportEmployeeCard')].map(d=>({
+    name:d.querySelector('.reportName')?.value||'',
+    role:d.querySelector('.reportRole')?.value||'',
+    start:d.querySelector('.reportStart')?.value||'',
+    end:d.querySelector('.reportEnd')?.value||'',
+    pause:+(d.querySelector('.reportPause')?.value||0),
+    hours:+(d.querySelector('.reportHours')?.value||0)
+  })).filter(e=>e.name||e.role||e.start||e.end);
 }
 
 function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
@@ -846,7 +895,8 @@ $('openCustomersGlobal').onclick=openCustomers;
 $('openEmployeesGlobal').onclick=openEmployees;
 $('openTagesbericht').onclick=()=>{initTagesbericht();show('tagesbericht')};
 $('reportNext')?.addEventListener('click',()=>{initTagesberichtEmployees();show('tagesberichtEmployees')});
-$('reportEmployeeNext')?.addEventListener('click',()=>{const employee=$('reportEmployeeSelect')?.value;const role=$('reportEmployeeRoleSelect')?.value;if(!employee||!role){alert('Bitte Mitarbeiter und Funktion auswählen.');return;}show('tagesberichtEmployees')});
+$('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
+$('reportEmployeeNext')?.addEventListener('click',()=>{const entries=collectReportEmployees();if(!entries.length||entries.some(e=>!e.name||!e.role||!e.start||!e.end)){alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.');return;}reportEmployeeEntries=entries;show('tagesberichtEmployees')});
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
