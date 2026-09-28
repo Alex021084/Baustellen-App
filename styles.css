@@ -1320,3 +1320,121 @@ body.home-screen #home.active .welcome h2 {
     font-size:16px !important;
   }
 }
+
+/* === TAGELohn-HOME: alles auf einen Bildschirm, kein Scrollen === */
+body:has(#tagelohnHome.active) {
+  overflow:hidden !important;
+}
+#tagelohnHome.active {
+  height:calc(100dvh - 70px - env(safe-area-inset-bottom)) !important;
+  min-height:0 !important;
+  max-height:calc(100dvh - 70px - env(safe-area-inset-bottom)) !important;
+  overflow:hidden !important;
+}
+#tagelohnHome.active .moduleHeader {
+  margin-bottom:12px !important;
+}
+#tagelohnHome.active .moduleHeader h2 {
+  font-size:26px !important;
+}
+#tagelohnHome.active .primary.big {
+  height:66px !important;
+  min-height:66px !important;
+  margin-bottom:10px !important;
+}
+#tagelohnHome.active .cards {
+  gap:9px !important;
+}
+#tagelohnHome.active .cards .card {
+  min-height:0 !important;
+  height:78px !important;
+  padding:13px 16px !important;
+  border:1px solid #e0e4e8 !important;
+  box-shadow:0 3px 12px rgba(23,35,47,.045) !important;
+}
+#tagelohnHome.active .cards .card b {
+  font-size:18px !important;
+}
+#tagelohnHome.active .cards .card small {
+  font-size:13px !important;
+}
+#tagelohnHome.active .cards .card:first-child {
+  background:#fff !important;
+}
+
+/* === Baustellen / Kundenauswahl === */
+#archive .archiveHint {
+  color:#727b86;
+  font-size:15px;
+  margin:-4px 0 16px;
+}
+#archive .archiveSelectHeading {
+  margin:4px 0 10px;
+}
+#archive .archiveSelectHeading strong {
+  display:block;
+  font-size:18px;
+  color:#17212b;
+}
+#archive .archiveSelectHeading small {
+  display:block;
+  color:#7a838c;
+  margin-top:3px;
+}
+.customerArchiveButton {
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  text-align:left;
+  border:1px solid #dde2e6;
+  background:#fff;
+  border-radius:20px;
+  padding:16px;
+  margin:10px 0;
+  box-shadow:0 5px 16px rgba(23,35,47,.045);
+  color:#17212b;
+}
+.customerArchiveIcon {
+  width:52px;
+  height:52px;
+  min-width:52px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  background:#eef1f4;
+  color:#17212b;
+  font-size:25px;
+}
+.customerArchiveButton span:nth-child(2) {
+  flex:1;
+  min-width:0;
+}
+.customerArchiveButton strong {
+  display:block;
+  font-size:18px;
+  line-height:1.2;
+}
+.customerArchiveButton small {
+  display:block;
+  color:#7a838c;
+  margin-top:4px;
+  font-size:14px;
+}
+.customerArchiveButton > b {
+  color:#8d969e;
+  font-size:34px;
+  font-weight:300;
+}
+@media(max-width:600px){
+  #tagelohnHome.active {
+    height:calc(100dvh - 70px - env(safe-area-inset-bottom)) !important;
+    padding:18px 20px 8px !important;
+  }
+  #tagelohnHome.active .moduleHeader h2 {font-size:24px !important}
+  #tagelohnHome.active .moduleHeader small {font-size:10px !important}
+  #tagelohnHome.active .primary.big {height:60px !important;min-height:60px !important;font-size:18px !important}
+  #tagelohnHome.active .cards .card {height:72px !important;padding:11px 14px !important}
+  #tagelohnHome.active .cards .card b {font-size:17px !important}
+  #tagelohnHome.active .cards .card small {font-size:12px !important}
+}
