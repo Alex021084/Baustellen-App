@@ -2323,3 +2323,22 @@ body.tagelohn-clean #appNav button small {
 #openTagesbericht{background:#eaf3ff !important;border-color:#b8d3f2 !important;color:#3c6f9f !important}
 #openCustomersGlobal{background:#eef8f1 !important;border-color:#b9dfc5 !important;color:#2f7d4a !important}
 #openEmployeesGlobal{background:#f4effa !important;border-color:#d8c8e8 !important;color:#76508f !important}
+
+
+/* Startseite: jedes Auswahlfeld hat ein sichtbares Symbol */
+.startChoice .startIcon{
+  width:74px !important;
+  height:74px !important;
+  min-width:74px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:22px !important;
+  background:#e9edf0 !important;
+  font-size:38px !important;
+  line-height:1 !important;
+}
+.startChoice .startIcon svg{
+  width:46px !important;
+  height:46px !important;
+}

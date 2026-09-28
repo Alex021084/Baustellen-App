@@ -66,7 +66,7 @@ function renderReportProjectSelect(selectedProject=''){
   const c=customers.find(x=>x.id===$('reportCustomerSelect')?.value);
   const projects=Array.isArray(c?.projects)?c.projects:[];
   s.innerHTML='<option value="">— Bauvorhaben auswählen —</option>'+
-    projects.map(p=>`<option value="${esc(p)}">${esc(cleanCustomerDisplayName(c.name)+' - '+p)}</option>`).join('');
+    projects.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
   s.value=projects.includes(selectedProject)?selectedProject:'';
 }
 function initTagesbericht(){
