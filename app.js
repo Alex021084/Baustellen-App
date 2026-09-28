@@ -741,6 +741,7 @@ $('openCustomersGlobal').onclick=openCustomers;
 $('openEmployeesGlobal').onclick=openEmployees;
 $('openTagesbericht').onclick=()=>{initTagesbericht();show('tagesbericht')};
 $('backToStartFromTagelohn').onclick=()=>show('home');
+$('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
 $('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show('home');
