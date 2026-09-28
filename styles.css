@@ -2317,3 +2317,9 @@ body.tagelohn-clean #appNav button small {
 .reportHeaderPanel input[type="text"]{
   width:100%;
 }
+
+/* Dezente Farbakzente auf der gemeinsamen Startseite */
+#openTagelohn{background:#fff3d9 !important;border-color:#f0c36a !important;color:#9a6500 !important}
+#openTagesbericht{background:#eaf3ff !important;border-color:#b8d3f2 !important;color:#3c6f9f !important}
+#openCustomersGlobal{background:#eef8f1 !important;border-color:#b9dfc5 !important;color:#2f7d4a !important}
+#openEmployeesGlobal{background:#f4effa !important;border-color:#d8c8e8 !important;color:#76508f !important}
