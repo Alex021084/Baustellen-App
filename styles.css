@@ -1237,3 +1237,69 @@ body.tagelohn-home #tagelohnHome .cards {
 @media(max-width:600px){
   #appNav button{max-width:150px}
 }
+
+/* =========================================================
+   TAGELohn-STARTSEITE – exakt bereinigt
+   Nur der Button "Neuer Tagelohn" oben.
+   Keine alte Kopfzeile, kein "Start"-Button, kein Seitentitel.
+   Unten bleiben nur Startseite + Zurück.
+   ========================================================= */
+
+/* Alte globale Kopfzeile entfernen, sobald tagelohnHome aktiv ist. */
+body:has(#tagelohnHome.active) > header {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Alte Modul-Kopfzeile komplett entfernen. */
+body:has(#tagelohnHome.active) #tagelohnHome > .moduleHeader {
+  display: none !important;
+}
+
+/* Auch der alte "Start"-Button wird nicht mehr benötigt. */
+body:has(#tagelohnHome.active) #backToStartFromTagelohn {
+  display: none !important;
+}
+
+/* Der neue Tagelohn-Button steht ganz oben. */
+body:has(#tagelohnHome.active) #tagelohnHome {
+  padding-top: 16px !important;
+  background: #f7f8f9 !important;
+}
+
+body:has(#tagelohnHome.active) #tagelohnHome #new2 {
+  display: block !important;
+  width: calc(100% - 40px) !important;
+  margin: 0 20px 18px !important;
+  min-height: 62px !important;
+  border-radius: 18px !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+}
+
+/* Karten direkt unter dem einzigen oberen Button. */
+body:has(#tagelohnHome.active) #tagelohnHome .cards {
+  padding-top: 0 !important;
+}
+
+/* Keine vierteilige alte Navigation – nur die vorhandene 2er-Navigation. */
+body:has(#tagelohnHome.active) #appNav {
+  display: flex !important;
+}
+
+/* Mobile: keine unnötige zusätzliche Höhe. */
+@media (max-width: 600px) {
+  body:has(#tagelohnHome.active) #tagelohnHome {
+    padding-top: 12px !important;
+  }
+  body:has(#tagelohnHome.active) #tagelohnHome #new2 {
+    width: calc(100% - 32px) !important;
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+    min-height: 58px !important;
+  }
+}
