@@ -693,6 +693,17 @@ window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector
 document.getElementById('navStart')?.addEventListener('click',()=>show('home'));
 document.getElementById('navBack')?.addEventListener('click',()=>{
   const current=document.querySelector('.screen.active')?.id;
-  if(current==='tagelohnHome') show('home');
-  else show(previousScreen && previousScreen!==current ? previousScreen : 'tagelohnHome');
+  const backTargets={
+    tagelohnHome:'home',
+    archive:'tagelohnHome',
+    customers:'tagelohnHome',
+    services:'tagelohnHome',
+    employeeManager:'tagelohnHome',
+    editor:'tagelohnHome',
+    summaryScreen:'editor',
+    signatureScreen:'summaryScreen',
+    tagesbericht:'home'
+  };
+  const target=backTargets[current] || 'tagelohnHome';
+  show(target);
 });
