@@ -993,29 +993,97 @@ function tagesberichtPdfFilename(data){
 async function createTagesberichtPdf(data){
   if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
-  const pdf=await PDFDocument.create();
-  const normal=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-  let page=pdf.addPage([595,842]), W=595,H=842;
-  let y=800;
-  const margin=42, maxW=W-margin*2;
-  const text=(txt,size=10,font=normal,x=margin)=>{page.drawText(String(txt||''),{x,y,size,font});y-=size+6};
-  const line=()=>{page.drawLine({start:{x:margin,y},end:{x:W-margin,y},thickness:1,color:rgb(.82,.84,.86)});y-=12};
-  const section=(title)=>{if(y<90){page=pdf.addPage([595,842]);y=800} page.drawText(title,{x:margin,y,size:14,font:bold});y-=24};
-  const wrap=(txt,size=10,font=normal)=>{const words=String(txt||'').split(/\s+/).filter(Boolean);let l='';for(const w of words){const t=l?l+' '+w:w;if(font.widthOfTextAtSize(t,size)>maxW){text(l,size,font);l=w}else l=t}if(l)text(l,size,font)};
-  page.drawText('Tagesbericht',{x:margin,y,size:22,font:bold});y-=34;
-  text(formatDate(data.date),11,normal); text(data.customer,11,bold); text(data.project,11,bold); y-=4; line();
-  section('Wetter'); text(`Temperatur: ${data.temperature}`,10); text(`Niederschlag: ${data.precipitation}`,10); y-=4;
-  section('Mitarbeiter');
-  data.employees.forEach(e=>{wrap(`${e.name} – ${e.role} – ${e.start} bis ${e.end} – ${e.pause?e.pause+' Min. Pause':'keine Pause'} – ${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.`,10);});
-  section('Ausgeführte Arbeiten'); data.works.forEach(v=>wrap('• '+v,10)); if(!data.works.length)text('Keine Angaben.',10);
-  section('Materiallieferung'); data.materials.forEach(v=>wrap('• '+v,10)); if(!data.materials.length)text('Keine Angaben.',10);
-  if(y<170){page=pdf.addPage([595,842]);y=800}
-  section('Unterschrift Auftraggeber'); text(data.signerName||'Name nicht angegeben',10); y-=8;
-  if(data.signature&&data.signature.length>100){const sig=await pdf.embedPng(data.signature);page.drawImage(sig,{x:margin,y:y-95,width:260,height:90});y-=110}
-  const out=await pdf.save({useObjectStreams:false});
-  const blob=new Blob([out],{type:'application/pdf'}), filename=tagesberichtPdfFilename(data);
-  if(navigator.share&&navigator.canShare){const file=new File([blob],filename,{type:'application/pdf'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}}
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);return true;
+  try{
+    const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.load(bytes);
+    const page=pdf.getPages()[0];
+    const W=page.getWidth(), H=page.getHeight();
+    const normal=await pdf.embedFont(StandardFonts.Helvetica);
+    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
+
+    const black=rgb(0.06,0.06,0.06);
+    const drawFit=(txt,x,y,maxW,size=9,font=normal)=>{
+      txt=String(txt??'').trim();
+      if(!txt)return;
+      let s=size;
+      while(s>6 && font.widthOfTextAtSize(txt,s)>maxW)s-=0.25;
+      page.drawText(txt,{x,y,size:s,font,color:black});
+    };
+    const drawWrapped=(txt,x,y,maxW,size=8.8,maxLines=8)=>{
+      const words=String(txt||'').split(/\s+/).filter(Boolean);
+      let line='', lines=[];
+      for(const w of words){
+        const t=line?line+' '+w:w;
+        if(normal.widthOfTextAtSize(t,size)<=maxW) line=t;
+        else { if(line)lines.push(line); line=w; }
+      }
+      if(line)lines.push(line);
+      lines.slice(0,maxLines).forEach((ln,i)=>drawFit(ln,x,y-i*13,maxW,size,normal));
+      return Math.min(lines.length,maxLines);
+    };
+
+    // Datum
+    drawFit(formatDate(data.date),266,H-112,140,10,normal);
+
+    // Bauvorhaben
+    drawFit(data.project||'',199,H-292,300,9.5,normal);
+
+    // Wetter – nur die Werte, die die App tatsächlich kennt.
+    drawFit(data.temperature||'—',180,H-332,105,9.5,normal);
+    drawFit(data.precipitation||'—',172,H-360,120,9.5,normal);
+
+    // Mitarbeiter – die Vorlage hat vier freie Zeilen unter den drei Beispielzeilen.
+    const employees=(data.employees||[]).slice(0,7);
+    const rowTops=[427,447,467,487,507,527,547];
+    employees.forEach((e,i)=>{
+      const y=H-rowTops[i];
+      drawFit(e.name||'',64,y,100,8.8,normal);
+      drawFit(e.role||'',172,y,68,8.5,normal);
+      if(e.start)drawFit(e.start,270,y,45,8.8,normal);
+      if(e.end)drawFit(e.end,360,y,45,8.8,normal);
+      if(e.pause)drawFit(String(e.pause),437,y,45,8.5,normal);
+      if(Number(e.hours)>0)drawFit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',500,y,60,8.5,normal);
+    });
+
+    // Ausgeführte Arbeiten
+    const works=(data.works||[]).slice(0,12);
+    works.forEach((v,i)=>{
+      const y=H-(603+i*15);
+      drawWrapped('• '+v,64,y,285,8.5,2);
+    });
+
+    // Materiallieferungen
+    const materials=(data.materials||[]).slice(0,12);
+    materials.forEach((v,i)=>{
+      const y=H-(603+i*15);
+      drawWrapped('• '+v,385,y,165,8.2,2);
+    });
+
+    // Unterschrift: die Vorlage selbst enthält die Beschriftung und Linie.
+    if(data.signature&&data.signature.length>100){
+      const sig=await pdf.embedPng(data.signature);
+      page.drawImage(sig,{x:70,y:48,width:220,height:82,opacity:1});
+    }
+
+    const out=await pdf.save({useObjectStreams:false});
+    const blob=new Blob([out],{type:'application/pdf'});
+    const filename=tagesberichtPdfFilename(data);
+
+    if(navigator.share&&navigator.canShare){
+      const file=new File([blob],filename,{type:'application/pdf'});
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    return true;
+  }catch(err){
+    console.error(err);
+    if(err?.name==='AbortError')return false;
+    alert('PDF konnte nicht erstellt werden: '+err.message);
+    return false;
+  }
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
