@@ -95,19 +95,6 @@ function setReportWeather(temp='—', precipitation='—', status=''){
 function normalizeAddress(address){
   return String(address||'').replaceAll('\n',' ').replace(/\s+/g,' ').trim();
 }
-async function getCurrentDeviceLocation(){
-  if(!('geolocation' in navigator)) throw new Error('Standort des Handys wird von diesem Browser nicht unterstützt');
-  return await new Promise((resolve,reject)=>{
-    navigator.geolocation.getCurrentPosition(
-      pos=>resolve({latitude:pos.coords.latitude,longitude:pos.coords.longitude}),
-      err=>{
-        const msg=err?.code===1?'Standortfreigabe wurde nicht erlaubt.':err?.code===2?'Standort konnte nicht ermittelt werden.':'Standortabfrage ist fehlgeschlagen.';
-        reject(new Error(msg));
-      },
-      {enableHighAccuracy:true,timeout:12000,maximumAge:300000}
-    );
-  });
-}
 async function geocodeCustomerAddress(address){
   const q=normalizeAddress(address);
   if(!q)return null;
@@ -146,29 +133,20 @@ async function loadReportWeather(){
   const date=$('reportDate')?.value;
   const customerId=$('reportCustomerSelect')?.value;
   if(!date||!customerId){setReportWeather('—','—','');return;}
-  setReportWeather('…','…','Standort des Handys wird ermittelt …');
+  const customer=customers.find(c=>c.id===customerId);
+  if(!customer?.address){setReportWeather('—','—','Keine Anschrift für den Kunden hinterlegt.');return;}
+  setReportWeather('…','…','Wetterdaten werden geladen …');
   try{
-    let geo=null;
-    let locationLabel='Handy-Standort';
-    try{
-      geo=await getCurrentDeviceLocation();
-    }catch(locationErr){
-      const customer=customers.find(c=>c.id===customerId);
-      if(customer?.address){
-        setReportWeather('…','…','Handy-Standort nicht verfügbar – Anschrift wird versucht …');
-        geo=await geocodeCustomerAddress(customer.address);
-        locationLabel='Baustellenanschrift';
-      }else throw locationErr;
-    }
+    const geo=await geocodeCustomerAddress(customer.address);
     if(token!==weatherRequestToken)return;
-    if(!geo)throw new Error('Standort konnte nicht ermittelt werden');
+    if(!geo)throw new Error('Baustellenanschrift konnte nicht gefunden werden');
     const weather=await fetchDailyWeather(geo.latitude,geo.longitude,date);
     if(token!==weatherRequestToken)return;
     const min=Number.isFinite(weather.min)?Math.round(weather.min):null;
     const max=Number.isFinite(weather.max)?Math.round(weather.max):null;
     const temp=min!==null&&max!==null?`${min}–${max} °C`:max!==null?`${max} °C`:min!==null?`${min} °C`:'—';
     const precip=Number.isFinite(weather.precipitation)?`${weather.precipitation.toLocaleString('de-DE',{maximumFractionDigits:1})} mm`:'—';
-    setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`);
+    setReportWeather(temp,precip,`Automatisch für ${date.split('-').reverse().join('.')} geladen.`);
   }catch(err){
     if(token!==weatherRequestToken)return;
     setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.');
