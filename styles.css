@@ -2082,3 +2082,26 @@ body:has(.screen.active:not(#home)) .title {
     padding: 16px 18px;
   }
 }
+
+/* V3: keine Zusatzhinweise, keine Symbole bei Bauvorhaben */
+#archive .archiveHint:empty {
+  display: none !important;
+}
+
+#archive .projectSelectButton {
+  gap: 18px;
+}
+
+#archive .projectSelectIcon {
+  display: none !important;
+}
+
+#archive .projectSelectButton > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+#archive .projectSelectButton > span:first-child {
+  flex: 1;
+  min-width: 0;
+}

@@ -439,9 +439,7 @@ function render(){
   }
 
   if(hint){
-    hint.textContent = archiveSelectedProject
-      ? 'Nachweise dieses Bauvorhabens'
-      : (archiveSelectedContractor ? 'Bauvorhaben dieses Kunden' : '');
+    hint.textContent = '';
   }
 
   if(back){
