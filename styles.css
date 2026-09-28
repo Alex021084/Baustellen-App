@@ -2342,3 +2342,21 @@ body.tagelohn-clean #appNav button small {
   width:46px !important;
   height:46px !important;
 }
+
+
+/* Startseite: Text-/Emoji-Symbole sichtbar halten */
+#home.active .startChoice .startIcon {
+  font-size:36px !important;
+  line-height:1 !important;
+  color:#17212b !important;
+}
+#home.active .startChoicePrimary .startIcon {
+  color:#9a6500 !important;
+  font-size:36px !important;
+}
+#home.active #openCustomersGlobal .startIcon {
+  color:#2f7d4a !important;
+}
+#home.active #openEmployeesGlobal .startIcon {
+  color:#76508f !important;
+}
