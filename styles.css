@@ -2259,3 +2259,41 @@ body:has(.screen.active:not(#home)) .title {
     flex-basis:135px !important;
   }
 }
+
+
+/* Finale Navigation: exakt wie Tagelohn, nur farbig */
+#appNav {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:12px !important;
+  height:68px !important;
+  padding:8px 18px !important;
+  background:#fff !important;
+  border-top:1px solid #dfe3e7 !important;
+}
+#appNav button {
+  display:flex !important;
+  flex:0 0 145px !important;
+  height:50px !important;
+  min-height:50px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  padding:0 !important;
+  border:1px solid #b9dfc5 !important;
+  border-radius:15px !important;
+  background:#eaf7ee !important;
+  color:#2f7d4a !important;
+  font-size:25px !important;
+  font-weight:600 !important;
+  box-shadow:none !important;
+}
+#appNav button small {
+  font-size:15px !important;
+  font-weight:700 !important;
+  color:#2f7d4a !important;
+}
+@media(max-width:600px){
+  #appNav button { flex-basis:135px !important; }
+}
