@@ -2441,3 +2441,10 @@ body.tagelohn-clean #appNav button small {
 .reportSignatureRow button{white-space:nowrap}
 .reportSignatureRow input{min-width:0;flex:1}
 @media(max-width:520px){.reportSummaryGrid{grid-template-columns:1fr}.reportSummaryGrid .wide{grid-column:auto}.reportSignatureRow{flex-direction:column;align-items:stretch}.reportSignatureRow input{width:100%;box-sizing:border-box}}
+
+
+/* v21: Tagesbericht – klare Abschlussaktionen */
+#tagesberichtWorks .reportNextButton{margin-top:18px;}
+.reportFinalActions{display:grid;gap:10px;margin-top:2px}
+.reportFinalActions .reportNextButton{margin-top:0}
+#tagesberichtSummary .reportSignaturePanel{padding-bottom:24px}

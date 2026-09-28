@@ -966,13 +966,20 @@ function renderTagesberichtSummary(){
     <div class="reportSummarySection"><h3>Ausgeführte Arbeiten</h3>${list(d.works)}</div>
     <div class="reportSummarySection"><h3>Materiallieferung</h3>${list(d.materials)}</div>`;
 }
-function saveTagesberichtAndPdf(){
-  if(!hasReportSignature()){alert('Bitte zuerst unterschreiben.');return;}
+function saveTagesbericht(){
+  if(!hasReportSignature()){alert('Bitte zuerst unterschreiben.');return false;}
   const data=collectTagesbericht();
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
-  reportsSaved.unshift({...data,signed:true,signedAt:new Date().toISOString()});
+  const key=(data.date||'')+'|'+(data.customer||'')+'|'+(data.project||'');
+  const idx=reportsSaved.findIndex(r=>((r.date||'')+'|'+(r.customer||'')+'|'+(r.project||''))===key);
+  const saved={...data,signed:true,signedAt:new Date().toISOString()};
+  if(idx>=0) reportsSaved[idx]=saved; else reportsSaved.unshift(saved);
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
-  createTagesberichtPdf(data).then(ok=>{if(ok)alert('Bericht gespeichert und PDF erstellt.');});
+  return true;
+}
+function saveTagesberichtAndPdf(){
+  if(!saveTagesbericht()) return;
+  createTagesberichtPdf(collectTagesbericht()).then(ok=>{if(ok)alert('PDF erstellt.');});
 }
 function tagesberichtPdfFilename(data){
   const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
@@ -1027,6 +1034,7 @@ $('reportAddWork')?.addEventListener('click',()=>addReportListEntry('reportWorks
 $('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportMaterialsEntries'));
 $('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();clearReportSignature();$('reportSignerName').value='';show('tagesberichtSummary',{replaceHistory:false})});
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
+$('saveReport')?.addEventListener('click',()=>{if(saveTagesbericht())alert('Bericht gespeichert.');});
 $('saveReportAndPdf')?.addEventListener('click',saveTagesberichtAndPdf);
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));

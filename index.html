@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=nav-green-20"></head><body>
+<link rel="stylesheet" href="styles.css?v=nav-green-21"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -84,7 +84,7 @@
   <h2>Materiallieferung</h2>
   <div id="reportMaterialsEntries" class="reportListEntries"></div>
   <button id="reportAddMaterial" type="button" class="secondary reportAddEntry">＋ Materiallieferung hinzufügen</button>
-  <button id="reportWorksNext" type="button" class="primary reportNextButton">Weiter</button>
+  <button id="reportWorksNext" type="button" class="primary reportNextButton">Zusammenfassung</button>
 </div>
 </section>
 
@@ -99,7 +99,7 @@
   <p class="hint">Bitte den Bericht nach der Prüfung unterschreiben.</p>
   <canvas id="reportSig" width="900" height="300" aria-label="Unterschrift Auftraggeber"></canvas>
   <div class="reportSignatureRow"><button id="clearReportSig" type="button">Unterschrift löschen</button><input id="reportSignerName" placeholder="Name (optional)" aria-label="Name des Unterzeichners"></div>
-  <button id="saveReportAndPdf" type="button" class="primary reportNextButton">Bericht speichern und als PDF ausgeben</button>
+  <div class="reportFinalActions"><button id="saveReport" type="button" class="secondary reportNextButton">Bericht speichern</button><button id="saveReportAndPdf" type="button" class="primary reportNextButton">PDF erstellen</button></div>
 </div>
 </section>
 
