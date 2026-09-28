@@ -1812,3 +1812,24 @@ body:has(#home.active) > nav {
     padding: 10px 13px !important;
   }
 }
+
+/* Startseite: Logo etwas größer, ohne zusätzlichen Platzbedarf zu erzeugen. */
+#home.active .companyLogoWrap {
+  height: clamp(115px, 20dvh, 160px) !important;
+  min-height: 115px !important;
+}
+
+#home.active .companyLogo {
+  width: min(92vw, 570px) !important;
+  max-height: clamp(115px, 19.5dvh, 155px) !important;
+}
+
+@media (max-height: 700px) {
+  #home.active .companyLogoWrap {
+    height: 108px !important;
+    min-height: 108px !important;
+  }
+  #home.active .companyLogo {
+    max-height: 104px !important;
+  }
+}
