@@ -2411,3 +2411,13 @@ body.tagelohn-clean #appNav button small {
 .reportEmployeeDelete{position:absolute;right:10px;top:10px;width:32px;height:32px;border:0;border-radius:50%;background:#fff;color:#7b838d;font-size:22px;line-height:1;cursor:pointer}
 .reportAddEmployee{width:100%;min-height:50px;margin-top:12px;border:1px solid rgba(31,93,61,.25);border-radius:14px;background:#f1f8f3;color:#1f5d3d;font-size:17px;font-weight:800}
 @media(max-width:420px){.reportEmployeeCard{padding:15px 12px 12px}.reportEmployeeCard .reportTimeGrid{gap:6px}.reportEmployeeCard .reportTimeGrid select{font-size:14px;padding-left:6px;padding-right:6px}}
+
+
+/* Tagesbericht – Schritt 3: Ausgeführte Arbeiten und Materiallieferung */
+#tagesberichtWorks .reportHeaderPanel{padding-bottom:20px}
+#tagesberichtWorks .reportMaterialPanel{margin-top:14px}
+.reportListEntries{display:grid;gap:10px;margin-top:4px}
+.reportListEntry{display:grid;grid-template-columns:1fr 40px;gap:8px;align-items:center}
+.reportListEntry input{width:100%;box-sizing:border-box;min-height:50px;border:1px solid #cfd6dd;border-radius:12px;background:#fff;padding:10px 12px;font-size:16px;font-weight:600;color:#1f2732}
+.reportListDelete{width:40px;height:40px;border:1px solid #d9dee4;border-radius:12px;background:#f8fafb;color:#7b838d;font-size:22px;line-height:1;cursor:pointer}
+.reportAddEntry{width:100%;min-height:50px;margin-top:12px;border:1px solid rgba(31,93,61,.25);border-radius:14px;background:#f1f8f3;color:#1f5d3d;font-size:17px;font-weight:800}

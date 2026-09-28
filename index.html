@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=nav-green-18"></head><body>
+<link rel="stylesheet" href="styles.css?v=nav-green-20"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -70,6 +70,20 @@
   <div id="reportEmployeeEntries" class="reportEmployeeEntries"></div>
   <button id="reportAddEmployee" type="button" class="secondary reportAddEmployee">＋ Mitarbeiter</button>
   <button id="reportEmployeeNext" class="primary reportNextButton">Weiter</button>
+</div>
+</section>
+
+<section id="tagesberichtWorks" class="screen reportDesign">
+<div class="moduleHeader"><div><h2>Arbeiten &amp; Material</h2></div></div>
+<div class="panel reportHeaderPanel">
+  <h2>Ausgeführte Arbeiten</h2>
+  <div id="reportWorksEntries" class="reportListEntries"></div>
+  <button id="reportAddWork" type="button" class="secondary reportAddEntry">＋ Arbeit hinzufügen</button>
+</div>
+<div class="panel reportHeaderPanel reportMaterialPanel">
+  <h2>Materiallieferung</h2>
+  <div id="reportMaterialsEntries" class="reportListEntries"></div>
+  <button id="reportAddMaterial" type="button" class="secondary reportAddEntry">＋ Materiallieferung hinzufügen</button>
 </div>
 </section>
 

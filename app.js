@@ -225,6 +225,29 @@ function initTagesberichtEmployees(){
   reportEmployeeEntries=[];
   addReportEmployee();
 }
+
+let reportWorkEntries=[];
+let reportMaterialEntries=[];
+function addReportListEntry(containerId, value=''){
+  const wrap=$(containerId);
+  if(!wrap)return;
+  const row=document.createElement('div');
+  row.className='reportListEntry';
+  row.innerHTML=`<input type="text" value="${esc(value)}" placeholder="Eintrag eingeben..." aria-label="Eintrag"><button type="button" class="reportListDelete" aria-label="Eintrag entfernen">×</button>`;
+  row.querySelector('.reportListDelete').onclick=()=>row.remove();
+  wrap.appendChild(row);
+  row.querySelector('input').focus();
+}
+function initTagesberichtWorks(){
+  const works=$('reportWorksEntries'), materials=$('reportMaterialsEntries');
+  if(!works||!materials)return;
+  works.innerHTML=''; materials.innerHTML='';
+  (reportWorkEntries.length?reportWorkEntries:['']).forEach(v=>addReportListEntry('reportWorksEntries',v));
+  (reportMaterialEntries.length?reportMaterialEntries:['']).forEach(v=>addReportListEntry('reportMaterialsEntries',v));
+}
+function collectReportList(containerId){
+  return [...document.querySelectorAll(`#${containerId} input`)].map(x=>x.value.trim()).filter(Boolean);
+}
 function collectReportEmployees(){
   return [...document.querySelectorAll('#reportEmployeeEntries .reportEmployeeCard')].map(d=>({
     name:d.querySelector('.reportName')?.value||'',
@@ -893,10 +916,12 @@ $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('e
 $('openTagelohn').onclick=()=>show('tagelohnHome');
 $('openCustomersGlobal').onclick=openCustomers;
 $('openEmployeesGlobal').onclick=openEmployees;
-$('openTagesbericht').onclick=()=>{initTagesbericht();show('tagesbericht')};
+$('openTagesbericht').onclick=()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=['home']};
 $('reportNext')?.addEventListener('click',()=>{initTagesberichtEmployees();show('tagesberichtEmployees')});
 $('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
-$('reportEmployeeNext')?.addEventListener('click',()=>{const entries=collectReportEmployees();if(!entries.length||entries.some(e=>!e.name||!e.role||!e.start||!e.end)){alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.');return;}reportEmployeeEntries=entries;show('tagesberichtEmployees')});
+$('reportEmployeeNext')?.addEventListener('click',()=>{const entries=collectReportEmployees();if(!entries.length||entries.some(e=>!e.name||!e.role||!e.start||!e.end)){alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.');return;}reportEmployeeEntries=entries;initTagesberichtWorks();show('tagesberichtWorks')});
+$('reportAddWork')?.addEventListener('click',()=>addReportListEntry('reportWorksEntries'));
+$('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportMaterialsEntries'));
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
