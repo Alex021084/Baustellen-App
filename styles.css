@@ -2158,17 +2158,51 @@ body:has(.screen.active:not(#home)) .title {
 /* v10: clearer review/signature workflow */
 .signaturePanel{padding-bottom:22px}
 .signaturePanel .hint{margin-bottom:16px}
-.workflowStep{
-  display:flex;align-items:flex-start;gap:12px;
-  margin:18px 0 9px;
+.workflowItem{
+  border:1px solid #e2e5e9;
+  border-radius:16px;
+  padding:15px;
+  margin:14px 0 0;
+  background:#fafbfc;
 }
-.workflowStep>span{
-  flex:0 0 30px;width:30px;height:30px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:#fff1cf;color:#7a4b00;font-weight:800;
+.workflowHead{
+  display:flex;
+  align-items:center;
+  gap:11px;
 }
-.workflowStep b{display:block;font-size:18px}
-.workflowStep small{display:block;color:var(--muted);font-size:14px;line-height:1.35;margin-top:2px}
-.workflowButton{display:block;width:100%;margin:0 0 8px}
-.signaturePanel .signatureStatus{margin:10px 0 4px}
+.workflowHead>span{
+  flex:0 0 32px;
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff1cf;
+  color:#7a4b00;
+  font-weight:800;
+  font-size:16px;
+}
+.workflowHead b{
+  font-size:18px;
+  line-height:1.2;
+}
+.workflowItem p{
+  margin:8px 0 12px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.45;
+}
+.workflowButton{
+  display:block;
+  width:100%;
+  margin:0;
+}
+.signaturePanel .signatureStatus{
+  margin:0;
+}
 .signaturePanel + .actions{margin-top:0}
+@media(max-width:520px){
+  .workflowItem{padding:14px;margin-top:12px}
+  .workflowHead b{font-size:17px}
+}
