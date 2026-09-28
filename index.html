@@ -84,6 +84,22 @@
   <h2>Materiallieferung</h2>
   <div id="reportMaterialsEntries" class="reportListEntries"></div>
   <button id="reportAddMaterial" type="button" class="secondary reportAddEntry">＋ Materiallieferung hinzufügen</button>
+  <button id="reportWorksNext" type="button" class="primary reportNextButton">Weiter</button>
+</div>
+</section>
+
+<section id="tagesberichtSummary" class="screen reportDesign">
+<div class="moduleHeader"><div><h2>Zusammenfassung</h2></div></div>
+<div class="panel reportSummaryPanel">
+  <h2>Bericht prüfen</h2>
+  <div id="reportSummaryContent" class="reportSummaryContent"></div>
+</div>
+<div class="panel reportSignaturePanel">
+  <h2>Unterschrift</h2>
+  <p class="hint">Bitte den Bericht nach der Prüfung unterschreiben.</p>
+  <canvas id="reportSig" width="900" height="300" aria-label="Unterschrift Auftraggeber"></canvas>
+  <div class="reportSignatureRow"><button id="clearReportSig" type="button">Unterschrift löschen</button><input id="reportSignerName" placeholder="Name (optional)" aria-label="Name des Unterzeichners"></div>
+  <button id="saveReportAndPdf" type="button" class="primary reportNextButton">Bericht speichern und als PDF ausgeben</button>
 </div>
 </section>
 
