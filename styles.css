@@ -1189,3 +1189,33 @@ body.home-screen #home.active .startChoice > strong {
     height: 145px !important;
   }
 }
+
+/* === Startseite: Logo etwas größer, Inhalt darunter tiefer === */
+body.home-screen #home.active .companyLogoWrap {
+  height: clamp(125px, 21dvh, 175px) !important;
+  min-height: 125px !important;
+  margin-bottom: clamp(28px, 4.2dvh, 38px) !important;
+}
+body.home-screen #home.active .companyLogo {
+  width: min(92vw, 600px) !important;
+  max-height: clamp(120px, 20.5dvh, 170px) !important;
+}
+body.home-screen #home.active .welcome small {
+  margin-bottom: clamp(7px, 1.5dvh, 13px) !important;
+}
+body.home-screen #home.active .welcome h2 {
+  margin-top: clamp(8px, 1.5dvh, 14px) !important;
+}
+@media (max-height: 700px) {
+  body.home-screen #home.active .companyLogoWrap {
+    height: 112px !important;
+    min-height: 112px !important;
+    margin-bottom: 18px !important;
+  }
+  body.home-screen #home.active .companyLogo {
+    max-height: 108px !important;
+  }
+  body.home-screen #home.active .welcome h2 {
+    margin-top: 7px !important;
+  }
+}
