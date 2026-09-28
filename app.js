@@ -96,8 +96,7 @@ function show(id, options={}){
 function goBackOneStep(){
   const current=document.querySelector('.screen.active')?.id;
 
-  // Innerhalb des Kunden-/Bauvorhaben-Archivs bleibt man auf derselben Seite,
-  // geht aber jeweils genau eine Ebene zurück.
+  // Im Archiv immer genau eine Ebene zurück.
   if(current==='archive'){
     if(archiveSelectedProject){
       archiveSelectedProject=null;
@@ -109,6 +108,20 @@ function goBackOneStep(){
       render();
       return;
     }
+    show('tagelohnHome');
+    return;
+  }
+
+  // Beim Öffnen eines vorhandenen Nachweises zurück zum selben
+  // Bauvorhaben-Archiv – nicht zurück zur Startseite.
+  if(current==='editor'){
+    if(editingReportIndex!==null){
+      render();
+      show('archive');
+    }else{
+      show('tagelohnHome');
+    }
+    return;
   }
 
   const target=navigationHistory.pop();
@@ -117,7 +130,6 @@ function goBackOneStep(){
     return;
   }
 
-  // Fallback, wenn keine vorherige Seite vorhanden ist.
   if(current==='tagelohnHome') show('home');
   else show('tagelohnHome');
 }
