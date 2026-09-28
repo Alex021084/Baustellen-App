@@ -1044,21 +1044,21 @@ async function createTagesberichtPdf(data){
     };
 
     // Datum
-    drawFit(formatDate(data.date),266,H-112,140,10,normal);
+    drawFit(formatDate(data.date),266,H-102,140,10,normal);
 
     // Bauvorhaben: Kunde + Bauvorhaben wie in der Originalvorlage.
     const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' - ');
-    drawFit(projectLabel,199,H-292,455,9.2,normal);
+    drawFit(projectLabel,199,H-282,455,9.2,normal);
 
     // Wetter exakt in die vier vorgesehenen Felder der Vorlage.
-    drawFit(data.temperature||'—',150,H-332,145,9.2,normal);
-    drawFit(data.wind||'—',392,H-332,145,9.2,normal);
-    drawFit(data.precipitation||'—',155,H-360,145,9.2,normal);
-    drawFit(data.cloud||'—',392,H-360,145,9.2,normal);
+    drawFit(data.temperature||'—',150,H-322,145,9.2,normal);
+    drawFit(data.wind||'—',392,H-322,145,9.2,normal);
+    drawFit(data.precipitation||'—',155,H-350,145,9.2,normal);
+    drawFit(data.cloud||'—',392,H-350,145,9.2,normal);
 
     // Mitarbeiter – die Vorlage hat vier freie Zeilen unter den drei Beispielzeilen.
     const employees=(data.employees||[]).slice(0,7);
-    const rowTops=[427,447,467,487,507,527,547];
+    const rowTops=[417,437,457,477,497,517,537];
     employees.forEach((e,i)=>{
       const y=H-rowTops[i];
       drawFit(e.name||'',64,y,100,8.8,normal);
@@ -1069,24 +1069,27 @@ async function createTagesberichtPdf(data){
       if(Number(e.hours)>0)drawFit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',500,y,60,8.5,normal);
     });
 
-    // Ausgeführte Arbeiten
-    const works=(data.works||[]).slice(0,12);
+    // Ausgeführte Arbeiten – innerhalb des linken Tabellenfeldes halten.
+    // Eine Zeile pro Eintrag verhindert, dass lange Texte in die Nachbarspalte
+    // oder aus dem Tabellenrahmen laufen. Die Schrift wird bei Bedarf verkleinert.
+    const works=(data.works||[]).slice(0,8);
     works.forEach((v,i)=>{
-      const y=H-(603+i*15);
-      drawWrapped('• '+v,64,y,285,8.5,2);
+      const y=H-(593+i*15);
+      drawFit('• '+v,64,y,315,8.5,normal);
     });
 
-    // Materiallieferungen
-    const materials=(data.materials||[]).slice(0,12);
+    // Materiallieferungen – deutlich weiter rechts und ebenfalls strikt innerhalb
+    // des rechten Tabellenfeldes.
+    const materials=(data.materials||[]).slice(0,8);
     materials.forEach((v,i)=>{
-      const y=H-(603+i*15);
-      drawWrapped('• '+v,385,y,165,8.2,2);
+      const y=H-(593+i*15);
+      drawFit('• '+v,410,y,130,8.2,normal);
     });
 
     // Unterschrift: die Vorlage selbst enthält die Beschriftung und Linie.
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:70,y:48,width:220,height:82,opacity:1});
+      page.drawImage(sig,{x:70,y:58,width:220,height:82,opacity:1});
     }
 
     const out=await pdf.save({useObjectStreams:false});
