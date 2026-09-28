@@ -1059,3 +1059,133 @@ body:has(#home.active) > nav {
     font-size:34px !important;
   }
 }
+
+/* === STARTSEITE: KOMPLETT AUF EINEN SMARTPHONE-BILDSCHIRM === */
+html:has(body.home-screen),
+body.home-screen {
+  height: 100%;
+  overflow: hidden !important;
+}
+body.home-screen main {
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
+body.home-screen #home.active {
+  width: 100% !important;
+  max-width: 760px !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  padding: max(10px, env(safe-area-inset-top)) 20px 10px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+body.home-screen #home.active .welcome {
+  flex: 0 0 auto !important;
+}
+body.home-screen #home.active .companyLogoWrap {
+  height: clamp(105px, 18dvh, 150px) !important;
+  min-height: 105px !important;
+  margin: 0 0 clamp(12px, 2.4dvh, 24px) !important;
+}
+body.home-screen #home.active .companyLogo {
+  width: min(86vw, 520px) !important;
+  max-height: clamp(105px, 18dvh, 145px) !important;
+}
+body.home-screen #home.active .welcome small {
+  font-size: clamp(11px, 1.9dvh, 15px) !important;
+  margin-bottom: clamp(6px, 1.3dvh, 12px) !important;
+}
+body.home-screen #home.active .welcome h2 {
+  font-size: clamp(29px, 5.4dvh, 42px) !important;
+  line-height: 1.04 !important;
+  margin-bottom: clamp(7px, 1.4dvh, 13px) !important;
+}
+body.home-screen #home.active .welcome p {
+  font-size: clamp(15px, 2.45dvh, 19px) !important;
+  line-height: 1.25 !important;
+}
+body.home-screen #home.active .startChoices {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: clamp(10px, 1.8dvh, 16px) !important;
+  margin-top: clamp(12px, 2.2dvh, 24px) !important;
+  padding-bottom: 2px !important;
+}
+body.home-screen #home.active .startChoice {
+  flex: 0 1 auto !important;
+  min-height: 0 !important;
+  height: clamp(92px, 15.5dvh, 132px) !important;
+  max-height: 132px !important;
+  padding: 14px 16px !important;
+  border-radius: 22px !important;
+  gap: 14px !important;
+}
+body.home-screen #home.active .startChoice .startIcon {
+  width: clamp(54px, 8.5dvh, 68px) !important;
+  min-width: clamp(54px, 8.5dvh, 68px) !important;
+  height: clamp(54px, 8.5dvh, 68px) !important;
+  border-radius: 15px !important;
+}
+body.home-screen #home.active .startChoice .startIcon svg {
+  width: clamp(34px, 5.8dvh, 46px) !important;
+  height: clamp(34px, 5.8dvh, 46px) !important;
+}
+body.home-screen #home.active .startChoice b {
+  font-size: clamp(17px, 2.8dvh, 21px) !important;
+  margin-bottom: 4px !important;
+}
+body.home-screen #home.active .startChoice small {
+  font-size: clamp(12px, 2.05dvh, 16px) !important;
+  line-height: 1.25 !important;
+}
+body.home-screen #home.active .startChoice > strong {
+  font-size: clamp(30px, 5dvh, 40px) !important;
+}
+
+/* Short iPhone screens: compress the whole composition further. */
+@media (max-height: 700px) {
+  body.home-screen #home.active {
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+  }
+  body.home-screen #home.active .companyLogoWrap {
+    height: 100px !important;
+    min-height: 100px !important;
+    margin-bottom: 10px !important;
+  }
+  body.home-screen #home.active .companyLogo {
+    max-height: 98px !important;
+  }
+  body.home-screen #home.active .welcome small {
+    margin-bottom: 5px !important;
+  }
+  body.home-screen #home.active .welcome h2 {
+    font-size: 28px !important;
+    margin-bottom: 6px !important;
+  }
+  body.home-screen #home.active .welcome p {
+    font-size: 15px !important;
+  }
+  body.home-screen #home.active .startChoices {
+    margin-top: 10px !important;
+    gap: 9px !important;
+  }
+  body.home-screen #home.active .startChoice {
+    height: 88px !important;
+    padding: 11px 14px !important;
+    border-radius: 20px !important;
+  }
+}
+
+/* Slightly taller phones can use the more spacious composition. */
+@media (min-height: 800px) {
+  body.home-screen #home.active .companyLogoWrap {
+    height: 145px !important;
+  }
+}
