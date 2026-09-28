@@ -992,7 +992,10 @@ function saveTagesbericht(){
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
   return true;
 }
+let tagesberichtPdfBusy=false;
+let tagesberichtShareBusy=false;
 function saveTagesberichtAndPdf(){
+  if(tagesberichtPdfBusy || tagesberichtShareBusy) return;
   if(!saveTagesbericht()) return;
   createTagesberichtPdf(collectTagesbericht()).then(ok=>{if(ok)alert('PDF erstellt.');});
 }
@@ -1001,7 +1004,9 @@ function tagesberichtPdfFilename(data){
   return `${customer} - ${shortDate(data.date).replaceAll('.','.') } - Tagesbericht - ${project}.pdf`;
 }
 async function createTagesberichtPdf(data){
-  if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
+  if(tagesberichtPdfBusy || tagesberichtShareBusy) return false;
+  tagesberichtPdfBusy=true;
+  if(!window.PDFLib){tagesberichtPdfBusy=false;alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
   try{
     const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
@@ -1084,7 +1089,21 @@ async function createTagesberichtPdf(data){
 
     if(navigator.share&&navigator.canShare){
       const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
+      if(navigator.canShare({files:[file]})){
+        if(tagesberichtShareBusy) return false;
+        tagesberichtShareBusy=true;
+        try{
+          await navigator.share({files:[file]});
+          return true;
+        }catch(err){
+          if(err?.name==='AbortError') return false;
+          // Safari/iOS can report an active share sheet when the user taps twice.
+          if(String(err?.message||'').toLowerCase().includes('already in progress')) return false;
+          throw err;
+        }finally{
+          tagesberichtShareBusy=false;
+        }
+      }
     }
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=filename;
@@ -1096,6 +1115,8 @@ async function createTagesberichtPdf(data){
     if(err?.name==='AbortError')return false;
     alert('PDF konnte nicht erstellt werden: '+err.message);
     return false;
+  }finally{
+    tagesberichtPdfBusy=false;
   }
 }
 
