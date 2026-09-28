@@ -1958,3 +1958,127 @@ body:has(.screen.active:not(#home)) .title {
   .projectSelectButton{padding:14px}
   .projectSelectIcon{width:48px;height:48px;min-width:48px}
 }
+
+/* V2: ruhige Archiv-Navigation */
+#archive .archiveTopBack { display:none !important; }
+
+#archive .title {
+  margin-bottom: 10px;
+}
+
+#archive .title h2 {
+  max-width: 100%;
+  line-height: 1.14;
+}
+
+#archive .archiveHint {
+  margin: 0 0 22px;
+  color: #7a838c;
+  font-size: 16px;
+}
+
+/* Kunden: bewusst ohne Symbol und ohne Nachweis-Zähler */
+#archive .customerArchiveButton {
+  width: 100%;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  text-align: left;
+  border: 1px solid #dfe4e8;
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin: 10px 0;
+  box-shadow: 0 4px 14px rgba(23,35,47,.045);
+  color: #17212b;
+  font: inherit;
+}
+
+#archive .customerArchiveButton strong {
+  display: block;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+#archive .customerArchiveButton > b {
+  color: #8c959d;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 300;
+  flex: 0 0 auto;
+}
+
+/* Bauvorhaben: deutlich getrennt von der Kundenebene */
+#archive .projectSelectButton {
+  width: 100%;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  border: 1px solid #dfe4e8;
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin: 12px 0;
+  box-shadow: 0 5px 16px rgba(23,35,47,.05);
+  color: #17212b;
+  font: inherit;
+}
+
+#archive .projectSelectIcon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #f0f2f4;
+  color: #17212b;
+  font-size: 20px;
+}
+
+#archive .projectSelectButton span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+#archive .projectSelectButton strong {
+  display: block;
+  font-size: 19px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+#archive .projectSelectButton small {
+  display: block;
+  color: #7a838c;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+#archive .projectSelectButton > b {
+  color: #8c959d;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 300;
+  flex: 0 0 auto;
+}
+
+@media(max-width:520px){
+  #archive .archiveHint {
+    font-size: 15px;
+    margin-bottom: 18px;
+  }
+  #archive .customerArchiveButton {
+    min-height: 72px;
+    padding: 16px 20px;
+  }
+  #archive .projectSelectButton {
+    min-height: 88px;
+    padding: 16px 18px;
+  }
+}

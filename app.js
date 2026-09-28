@@ -441,7 +441,7 @@ function render(){
   if(hint){
     hint.textContent = archiveSelectedProject
       ? 'Nachweise dieses Bauvorhabens'
-      : (archiveSelectedContractor ? 'Bauvorhaben dieses Kunden' : 'Kunden mit vorhandenen Tagelohnnachweisen');
+      : (archiveSelectedContractor ? 'Bauvorhaben dieses Kunden' : '');
   }
 
   if(back){
@@ -471,11 +471,10 @@ function render(){
     [...groups.entries()]
       .sort((a,b)=>a[0].localeCompare(b[0],'de'))
       .forEach(([contractor,projects])=>{
-        const total=[...projects.values()].reduce((n,a)=>n+a.length,0);
         const btn=document.createElement('button');
         btn.type='button';
         btn.className='customerArchiveButton';
-        btn.innerHTML=`<span class="customerArchiveIcon">▣</span><span><strong>${esc(contractor)}</strong><small>${total} ${total===1?'Nachweis':'Nachweise'}</small></span><b>›</b>`;
+        btn.innerHTML=`<span><strong>${esc(contractor)}</strong></span><b>›</b>`;
         btn.onclick=()=>{
           archiveSelectedContractor=contractor;
           archiveSelectedProject=null;
