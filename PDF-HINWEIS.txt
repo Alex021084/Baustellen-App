@@ -1,1 +1,2 @@
-PDF-FIX: Verwendet die vom Benutzer gelieferte Originalvorlage. Die PDF wird mit useObjectStreams:false gespeichert und direkt heruntergeladen statt in einem neuen Tab geöffnet.
+Die Tagesbericht-PDF wird auf Basis der vom Anwender bereitgestellten Vorlage erzeugt.
+Die Vorlage wird als Hintergrundbild eingebettet, damit die erzeugte PDF nicht als geschützte PDF erkannt wird und auf iPhone/iPad geteilt bzw. in Dateien gesichert werden kann.

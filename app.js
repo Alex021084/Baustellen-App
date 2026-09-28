@@ -1009,10 +1009,16 @@ async function createTagesberichtPdf(data){
   if(!window.PDFLib){tagesberichtPdfBusy=false;alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
   try{
-    const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
-    const pdf=await PDFDocument.load(bytes);
-    const page=pdf.getPages()[0];
-    const W=page.getWidth(), H=page.getHeight();
+    // Die Originalvorlage wird als gerastertes Hintergrundbild eingebettet.
+    // Dadurch entsteht eine neue, nicht geschützte PDF-Datei, die Safari/iOS
+    // problemlos über den Teilen-Dialog weitergeben kann. Das Layout der Vorlage
+    // bleibt dabei pixelgenau erhalten.
+    const templateBytes=await fetch('template-bg.png',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('PDF-Vorlage nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.create();
+    const W=668.539, H=946.067;
+    const page=pdf.addPage([W,H]);
+    const bg=await pdf.embedPng(templateBytes);
+    page.drawImage(bg,{x:0,y:0,width:W,height:H});
     const normal=await pdf.embedFont(StandardFonts.Helvetica);
     const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
 
