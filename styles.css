@@ -1607,3 +1607,55 @@ body.tagelohn-clean #appNav button small {
     flex-basis:135px !important;
   }
 }
+
+/* === FINAL: Tagelohn wirklich ohne alten Kopfbereich === */
+body.tagelohn-clean > header,
+body.tagelohn-clean header,
+body.tagelohn-clean .app-header,
+body.tagelohn-clean .page-header,
+body.tagelohn-clean .hero-header,
+body.tagelohn-clean .top-header,
+body.tagelohn-clean .moduleHeader {
+  display:none !important;
+}
+
+/* The Tagelohn home starts directly with the one requested action. */
+body.tagelohn-clean #tagelohnHome,
+body.tagelohn-clean #tagelohn {
+  padding-top: max(12px, env(safe-area-inset-top)) !important;
+}
+body.tagelohn-clean #tagelohnHome .tagelohn-clean-top,
+body.tagelohn-clean #tagelohn .tagelohn-clean-top {
+  margin:0 20px 18px !important;
+  padding:0 !important;
+  min-height:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  justify-content:stretch !important;
+}
+body.tagelohn-clean #tagelohnHome .tagelohn-clean-top .newTagelohn,
+body.tagelohn-clean #tagelohn .tagelohn-clean-top .newTagelohn {
+  width:100% !important;
+  min-height:64px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:18px !important;
+  background:#f4a51c !important;
+  color:#17212b !important;
+  font-size:20px !important;
+  font-weight:800 !important;
+}
+
+/* Remove old page title/start controls if they exist outside moduleHeader. */
+body.tagelohn-clean #tagelohnHome .eyebrow,
+body.tagelohn-clean #tagelohnHome .page-title,
+body.tagelohn-clean #tagelohnHome .start-button,
+body.tagelohn-clean #tagelohnHome .home-button,
+body.tagelohn-clean #tagelohnHome .module-title {
+  display:none !important;
+}
+
+/* No navigation icons other than Startseite and Zurück. */
+body.tagelohn-clean #appNav {
+  display:flex !important;
+}
