@@ -21,6 +21,12 @@
 <button class="startChoice" id="openTagesbericht">
   <span class="startIcon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><rect x="12" y="7" width="24" height="35" rx="4" stroke="currentColor" stroke-width="3"/><path d="M18 17l2.5 2.5L25 15M28 18h4M18 26l2.5 2.5L25 24M28 27h4M18 35l2.5 2.5L25 33M28 36h4" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 7v-2h10v2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><span><b>Tagesbericht</b><small>Baustellenfortschritt und Tagesgeschehen dokumentieren</small></span><strong>›</strong>
 </button>
+<button class="startChoice" id="openCustomersGlobal">
+  <span class="startIcon" aria-hidden="true">👥</span><span><b>Kunden</b><small>Kunden und Bauvorhaben gemeinsam verwalten</small></span><strong>›</strong>
+</button>
+<button class="startChoice" id="openEmployeesGlobal">
+  <span class="startIcon" aria-hidden="true">👷</span><span><b>Mitarbeiter</b><small>Mitarbeiter zentral für Tagelohn und Tagesbericht verwalten</small></span><strong>›</strong>
+</button>
 </div>
 </section>
 
@@ -39,14 +45,26 @@
   </span>
   <span><b>Baustellen</b><small id="count">0 Nachweise</small></span>›
 </button>
-<button class="card" id="customersBtn">👥 <span><b>Kunden</b><small>Kunden anlegen und Adressen verwalten</small></span>›</button>
-<button class="card" id="servicesBtn">⚙️ <span><b>Leistungen</b><small>Leistungen für Mitarbeiter und Maschinen verwalten</small></span>›</button>
-<button class="card" id="employeesBtn">👷 <span><b>Mitarbeiter</b><small>Mitarbeiter für Tagelohnnachweise verwalten</small></span>›</button></div></section>
+<button class="card" id="servicesBtn">⚙️ <span><b>Leistungen</b><small>Leistungen für Mitarbeiter und Maschinen verwalten</small></span>›</button></div></section>
 
-<section id="tagesbericht" class="screen reportDesign"><div class="moduleHeader"><div><small>TAGESBERICHT</small><h2>Tagesbericht</h2></div><button id="backToStartFromTagesbericht">Start</button></div>
-<div class="panel reportIntro"><span class="reportBadge">IN VORBEREITUNG</span><h2>Tagesbericht gestalten</h2><p>Diese Seite ist bereits vorbereitet. Die Inhalte und der Aufbau des Tagesberichts können wir als Nächstes gemeinsam festlegen.</p></div>
-<div class="panel reportPreview"><h3>Vorgesehene Bereiche</h3><div class="reportFields"><div><span>Datum</span><b>28.09.2026</b></div><div><span>Baustelle / Bauvorhaben</span><b>Auswählen</b></div><div><span>Wetter</span><b>—</b></div><div><span>Temperatur</span><b>— °C</b></div><div class="wide"><span>Tagesgeschehen / ausgeführte Arbeiten</span><b>Text und Stichpunkte</b></div><div class="wide"><span>Besondere Vorkommnisse</span><b>Textfeld</b></div></div></div>
-<button class="primary big" id="designTagesbericht">Tagesbericht weiter gestalten</button>
+<section id="tagesbericht" class="screen reportDesign">
+<div class="moduleHeader"><div><small>TAGESBERICHT</small><h2>Tagesbericht</h2></div><button id="backToStartFromTagesbericht">Start</button></div>
+<div class="steps reportSteps">1 Kopfdaten · 2 Mitarbeiter · 3 Arbeiten · 4 Material · 5 Unterschrift · 6 PDF</div>
+<div class="panel reportHeaderPanel">
+  <h2>Kopfdaten</h2>
+  <label class="dateField">Datum
+    <div class="dateInputWrap">
+      <input id="reportDateDisplay" type="text" readonly aria-label="Datum">
+      <input id="reportDate" type="date" class="nativeDatePicker" aria-label="Datum auswählen">
+    </div>
+  </label>
+  <label>Kunde
+    <select id="reportCustomerSelect" aria-label="Kunde auswählen"></select>
+  </label>
+  <label>Bauvorhaben
+    <select id="reportProjectSelect" aria-label="Bauvorhaben auswählen"></select>
+  </label>
+</div>
 </section>
 
 <section id="services" class="screen">
@@ -56,7 +74,7 @@
 </section>
 
 <section id="employeeManager" class="screen">
-<div class="title"><h2>Mitarbeiter verwalten</h2><button id="homeFromEmployees">Baustellen</button></div>
+<div class="title"><h2>Mitarbeiter verwalten</h2><button id="homeFromEmployees">Startseite</button></div>
 <div class="panel addPanel"><div class="addBar"><input id="employeeName" placeholder="Neuen Mitarbeiter..." aria-label="Neuer Mitarbeiter"><button id="addEmployee" class="primary saveManage">Speichern</button></div></div>
 <div class="panel"><h2>Vorhandene Mitarbeiter</h2><div id="employeeList"></div></div>
 </section>
@@ -111,7 +129,7 @@
 
 
 <section id="customers" class="screen">
-<div class="title"><h2>Meine Kunden</h2><button id="homeFromCustomers">Baustellen</button></div>
+<div class="title"><h2>Meine Kunden</h2><button id="homeFromCustomers">Startseite</button></div>
 <div class="panel"><h2>Neuen Kunden anlegen</h2>
 <label>Kundenname<input id="customerName" placeholder="z. B. Muster GmbH"></label>
 <label>Anschrift<textarea id="customerAddress" placeholder="Straße Hausnummer&#10;PLZ Ort"></textarea></label>

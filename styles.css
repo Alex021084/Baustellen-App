@@ -2308,3 +2308,12 @@ body.tagelohn-clean #appNav button {
 body.tagelohn-clean #appNav button small {
   color:#2f7d4a !important;
 }
+
+/* Tagesbericht – erster Schritt: Kunde und Bauvorhaben */
+.reportHeaderPanel h2{margin-top:0}
+.reportSteps{margin-bottom:14px}
+.reportHeaderPanel label{margin-bottom:14px}
+.reportHeaderPanel select,
+.reportHeaderPanel input[type="text"]{
+  width:100%;
+}

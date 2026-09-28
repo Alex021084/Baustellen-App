@@ -40,6 +40,48 @@ const defaultEmployees=[
 ];
 if(!Array.isArray(employees)||!employees.length) employees=[...defaultEmployees];
 
+
+function cleanCustomerDisplayName(name){
+  return String(name||'')
+    .replace(/\s*,?\s+GmbH\s*&\s*Co\.\s*KG\.?$/i,'')
+    .replace(/\s*,?\s+GmbH$/i,'')
+    .replace(/\s*,?\s+AG$/i,'')
+    .replace(/\s*,?\s+UG\s*\(haftungsbeschränkt\)$/i,'')
+    .replace(/\s*,?\s+UG$/i,'')
+    .replace(/\s*,?\s+e\.?\s*K\.?$/i,'')
+    .trim();
+}
+function renderReportCustomerSelect(selectedName=''){
+  const s=$('reportCustomerSelect');
+  if(!s)return;
+  s.innerHTML='<option value="">— Kunde auswählen —</option>'+
+    customers.map(c=>`<option value="${esc(c.id)}">${esc(cleanCustomerDisplayName(c.name))}</option>`).join('');
+  const c=customers.find(x=>x.name===selectedName);
+  s.value=c?c.id:'';
+  renderReportProjectSelect();
+}
+function renderReportProjectSelect(selectedProject=''){
+  const s=$('reportProjectSelect');
+  if(!s)return;
+  const c=customers.find(x=>x.id===$('reportCustomerSelect')?.value);
+  const projects=Array.isArray(c?.projects)?c.projects:[];
+  s.innerHTML='<option value="">— Bauvorhaben auswählen —</option>'+
+    projects.map(p=>`<option value="${esc(p)}">${esc(cleanCustomerDisplayName(c.name)+' - '+p)}</option>`).join('');
+  s.value=projects.includes(selectedProject)?selectedProject:'';
+}
+function initTagesbericht(){
+  const d=$('reportDate');
+  const display=$('reportDateDisplay');
+  if(d){
+    if(!d.value)d.value=today();
+    if(display)display.value=formatLongDate(d.value);
+    d.onchange=()=>{if(display)display.value=formatLongDate(d.value)};
+  }
+  renderReportCustomerSelect();
+  const c=$('reportCustomerSelect');
+  if(c)c.onchange=()=>renderReportProjectSelect();
+}
+
 function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
 function persistServices(){localStorage.tagelohnServices=JSON.stringify(services)}
 function persistEmployees(){localStorage.tagelohnEmployees=JSON.stringify(employees)}
@@ -695,13 +737,15 @@ async function createPdf(options={}){
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
 $('openTagelohn').onclick=()=>show('tagelohnHome');
-$('openTagesbericht').onclick=()=>show('tagesbericht');
+$('openCustomersGlobal').onclick=openCustomers;
+$('openEmployeesGlobal').onclick=openEmployees;
+$('openTagesbericht').onclick=()=>{initTagesbericht();show('tagesbericht')};
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht').onclick=()=>show('home');
-$('designTagesbericht').onclick=()=>alert('Den Tagesbericht gestalten wir im nächsten Schritt gemeinsam.');
+initTagesbericht();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
-$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('customersBtn').onclick=openCustomers;$('homeFromCustomers').onclick=()=>show('tagelohnHome');
-$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;$('homeFromServices').onclick=()=>show('tagelohnHome');$('addService').onclick=addService;$('employeesBtn').onclick=openEmployees;$('homeFromEmployees').onclick=()=>show('tagelohnHome');$('addEmployee').onclick=addEmployee;
+$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show('home');
+$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;$('homeFromServices').onclick=()=>show('tagelohnHome');$('addService').onclick=addService;$('homeFromEmployees').onclick=()=>show('home');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
 $('date').addEventListener('change',syncDateDisplay);
 syncDateDisplay();
