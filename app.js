@@ -567,11 +567,16 @@ async function createPdf(options={}){
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
+$('openTagelohn').onclick=()=>show('tagelohnHome');
+$('openTagesbericht').onclick=()=>show('tagesbericht');
+$('backToStartFromTagelohn').onclick=()=>show('home');
+$('backToStartFromTagesbericht').onclick=()=>show('home');
+$('designTagesbericht').onclick=()=>alert('Den Tagesbericht gestalten wir im nächsten Schritt gemeinsam.');
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
-$('archiveBtn').onclick=()=>{render();show('archive')};$('homeBtn').onclick=()=>show('home');$('customersBtn').onclick=openCustomers;$('homeFromCustomers').onclick=()=>show('home');
-$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;$('homeFromServices').onclick=()=>show('home');$('addService').onclick=addService;$('employeesBtn').onclick=openEmployees;$('homeFromEmployees').onclick=()=>show('home');$('addEmployee').onclick=addEmployee;
+$('archiveBtn').onclick=()=>{render();show('archive')};$('homeBtn').onclick=()=>show('tagelohnHome');$('customersBtn').onclick=openCustomers;$('homeFromCustomers').onclick=()=>show('tagelohnHome');
+$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;$('homeFromServices').onclick=()=>show('tagelohnHome');$('addService').onclick=addService;$('employeesBtn').onclick=openEmployees;$('homeFromEmployees').onclick=()=>show('tagelohnHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.s));
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.s==='archive')render();show(b.dataset.s)});
 $('date').addEventListener('change',syncDateDisplay);
 syncDateDisplay();
 persistCustomers();persistServices();persistEmployees();renderCustomerSelect('');save();
