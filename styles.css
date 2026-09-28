@@ -2389,3 +2389,10 @@ body.tagelohn-clean #appNav button small {
 .weatherValue b{font-size:1.02rem !important;color:#1f5d3d !important;line-height:1.15 !important;white-space:nowrap !important}
 .weatherStatus,.weatherSource{display:none !important}
 @media (max-width:420px){.weatherGrid{gap:8px !important}.weatherValue{padding:9px 10px !important}.weatherIcon{font-size:20px !important}.weatherLabel{font-size:.7rem !important}.weatherValue b{font-size:.98rem !important}}
+
+/* Tagesbericht – Schritt Mitarbeiter */
+.reportNextButton{width:100%;margin-top:18px;min-height:52px;font-size:17px}
+.reportDesign .reportHeaderPanel h2{font-size:25px}
+#tagesberichtEmployees .reportHeaderPanel{padding-bottom:22px}
+#tagesberichtEmployees label{font-size:15px;font-weight:700;color:#5f6872}
+#tagesberichtEmployees select{font-size:17px;font-weight:600;min-height:52px;background:#f8f9fa}

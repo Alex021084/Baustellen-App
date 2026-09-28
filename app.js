@@ -174,6 +174,19 @@ async function loadReportWeather(){
     setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.');
   }
 }
+
+function renderReportEmployeeSelect(selected=''){
+  const s=$('reportEmployeeSelect');
+  if(!s)return;
+  s.innerHTML='<option value="">— Mitarbeiter auswählen —</option>'+employees.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
+  s.value=employees.includes(selected)?selected:'';
+}
+function initTagesberichtEmployees(){
+  renderReportEmployeeSelect();
+  const role=$('reportEmployeeRoleSelect');
+  if(role && !role.value) role.value='';
+}
+
 function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
 function persistServices(){localStorage.tagelohnServices=JSON.stringify(services)}
 function persistEmployees(){localStorage.tagelohnEmployees=JSON.stringify(employees)}
@@ -832,6 +845,8 @@ $('openTagelohn').onclick=()=>show('tagelohnHome');
 $('openCustomersGlobal').onclick=openCustomers;
 $('openEmployeesGlobal').onclick=openEmployees;
 $('openTagesbericht').onclick=()=>{initTagesbericht();show('tagesbericht')};
+$('reportNext')?.addEventListener('click',()=>{initTagesberichtEmployees();show('tagesberichtEmployees')});
+$('reportEmployeeNext')?.addEventListener('click',()=>{const employee=$('reportEmployeeSelect')?.value;const role=$('reportEmployeeRoleSelect')?.value;if(!employee||!role){alert('Bitte Mitarbeiter und Funktion auswählen.');return;}show('tagesberichtEmployees')});
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
