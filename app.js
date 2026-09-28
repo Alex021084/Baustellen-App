@@ -1,6 +1,7 @@
 const $=x=>document.getElementById(x);
 let reports=JSON.parse(localStorage.tagelohn||'[]');
 let editingReportIndex=null;
+let navigationHistory=[];
 let archiveSelectedContractor=null;
 let archiveSelectedProject=null;
 const defaultCustomers=[{id:'dreyer',name:'Dreyer Hochbau GmbH & Co. KG',address:'Mühlenberg 12\n27404 Elsdorf'}];
@@ -69,9 +70,16 @@ function addService(){
   services.push(value);persistServices();$('serviceName').value='';renderServices();
 }
 let previousScreen='home';
-function show(id){
+function show(id, options={}){
   const current=document.querySelector('.screen.active')?.id;
-  if(current && current!==id) previousScreen=current;
+  if(current && current!==id){
+    if(options.replaceHistory){
+      navigationHistory=navigationHistory.slice(0,-1);
+    }else{
+      navigationHistory.push(current);
+    }
+    previousScreen=current;
+  }
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const screen=$(id);
   if(screen) screen.classList.add('active');
@@ -83,6 +91,35 @@ function show(id){
   const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','editor','summaryScreen','signatureScreen'];
   document.body.classList.toggle('tagelohn-clean',tagelohnIds.includes(id));
   scrollTo(0,0);
+}
+
+function goBackOneStep(){
+  const current=document.querySelector('.screen.active')?.id;
+
+  // Innerhalb des Kunden-/Bauvorhaben-Archivs bleibt man auf derselben Seite,
+  // geht aber jeweils genau eine Ebene zurück.
+  if(current==='archive'){
+    if(archiveSelectedProject){
+      archiveSelectedProject=null;
+      render();
+      return;
+    }
+    if(archiveSelectedContractor){
+      archiveSelectedContractor=null;
+      render();
+      return;
+    }
+  }
+
+  const target=navigationHistory.pop();
+  if(target){
+    show(target,{replaceHistory:true});
+    return;
+  }
+
+  // Fallback, wenn keine vorherige Seite vorhanden ist.
+  if(current==='tagelohnHome') show('home');
+  else show('tagelohnHome');
 }
 function today(){return new Date().toISOString().slice(0,10)}
 function formatLongDate(value){
@@ -678,6 +715,7 @@ $('saveSignature').onclick=async()=>{
     if(editingReportIndex!==null && reports[editingReportIndex]) reports[editingReportIndex]=signed;
     else {reports.unshift(signed); editingReportIndex=0;}
     save(); render(); updateSignatureStatus();
+    navigationHistory=[];
     const pdfSaved=await createPdf({askLocation:true});
     if(pdfSaved) alert('Unterschrieben gespeichert und PDF gespeichert.');
     show('archive');
@@ -691,37 +729,4 @@ window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector
 });
 
 document.getElementById('navStart')?.addEventListener('click',()=>show('home'));
-document.getElementById('navBack')?.addEventListener('click',()=>{
-  const current=document.querySelector('.screen.active')?.id;
-
-  // Im Nachweis-Archiv immer genau eine Ebene zurück:
-  // Nachweis -> Bauvorhaben -> Kunde -> Tagelohn-Startseite.
-  if(current==='archive'){
-    if(archiveSelectedProject){
-      archiveSelectedProject=null;
-      render();
-      show('archive');
-      return;
-    }
-    if(archiveSelectedContractor){
-      archiveSelectedContractor=null;
-      render();
-      show('archive');
-      return;
-    }
-    show('tagelohnHome');
-    return;
-  }
-
-  const backTargets={
-    tagelohnHome:'home',
-    customers:'tagelohnHome',
-    services:'tagelohnHome',
-    employeeManager:'tagelohnHome',
-    editor:'tagelohnHome',
-    summaryScreen:'editor',
-    signatureScreen:'summaryScreen',
-    tagesbericht:'home'
-  };
-  show(backTargets[current] || 'tagelohnHome');
-});
+document.getElementById('navBack')?.addEventListener('click',goBackOneStep);
