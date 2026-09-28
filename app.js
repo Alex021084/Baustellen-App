@@ -86,10 +86,12 @@ function initTagesbericht(){
   loadReportWeather();
 }
 
-function setReportWeather(temp='—', precipitation='—', status=''){
-  const t=$('reportTemperature'), p=$('reportPrecipitation'), s=$('reportWeatherStatus');
+function setReportWeather(temp='—', precipitation='—', status='', wind='—', cloud='—'){
+  const t=$('reportTemperature'), p=$('reportPrecipitation'), w=$('reportWind'), c=$('reportCloud'), s=$('reportWeatherStatus');
   if(t)t.textContent=temp;
   if(p)p.textContent=precipitation;
+  if(w)w.textContent=wind;
+  if(c)c.textContent=cloud;
   if(s)s.textContent=status;
 }
 function normalizeAddress(address){
@@ -122,7 +124,7 @@ async function fetchDailyWeather(lat,lon,date){
   const todayDate=today();
   const params=new URLSearchParams({
     latitude:String(lat),longitude:String(lon),
-    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,cloud_cover_mean',
     temperature_unit:'celsius',precipitation_unit:'mm',timezone:'auto',
     start_date:date,end_date:date
   });
@@ -137,7 +139,9 @@ async function fetchDailyWeather(lat,lon,date){
   return {
     min:data.daily.temperature_2m_min?.[idx],
     max:data.daily.temperature_2m_max?.[idx],
-    precipitation:data.daily.precipitation_sum?.[idx]
+    precipitation:data.daily.precipitation_sum?.[idx],
+    windMax:data.daily.wind_speed_10m_max?.[idx],
+    cloudMean:data.daily.cloud_cover_mean?.[idx]
   };
 }
 let weatherRequestToken=0;
@@ -145,8 +149,8 @@ async function loadReportWeather(){
   const token=++weatherRequestToken;
   const date=$('reportDate')?.value;
   const customerId=$('reportCustomerSelect')?.value;
-  if(!date||!customerId){setReportWeather('—','—','');return;}
-  setReportWeather('…','…','Standort des Handys wird ermittelt …');
+  if(!date||!customerId){setReportWeather('—','—','','—','—');return;}
+  setReportWeather('…','…','Standort des Handys wird ermittelt …','…','…');
   try{
     let geo=null;
     let locationLabel='Handy-Standort';
@@ -155,7 +159,7 @@ async function loadReportWeather(){
     }catch(locationErr){
       const customer=customers.find(c=>c.id===customerId);
       if(customer?.address){
-        setReportWeather('…','…','Handy-Standort nicht verfügbar – Anschrift wird versucht …');
+        setReportWeather('…','…','Handy-Standort nicht verfügbar – Anschrift wird versucht …','…','…');
         geo=await geocodeCustomerAddress(customer.address);
         locationLabel='Baustellenanschrift';
       }else throw locationErr;
@@ -168,10 +172,12 @@ async function loadReportWeather(){
     const max=Number.isFinite(weather.max)?Math.round(weather.max):null;
     const temp=min!==null&&max!==null?`${min}–${max} °C`:max!==null?`${max} °C`:min!==null?`${min} °C`:'—';
     const precip=Number.isFinite(weather.precipitation)?`${weather.precipitation.toLocaleString('de-DE',{maximumFractionDigits:1})} mm`:'—';
-    setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`);
+    const wind=Number.isFinite(weather.windMax)?`${Math.round(weather.windMax)} km/h`:'—';
+    const cloud=Number.isFinite(weather.cloudMean)?`${Math.round(weather.cloudMean)} %`:'—';
+    setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`,wind,cloud);
   }catch(err){
     if(token!==weatherRequestToken)return;
-    setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.');
+    setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.','—','—');
   }
 }
 
@@ -948,6 +954,8 @@ function collectTagesbericht(){
     project:$('reportProjectSelect')?.selectedOptions?.[0]?.textContent?.trim()||'',
     temperature:$('reportTemperature')?.textContent?.trim()||'—',
     precipitation:$('reportPrecipitation')?.textContent?.trim()||'—',
+    wind:$('reportWind')?.textContent?.trim()||'—',
+    cloud:$('reportCloud')?.textContent?.trim()||'—',
     employees:collectReportEmployees(),
     works:collectReportList('reportWorksEntries'),
     materials:collectReportList('reportMaterialsEntries'),
@@ -966,6 +974,8 @@ function renderTagesberichtSummary(){
       <div class="wide"><span>Bauvorhaben</span><b>${esc(d.project||'—')}</b></div>
       <div><span>🌡️ Temperatur</span><b>${esc(d.temperature)}</b></div>
       <div><span>🌧️ Niederschlag</span><b>${esc(d.precipitation)}</b></div>
+      <div><span>💨 Wind</span><b>${esc(d.wind)}</b></div>
+      <div><span>☁️ Bewölkung</span><b>${esc(d.cloud)}</b></div>
     </div>
     <div class="reportSummarySection"><h3>Mitarbeiter</h3>${emp||'<div class="empty">Keine Mitarbeiter eingetragen.</div>'}</div>
     <div class="reportSummarySection"><h3>Ausgeführte Arbeiten</h3>${list(d.works)}</div>
@@ -1025,12 +1035,15 @@ async function createTagesberichtPdf(data){
     // Datum
     drawFit(formatDate(data.date),266,H-112,140,10,normal);
 
-    // Bauvorhaben
-    drawFit(data.project||'',199,H-292,300,9.5,normal);
+    // Bauvorhaben: Kunde + Bauvorhaben wie in der Originalvorlage.
+    const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' - ');
+    drawFit(projectLabel,199,H-292,455,9.2,normal);
 
-    // Wetter – nur die Werte, die die App tatsächlich kennt.
-    drawFit(data.temperature||'—',180,H-332,105,9.5,normal);
-    drawFit(data.precipitation||'—',172,H-360,120,9.5,normal);
+    // Wetter exakt in die vier vorgesehenen Felder der Vorlage.
+    drawFit(data.temperature||'—',150,H-332,145,9.2,normal);
+    drawFit(data.wind||'—',392,H-332,145,9.2,normal);
+    drawFit(data.precipitation||'—',155,H-360,145,9.2,normal);
+    drawFit(data.cloud||'—',392,H-360,145,9.2,normal);
 
     // Mitarbeiter – die Vorlage hat vier freie Zeilen unter den drei Beispielzeilen.
     const employees=(data.employees||[]).slice(0,7);
