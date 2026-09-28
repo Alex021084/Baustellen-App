@@ -438,9 +438,7 @@ function render(){
       : (archiveSelectedContractor ? archiveSelectedContractor : 'Kunden');
   }
 
-  if(hint){
-    hint.textContent = '';
-  }
+  if(hint){ hint.textContent = ''; }
 
   if(back){
     back.textContent = archiveSelectedProject

@@ -2127,3 +2127,29 @@ body:has(.screen.active:not(#home)) .title {
   flex: 1;
   min-width: 0;
 }
+
+/* V5: Baustellen-Symbol auf der Tagelohn-Startseite */
+#archiveBtn .constructionCardIcon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  display: inline-grid;
+  place-items: center;
+  color: #d88a16;
+  margin-right: 8px;
+}
+#archiveBtn .constructionCardIcon svg {
+  width: 42px;
+  height: 42px;
+  display: block;
+}
+
+/* Archiv: keinerlei erklärender Hinweis */
+#archive #archiveHint {
+  display: none !important;
+}
+
+/* Bauvorhaben: kein Symbol */
+#archive .projectSelectIcon {
+  display: none !important;
+}
