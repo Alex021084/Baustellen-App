@@ -518,8 +518,13 @@ function timeOptions(selected=''){
       value=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
     }
   }
+  // Arbeitszeiten sind in allen Bereichen auf 04:00 bis 22:00 Uhr begrenzt.
+  // Werte außerhalb dieses Bereichs werden nicht vorausgewählt.
+  const selectedMinutes = value ? (() => { const [h,m]=value.split(':').map(Number); return h*60+m; })() : -1;
+  if(selectedMinutes < 240 || selectedMinutes > 1320) value='';
   let html='<option value="">— Uhrzeit —</option>';
-  for(let h=0;h<24;h++) for(const min of [0,15,30,45]){
+  for(let total=240; total<=1320; total+=15){
+    const h=Math.floor(total/60), min=total%60;
     const v=String(h).padStart(2,'0')+':'+String(min).padStart(2,'0');
     html+=`<option value="${v}"${v===value?' selected':''}>${v}</option>`;
   }
@@ -967,12 +972,12 @@ function renderTagesberichtSummary(){
     <div class="reportSummarySection"><h3>Materiallieferung</h3>${list(d.materials)}</div>`;
 }
 function saveTagesbericht(){
-  if(!hasReportSignature()){alert('Bitte zuerst unterschreiben.');return false;}
   const data=collectTagesbericht();
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
   const key=(data.date||'')+'|'+(data.customer||'')+'|'+(data.project||'');
   const idx=reportsSaved.findIndex(r=>((r.date||'')+'|'+(r.customer||'')+'|'+(r.project||''))===key);
-  const saved={...data,signed:true,signedAt:new Date().toISOString()};
+  const signed=hasReportSignature();
+  const saved={...data,signed,signedAt:signed?new Date().toISOString():''};
   if(idx>=0) reportsSaved[idx]=saved; else reportsSaved.unshift(saved);
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
   return true;
@@ -1023,8 +1028,8 @@ $('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
 function continueTagesberichtEmployees(){
   const entries=collectReportEmployees();
   if(!entries.length){ alert('Bitte mindestens einen Mitarbeiter auswählen.'); return; }
-  const incomplete=entries.some(e=>!e.name||!e.role||!e.start||!e.end);
-  if(incomplete){ alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.'); return; }
+  const incomplete=entries.some(e=>!e.name||!e.role);
+  if(incomplete){ alert('Bitte Mitarbeiter und Funktion auswählen. Arbeitszeiten sind optional.'); return; }
   reportEmployeeEntries=entries;
   initTagesberichtWorks();
   show('tagesberichtWorks',{replaceHistory:false});
