@@ -1658,3 +1658,32 @@ body.tagelohn-clean #appNav {
     margin-bottom: 14px !important;
   }
 }
+
+/* === TAGELohn: oberer Bereich komplett entfernen === */
+/* Gilt ausschließlich, wenn #tagelohnHome aktiv ist. */
+
+body:has(#tagelohnHome.active) > header {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+body:has(#tagelohnHome.active) #tagelohnHome > .moduleHeader {
+  display: none !important;
+}
+
+body:has(#tagelohnHome.active) #tagelohnHome {
+  padding-top: 18px !important;
+}
+
+body:has(#tagelohnHome.active) #tagelohnHome #new2 {
+  margin-top: 0 !important;
+}
+
+/* Die beiden gewünschten unteren Buttons bleiben sichtbar. */
+body:has(#tagelohnHome.active) #appNav {
+  display: flex !important;
+}
