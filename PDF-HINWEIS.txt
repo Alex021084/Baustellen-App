@@ -1,2 +1,4 @@
-Die Tagesbericht-PDF wird auf Basis der vom Anwender bereitgestellten Vorlage erzeugt.
-Die Vorlage wird als Hintergrundbild eingebettet, damit die erzeugte PDF nicht als geschützte PDF erkannt wird und auf iPhone/iPad geteilt bzw. in Dateien gesichert werden kann.
+Tagesbericht-PDF: OriginalTemplate.pdf ist die vom Nutzer bereitgestellte Blanko-PDF.
+Die App legt die eingegebenen Daten als Text/Bild direkt über diese originale PDF.
+Im Menü „PDF ausrichten“ können die Koordinaten per Drag & Drop verschoben und gespeichert werden.
+Die Ausrichtungsvorschau ist nur eine PNG-Vorschau; die erzeugte PDF verwendet weiterhin die originale Vektor-PDF.

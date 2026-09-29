@@ -97,8 +97,22 @@
     <canvas id="reportSig" width="900" height="260" aria-label="Unterschrift Auftraggeber"></canvas>
     <div class="reportSignatureRow"><button id="clearReportSig" type="button">Unterschrift löschen</button><input id="reportSignerName" placeholder="Name (optional)" aria-label="Name des Unterzeichners"></div>
   </div>
-  <div class="reportFinalActions"><button id="saveReport" type="button" class="secondary reportNextButton">Bericht speichern</button><button id="saveReportAndPdf" type="button" class="primary reportNextButton">PDF erstellen</button></div>
+  <div class="reportFinalActions"><button id="saveReport" type="button" class="secondary reportNextButton">Bericht speichern</button><button id="saveReportAndPdf" type="button" class="primary reportNextButton">PDF erstellen</button><button id="openPdfAligner" type="button" class="secondary reportNextButton">PDF ausrichten</button></div>
 </div>
+</section>
+
+<section id="pdfAlignerScreen" class="screen reportDesign">
+  <div class="moduleHeader"><div><h2>PDF ausrichten</h2><p>Ziehe die Beispielwerte direkt auf deiner Blanko-PDF an die richtige Stelle. Die Positionen werden gespeichert und später für alle Tagesberichte verwendet.</p></div></div>
+  <div class="pdfAlignToolbar">
+    <button id="savePdfAlignment" type="button" class="primary">Positionen speichern</button>
+    <button id="resetPdfAlignment" type="button" class="secondary">Auf Vorlage zurücksetzen</button>
+    <label>Mitarbeiter-Zeilenabstand <input id="pdfEmployeeGap" type="number" min="10" max="60" step="1"></label>
+    <label>Text-Zeilenabstand <input id="pdfTextGap" type="number" min="8" max="40" step="1"></label>
+    <span id="pdfCoordReadout" class="pdfCoordReadout">Feld auswählen und ziehen</span>
+  </div>
+  <div class="pdfAlignHelp">Jedes markierte Feld ist verschiebbar. Die Blanko-PDF im Hintergrund bleibt die originale PDF; nur die Daten werden später darübergelegt.</div>
+  <div class="pdfAlignViewport"><div id="pdfAlignStage" class="pdfAlignStage"><img src="template-preview.png" alt="Blanko-Tagesbericht als Ausrichtungsvorschau"></div></div>
+  <div class="actions"><button id="backFromPdfAligner" type="button" class="secondary">Zurück zum Bericht</button></div>
 </section>
 
 <section id="services" class="screen">
@@ -183,4 +197,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=pdf-template-52"></script></body></html>
+<script src="app.js?v=pdf-template-53"></script></body></html>

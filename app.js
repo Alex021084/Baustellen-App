@@ -323,6 +323,7 @@ function goBackOneStep(){
 
   // Tagesbericht hat seinen eigenen, festen Schrittverlauf.
   // Dadurch kann die globale Tagelohn-Historie nicht mehr dazwischenfunken.
+  if(current==='pdfAlignerScreen'){ show('tagesberichtSummary',{replaceHistory:true}); return; }
   if(current==='tagesberichtSummary'){ show('tagesberichtWorks',{replaceHistory:true}); return; }
   if(current==='tagesberichtWorks'){ show('tagesberichtEmployees',{replaceHistory:true}); return; }
   if(current==='tagesberichtEmployees'){ show('tagesbericht',{replaceHistory:true}); return; }
@@ -1033,7 +1034,7 @@ function renderTagesberichtSummary(){
   const sig=hasReportSignature()?`<img class="reportPreviewSignature" src="${reportSignatureCanvas.toDataURL('image/png')}" alt="">`:'';
   $('reportSummaryContent').innerHTML=`
     <div class="reportPaperHeader"><div class="reportHeaderLeft"><h1>Baustellentagesbericht</h1><div class="reportRedRule"></div><div class="reportDate">${esc(date)}</div><div class="reportCompany">Dählmann Erdbau GmbH</div><div>Südring 11</div><div>27404 Zeven</div></div><img class="reportLogo" src="dahlmann-erdbau-logo.jpg" alt="Dählmann Erdbau GmbH"></div>
-    <div class="reportInfoBox"><div class="reportProjectRow"><span class="reportDocIcon" aria-hidden="true">▤</span><b>Bauvorhaben:</b><span class="reportProjectValue">${esc(projectLabel)}</span></div><div class="reportWeatherRows"><div><span class="reportWeatherIcon">🌡️</span><span>${esc(d.temperature)}</span></div><div><span class="reportWeatherIcon">💨</span><span>${esc(d.wind)}</span></div><div><span class="reportWeatherIcon">🌧️</span><span>${esc(d.precipitation)}</span></div><div><span class="reportWeatherIcon">☁️</span><span>${esc(d.cloud)}</span></div></div></div>
+    <div class="reportInfoBox"><div class="reportProjectRow"><span class="reportDocIcon" aria-hidden="true">▤</span><b>Bauvorhaben:</b><span class="reportProjectValue">${esc(projectLabel)}</span></div><div class="reportWeatherRows"><div><b>Temperatur:</b><span>${esc(d.temperature)}</span></div><div><b>Wind:</b><span>${esc(d.wind)}</span></div><div><b>Niederschlag:</b><span>${esc(d.precipitation)}</span></div><div><b>Bewölkung:</b><span>${esc(d.cloud)}</span></div></div></div>
     <div class="reportEmployeeTableWrap"><table class="reportEmployeeTable"><thead><tr><th>Mitarbeiter</th><th>Funktion</th><th>Arbeitsbeginn</th><th>Arbeitsende</th><th>Pause</th><th>Gesamt</th></tr></thead><tbody>${rows}${Array.from({length:Math.max(0,5-(d.employees||[]).length)},()=>'<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table></div>
     <div class="reportTwoCols"><section class="reportListBox"><h3><span class="gearIcon">⚙</span>Ausgeführte Arbeiten:</h3><div class="reportLines">${lineRows(d.works)}</div></section><section class="reportListBox"><h3><span class="truckIcon">▰</span>Materiallieferung:</h3><div class="reportLines">${lineRows(d.materials)}</div></section></div>
     <div class="reportSignaturePreview"><h3>Unterschrift Auftraggeber</h3><div class="signatureLine">${sig}</div></div>
@@ -1061,73 +1062,206 @@ function tagesberichtPdfFilename(data){
   const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
   return `${customer} - ${shortDate(data.date).replaceAll('.','.') } - Tagesbericht - ${project}.pdf`;
 }
+const PDF_TEMPLATE_W=668.539;
+const PDF_TEMPLATE_H=946.067;
+const PDF_COORDS_KEY='tagesberichtPdfCoordinatesV1';
+const DEFAULT_PDF_COORDS={
+  date:{x:500,y:82,w:120,size:10},
+  project:{x:64,y:284,w:540,size:9.5},
+  temperature:{x:72,y:329,w:170,size:9.2},
+  wind:{x:337,y:329,w:170,size:9.2},
+  precipitation:{x:72,y:356,w:170,size:9.2},
+  cloud:{x:337,y:356,w:170,size:9.2},
+  employeeName:{x:64,y:314,w:125,size:8.8},
+  employeeStart:{x:248,y:314,w:75,size:8.8},
+  employeeEnd:{x:339,y:314,w:75,size:8.8},
+  employeePause:{x:430,y:314,w:65,size:8.8},
+  employeeHours:{x:514,y:314,w:90,size:8.8},
+  employeeRowGap:22,
+  works:{x:64,y:451,w:355,size:8.5},
+  materials:{x:425,y:451,w:170,size:8.5},
+  textRowGap:14,
+  signature:{x:60,y:625,w:220,h:72}
+};
+function loadPdfCoords(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(PDF_COORDS_KEY)||'null');
+    return {...DEFAULT_PDF_COORDS,...(saved||{}),signature:{...DEFAULT_PDF_COORDS.signature,...(saved?.signature||{})}};
+  }catch(e){return JSON.parse(JSON.stringify(DEFAULT_PDF_COORDS))}
+}
+function savePdfCoords(coords){localStorage.setItem(PDF_COORDS_KEY,JSON.stringify(coords));}
+function resetPdfCoords(){localStorage.removeItem(PDF_COORDS_KEY);return loadPdfCoords()}
+
+const ALIGN_FIELDS=[
+  ['date','Datum','Datum'],
+  ['project','Bauvorhaben','Bauvorhaben'],
+  ['temperature','Temperatur','Temperatur'],
+  ['wind','Wind','Wind'],
+  ['precipitation','Niederschlag','Niederschlag'],
+  ['cloud','Bewölkung','Bewölkung'],
+  ['employeeName','Mitarbeiter','Mitarbeiter'],
+  ['employeeStart','Arbeitsbeginn','Arbeitsbeginn'],
+  ['employeeEnd','Arbeitsende','Arbeitsende'],
+  ['employeePause','Pause','Pause'],
+  ['employeeHours','Gesamt','Gesamt'],
+  ['works','Ausgeführte Arbeiten','Ausgeführte Arbeiten'],
+  ['materials','Materiallieferung','Materiallieferung'],
+  ['signature','Unterschrift','Unterschrift']
+];
+let pdfAlignCoords=loadPdfCoords();
+let pdfAlignPointer=null;
+function pdfAlignSampleData(data){
+  const emp=(data?.employees||[])[0]||{};
+  return {
+    date:formatDate(data?.date)||'24.09.2026',
+    project:[data?.customer,data?.project].filter(Boolean).join(' – ')||'Bauvorhaben',
+    temperature:data?.temperature||'18 °C', wind:data?.wind||'12 km/h',
+    precipitation:data?.precipitation||'0,0 mm', cloud:data?.cloud||'35 %',
+    employeeName:emp.name||'Max Mustermann', employeeStart:emp.start||'07:00',
+    employeeEnd:emp.end||'16:00', employeePause:emp.pause?`${emp.pause} min`:'30 min',
+    employeeHours:Number(emp.hours)?`${Number(emp.hours).toFixed(2).replace('.',',')} Std.`:'8,50 Std.',
+    works:(data?.works||[])[0]||'Ausgeführte Arbeiten',
+    materials:(data?.materials||[])[0]||'Material / sonstige Leistungen',
+    signature:'Unterschrift'
+  };
+}
+function renderPdfAligner(data=collectTagesbericht()){
+  const stage=$('pdfAlignStage'); if(!stage)return;
+  pdfAlignCoords=loadPdfCoords();
+  const sample=pdfAlignSampleData(data);
+  stage.innerHTML='';
+  ALIGN_FIELDS.forEach(([key,label])=>{
+    const el=document.createElement('div');
+    el.className='pdfAlignField'; el.dataset.field=key; el.title=`${label} – ziehen`;
+    el.textContent=sample[key];
+    const c=pdfAlignCoords[key];
+    el.style.left=`${(c.x/PDF_TEMPLATE_W)*100}%`;
+    el.style.top=`${(c.y/PDF_TEMPLATE_H)*100}%`;
+    el.style.maxWidth=`${Math.max(45,c.w||100)/PDF_TEMPLATE_W*100}%`;
+    if(c.size)el.style.fontSize=`${Math.max(8,c.size*1.6)}px`;
+    el.addEventListener('pointerdown',e=>startPdfAlignDrag(e,el));
+    stage.appendChild(el);
+  });
+  const gap=$('pdfEmployeeGap'); if(gap)gap.value=pdfAlignCoords.employeeRowGap||22;
+  const textGap=$('pdfTextGap'); if(textGap)textGap.value=pdfAlignCoords.textRowGap||14;
+}
+function startPdfAlignDrag(e,el){
+  e.preventDefault();
+  const stage=$('pdfAlignStage'); if(!stage)return;
+  const rect=stage.getBoundingClientRect();
+  const field=el.dataset.field;
+  const c=pdfAlignCoords[field];
+  pdfAlignPointer={field,el,rect,startX:e.clientX,startY:e.clientY,x:c.x,y:c.y};
+  el.setPointerCapture?.(e.pointerId);
+  el.classList.add('dragging');
+  const move=ev=>{
+    if(!pdfAlignPointer)return;
+    const dx=(ev.clientX-pdfAlignPointer.startX)/rect.width*PDF_TEMPLATE_W;
+    const dy=(ev.clientY-pdfAlignPointer.startY)/rect.height*PDF_TEMPLATE_H;
+    const nc=pdfAlignCoords[field];
+    nc.x=Math.max(0,Math.min(PDF_TEMPLATE_W-10,pdfAlignPointer.x+dx));
+    nc.y=Math.max(0,Math.min(PDF_TEMPLATE_H-10,pdfAlignPointer.y+dy));
+    el.style.left=`${nc.x/PDF_TEMPLATE_W*100}%`;
+    el.style.top=`${nc.y/PDF_TEMPLATE_H*100}%`;
+    updatePdfCoordReadout(field);
+  };
+  const up=()=>{
+    el.classList.remove('dragging');
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    pdfAlignPointer=null;
+  };
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up,{once:true});
+}
+function updatePdfCoordReadout(field){
+  const c=pdfAlignCoords[field]; const out=$('pdfCoordReadout');
+  if(out&&c)out.textContent=`${field}: X ${c.x.toFixed(1)} pt · Y ${c.y.toFixed(1)} pt`;
+}
+function openPdfAligner(){
+  renderPdfAligner(collectTagesbericht());
+  show('pdfAlignerScreen');
+}
+function savePdfAlignment(){
+  const gap=Number($('pdfEmployeeGap')?.value); if(Number.isFinite(gap)&&gap>0)pdfAlignCoords.employeeRowGap=gap;
+  const textGap=Number($('pdfTextGap')?.value); if(Number.isFinite(textGap)&&textGap>0)pdfAlignCoords.textRowGap=textGap;
+  savePdfCoords(pdfAlignCoords);
+  alert('PDF-Positionen gespeichert. Diese Koordinaten werden ab jetzt für alle Tagesberichte verwendet.');
+}
+function resetPdfAlignment(){
+  pdfAlignCoords=resetPdfCoords();
+  renderPdfAligner(collectTagesbericht());
+}
+function wrapPdfLines(font,text,size,maxW,maxLines){
+  const words=String(text||'').split(/\s+/).filter(Boolean); let line=''; const lines=[];
+  for(const word of words){
+    const test=line?`${line} ${word}`:word;
+    if(font.widthOfTextAtSize(test,size)<=maxW)line=test;
+    else{if(line)lines.push(line);line=word;}
+  }
+  if(line)lines.push(line);
+  return lines.slice(0,maxLines);
+}
+
 async function createTagesberichtPdf(data){
   if(tagesberichtPdfBusy || tagesberichtShareBusy) return false;
   tagesberichtPdfBusy=true;
   if(!window.PDFLib){tagesberichtPdfBusy=false;alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
   try{
-    const templateBytes=await fetch('template-bg-v53.png',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('PDF-Vorlage nicht gefunden');return r.arrayBuffer()});
-    const pdf=await PDFDocument.create();
-    const W=668.539, H=946.067;
-    const page=pdf.addPage([W,H]);
-    const bg=await pdf.embedPng(templateBytes);
-    page.drawImage(bg,{x:0,y:0,width:W,height:H});
+    // WICHTIG: Die hochgeladene Blanko-PDF bleibt die echte PDF-Seite.
+    // Es wird nichts gerastert oder neu gezeichnet. Dadurch bleibt die Vorlage
+    // beim starken Hineinzoomen scharf und exakt erhalten.
+    const templateBytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('OriginalTemplate.pdf nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.load(templateBytes);
+    const page=pdf.getPages()[0];
     const normal=await pdf.embedFont(StandardFonts.Helvetica);
     const black=rgb(0.06,0.06,0.06);
-    const fit=(value,x,y,maxW,size=9)=>{
-      const txt=String(value??'').trim(); if(!txt)return;
-      let fs=size;
-      while(fs>6 && normal.widthOfTextAtSize(txt,fs)>maxW)fs-=0.2;
-      page.drawText(txt,{x,y,size:fs,font:normal,color:black});
+    const coords=loadPdfCoords();
+    const drawFit=(txt,c,opts={})=>{
+      txt=String(txt??'').trim(); if(!txt)return;
+      const maxW=(c.w||160); let size=c.size||opts.size||9;
+      while(size>5.5 && normal.widthOfTextAtSize(txt,size)>maxW)size-=0.2;
+      page.drawText(txt,{x:c.x,y:PDF_TEMPLATE_H-(c.y+size),size,font:normal,color:black});
     };
-    const wrap=(value,x,y,maxW,size=8.2,lineH=11,maxLines=2)=>{
-      const words=String(value??'').trim().split(/\\s+/).filter(Boolean); if(!words.length)return;
-      let lines=[],line='';
-      for(const word of words){
-        const test=line?line+' '+word:word;
-        if(normal.widthOfTextAtSize(test,size)<=maxW)line=test;
-        else{if(line)lines.push(line);line=word;}
-      }
-      if(line)lines.push(line);
-      lines.slice(0,maxLines).forEach((ln,i)=>fit(ln,x,y-i*lineH,maxW,size));
-    };
+    const dateText=formatDate(data.date);
+    drawFit(dateText,coords.date);
+    const project=[data.customer,data.project].filter(Boolean).join(' – ');
+    drawFit(project,coords.project);
+    drawFit(data.temperature,coords.temperature);
+    drawFit(data.wind,coords.wind);
+    drawFit(data.precipitation,coords.precipitation);
+    drawFit(data.cloud,coords.cloud);
 
-    // Datum unter dem Titel, links.
-    fit(formatLongDate(data.date)||formatDate(data.date)||'',30,H-78,250,9.5);
-
-    // Kunde + Bauvorhaben im grauen Feld.
-    const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' – ');
-    fit(projectLabel,195,H-197,430,9.0);
-
-    // Wetter: nur Werte, die Symbole sind Bestandteil der Vorlage.
-    fit(data.temperature||'—',105,H-266,145,9.2);
-    fit(data.wind||'—',390,H-266,150,9.2);
-    fit(data.precipitation||'—',105,H-307,145,9.2);
-    fit(data.cloud||'—',390,H-307,150,9.2);
-
-    // Mitarbeiter.
-    const employees=(data.employees||[]).slice(0,5);
-    const rowYs=[H-406,H-437,H-468,H-499,H-530];
+    const employees=(data.employees||[]).slice(0,7);
     employees.forEach((e,i)=>{
-      const y=rowYs[i];
-      fit(e.name||'',38,y,135,7.7);
-      fit(e.role||'',172,y,78,7.7);
-      fit(e.start||'',273,y,72,7.7);
-      fit(e.end||'',365,y,72,7.7);
-      if(e.pause)fit(String(e.pause)+' min',448,y,58,7.4);
-      if(Number(e.hours)>0)fit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',522,y,70,7.4);
+      const yOffset=i*(coords.employeeRowGap||22);
+      for(const key of ['employeeName','employeeStart','employeeEnd','employeePause','employeeHours']){
+        const base=coords[key]; const c={...base,y:base.y+yOffset};
+        let value='';
+        if(key==='employeeName')value=e.name||'';
+        if(key==='employeeStart')value=e.start||'';
+        if(key==='employeeEnd')value=e.end||'';
+        if(key==='employeePause')value=Number(e.pause)>0?`${e.pause} min`:'';
+        if(key==='employeeHours')value=Number(e.hours)>0?`${Number(e.hours).toFixed(2).replace('.',',')} Std.`:'';
+        drawFit(value,c);
+      }
     });
 
-    // Keine Aufzählungspunkte; lange Einträge bleiben im jeweiligen Feld.
-    const works=(data.works||[]).filter(Boolean).slice(0,6);
-    const materials=(data.materials||[]).filter(Boolean).slice(0,6);
-    works.forEach((v,i)=>wrap(v,43,H-(614+i*25),300));
-    materials.forEach((v,i)=>wrap(v,385,H-(614+i*25),245));
+    const drawWrappedField=(values,c,gap,maxLines)=>{
+      const items=(values||[]).filter(v=>String(v||'').trim()).slice(0,maxLines);
+      items.forEach((v,i)=>{
+        const lines=wrapPdfLines(normal,v,c.size||8.5,c.w||150,2);
+        lines.forEach((line,j)=>drawFit(line,{...c,y:c.y+(i*gap)+(j*(c.size||8.5)+3),w:c.w,size:c.size}));
+      });
+    };
+    drawWrappedField(data.works,coords.works,coords.textRowGap||14,7);
+    drawWrappedField(data.materials,coords.materials,coords.textRowGap||14,7);
 
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:48,y:58,width:180,height:58});
+      const c=coords.signature;
+      page.drawImage(sig,{x:c.x,y:PDF_TEMPLATE_H-(c.y+c.h),width:c.w,height:c.h});
     }
 
     const out=await pdf.save({useObjectStreams:false});
@@ -1136,25 +1270,21 @@ async function createTagesberichtPdf(data){
     if(navigator.share&&navigator.canShare){
       const file=new File([blob],filename,{type:'application/pdf'});
       if(navigator.canShare({files:[file]})){
+        if(tagesberichtShareBusy)return false;
         tagesberichtShareBusy=true;
-        try{await navigator.share({files:[file]});return true;}
-        catch(err){
-          if(err?.name==='AbortError')return false;
-          if(String(err?.message||'').toLowerCase().includes('already in progress'))return false;
-          throw err;
-        }finally{tagesberichtShareBusy=false;}
+        try{await navigator.share({files:[file]});return true}
+        catch(err){if(err?.name==='AbortError')return false;throw err}
+        finally{tagesberichtShareBusy=false}
       }
     }
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
     return true;
   }catch(err){
-    console.error(err);
-    if(err?.name==='AbortError')return false;
-    alert('PDF konnte nicht erstellt werden: '+err.message);
-    return false;
-  }finally{tagesberichtPdfBusy=false;}
+    console.error(err); if(err?.name==='AbortError')return false;
+    alert('PDF konnte nicht erstellt werden: '+err.message); return false;
+  }finally{tagesberichtPdfBusy=false}
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
@@ -1180,6 +1310,10 @@ $('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
 $('saveReport')?.addEventListener('click',()=>{if(saveTagesbericht())alert('Bericht gespeichert.');});
 $('saveReportAndPdf')?.addEventListener('click',saveTagesberichtAndPdf);
+$('openPdfAligner')?.addEventListener('click',openPdfAligner);
+$('savePdfAlignment')?.addEventListener('click',savePdfAlignment);
+$('resetPdfAlignment')?.addEventListener('click',resetPdfAlignment);
+$('backFromPdfAligner')?.addEventListener('click',()=>{renderTagesberichtSummary();show('tagesberichtSummary',{replaceHistory:true})});
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
