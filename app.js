@@ -1125,11 +1125,53 @@ function pdfAlignSampleData(data){
     signature:'Unterschrift'
   };
 }
-function renderPdfAligner(data=collectTagesbericht()){
+async function renderPdfTemplateBackground(){
+  const stage=$('pdfAlignStage');
+  if(!stage) return;
+  stage.classList.add('pdfTemplateLoading');
+  let canvas=stage.querySelector('.pdfAlignTemplateCanvas');
+  if(!canvas){
+    canvas=document.createElement('canvas');
+    canvas.className='pdfAlignTemplateCanvas';
+    canvas.setAttribute('aria-label','Originale Blanko-PDF');
+    stage.prepend(canvas);
+  }
+  const ctx=canvas.getContext('2d',{alpha:false});
+  try{
+    if(!window.pdfjsLib) throw new Error('PDF.js konnte nicht geladen werden');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const loading=pdfjsLib.getDocument({url:'OriginalTemplate.pdf',cacheKey:Date.now()});
+    const pdf=await loading.promise;
+    const page=await pdf.getPage(1);
+    const cssWidth=Math.max(1,stage.clientWidth);
+    const baseViewport=page.getViewport({scale:1});
+    const scale=(cssWidth/baseViewport.width)*2;
+    const viewport=page.getViewport({scale});
+    canvas.width=Math.ceil(viewport.width);
+    canvas.height=Math.ceil(viewport.height);
+    canvas.style.aspectRatio=`${baseViewport.width}/${baseViewport.height}`;
+    await page.render({canvasContext:ctx,viewport}).promise;
+    stage.classList.remove('pdfTemplateLoading');
+    stage.classList.add('pdfTemplateReady');
+  }catch(err){
+    stage.classList.remove('pdfTemplateLoading');
+    stage.classList.remove('pdfTemplateReady');
+    console.error('OriginalTemplate.pdf konnte nicht angezeigt werden',err);
+    canvas.width=10; canvas.height=10;
+    ctx.clearRect(0,0,10,10);
+    const msg=document.createElement('div');
+    msg.className='pdfAlignPdfError';
+    msg.textContent='Die Original-PDF konnte hier nicht geladen werden. Bitte Seite neu laden.';
+    stage.appendChild(msg);
+  }
+}
+
+async function renderPdfAligner(data=collectTagesbericht()){
   const stage=$('pdfAlignStage'); if(!stage)return;
   pdfAlignCoords=loadPdfCoords();
   const sample=pdfAlignSampleData(data);
-  stage.innerHTML='';
+  stage.querySelectorAll('.pdfAlignField,.pdfAlignPdfError').forEach(el=>el.remove());
+  await renderPdfTemplateBackground();
   ALIGN_FIELDS.forEach(([key,label])=>{
     const el=document.createElement('div');
     el.className='pdfAlignField'; el.dataset.field=key; el.title=`${label} – ziehen`;
@@ -1178,9 +1220,10 @@ function updatePdfCoordReadout(field){
   const c=pdfAlignCoords[field]; const out=$('pdfCoordReadout');
   if(out&&c)out.textContent=`${field}: X ${c.x.toFixed(1)} pt · Y ${c.y.toFixed(1)} pt`;
 }
-function openPdfAligner(){
-  renderPdfAligner(collectTagesbericht());
+async function openPdfAligner(){
   show('pdfAlignerScreen');
+  await new Promise(r=>requestAnimationFrame(r));
+  await renderPdfAligner(collectTagesbericht());
 }
 function savePdfAlignment(){
   const gap=Number($('pdfEmployeeGap')?.value); if(Number.isFinite(gap)&&gap>0)pdfAlignCoords.employeeRowGap=gap;
@@ -1188,9 +1231,9 @@ function savePdfAlignment(){
   savePdfCoords(pdfAlignCoords);
   alert('PDF-Positionen gespeichert. Diese Koordinaten werden ab jetzt für alle Tagesberichte verwendet.');
 }
-function resetPdfAlignment(){
+async function resetPdfAlignment(){
   pdfAlignCoords=resetPdfCoords();
-  renderPdfAligner(collectTagesbericht());
+  await renderPdfAligner(collectTagesbericht());
 }
 function wrapPdfLines(font,text,size,maxW,maxLines){
   const words=String(text||'').split(/\s+/).filter(Boolean); let line=''; const lines=[];
