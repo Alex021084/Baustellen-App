@@ -4,3 +4,6 @@ Version 56
 - Reduced alignment overlay font size so fields are easier to place.
 - Alignment preview now fits the complete A4 page into the available viewport instead of forcing horizontal scrolling/cropping.
 - Saved PDF coordinates remain in localStorage.
+
+
+Version 57: Tagelohn-PDF wieder auf eigener Tagelohn-Vorlage. Tagesbericht nutzt weiterhin OriginalTemplate.pdf.
