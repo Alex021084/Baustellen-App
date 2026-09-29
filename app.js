@@ -1072,11 +1072,12 @@ const DEFAULT_PDF_COORDS={
   wind:{x:337,y:329,w:170,size:9.2},
   precipitation:{x:72,y:356,w:170,size:9.2},
   cloud:{x:337,y:356,w:170,size:9.2},
-  employeeName:{x:64,y:314,w:125,size:8.8},
-  employeeStart:{x:248,y:314,w:75,size:8.8},
-  employeeEnd:{x:339,y:314,w:75,size:8.8},
-  employeePause:{x:430,y:314,w:65,size:8.8},
-  employeeHours:{x:514,y:314,w:90,size:8.8},
+  employeeName:{x:64,y:314,w:125,size:7.8},
+  employeeRole:{x:64,y:329,w:125,size:7.4},
+  employeeStart:{x:248,y:314,w:75,size:7.8},
+  employeeEnd:{x:339,y:314,w:75,size:7.8},
+  employeePause:{x:430,y:314,w:65,size:7.8},
+  employeeHours:{x:514,y:314,w:90,size:7.8},
   employeeRowGap:22,
   works:{x:64,y:451,w:355,size:8.5},
   materials:{x:425,y:451,w:170,size:8.5},
@@ -1100,6 +1101,7 @@ const ALIGN_FIELDS=[
   ['precipitation','Niederschlag','Niederschlag'],
   ['cloud','Bewölkung','Bewölkung'],
   ['employeeName','Mitarbeiter','Mitarbeiter'],
+  ['employeeRole','Vorarbeiter / Leistung','Vorarbeiter / Leistung'],
   ['employeeStart','Arbeitsbeginn','Arbeitsbeginn'],
   ['employeeEnd','Arbeitsende','Arbeitsende'],
   ['employeePause','Pause','Pause'],
@@ -1117,7 +1119,7 @@ function pdfAlignSampleData(data){
     project:[data?.customer,data?.project].filter(Boolean).join(' – ')||'Bauvorhaben',
     temperature:data?.temperature||'18 °C', wind:data?.wind||'12 km/h',
     precipitation:data?.precipitation||'0,0 mm', cloud:data?.cloud||'35 %',
-    employeeName:emp.name||'Max Mustermann', employeeStart:emp.start||'07:00',
+    employeeName:emp.name||'Max Mustermann', employeeRole:emp.role||'Vorarbeiter', employeeStart:emp.start||'07:00',
     employeeEnd:emp.end||'16:00', employeePause:emp.pause?`${emp.pause} min`:'30 min',
     employeeHours:Number(emp.hours)?`${Number(emp.hours).toFixed(2).replace('.',',')} Std.`:'8,50 Std.',
     works:(data?.works||[])[0]||'Ausgeführte Arbeiten',
@@ -1180,7 +1182,7 @@ async function renderPdfAligner(data=collectTagesbericht()){
     el.style.left=`${(c.x/PDF_TEMPLATE_W)*100}%`;
     el.style.top=`${(c.y/PDF_TEMPLATE_H)*100}%`;
     el.style.maxWidth=`${Math.max(45,c.w||100)/PDF_TEMPLATE_W*100}%`;
-    if(c.size)el.style.fontSize=`${Math.max(8,c.size*1.6)}px`;
+    if(c.size)el.style.fontSize=`${Math.max(7,c.size*1.0)}px`;
     el.addEventListener('pointerdown',e=>startPdfAlignDrag(e,el));
     stage.appendChild(el);
   });
@@ -1279,10 +1281,11 @@ async function createTagesberichtPdf(data){
     const employees=(data.employees||[]).slice(0,7);
     employees.forEach((e,i)=>{
       const yOffset=i*(coords.employeeRowGap||22);
-      for(const key of ['employeeName','employeeStart','employeeEnd','employeePause','employeeHours']){
+      for(const key of ['employeeName','employeeRole','employeeStart','employeeEnd','employeePause','employeeHours']){
         const base=coords[key]; const c={...base,y:base.y+yOffset};
         let value='';
         if(key==='employeeName')value=e.name||'';
+        if(key==='employeeRole')value=e.role||'';
         if(key==='employeeStart')value=e.start||'';
         if(key==='employeeEnd')value=e.end||'';
         if(key==='employeePause')value=Number(e.pause)>0?`${e.pause} min`:'';
