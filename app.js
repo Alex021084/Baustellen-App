@@ -856,9 +856,7 @@ function pdfFilename(data){
 
 async function createPdf(options={}){
   const data=collect();
-  // Auch beim direkten Erstellen einer PDF wird der aktuelle Nachweis in der
-  // App gespeichert. So bleibt er unter "Nachweise" erhalten, unabhängig
-  // davon, ob der Benutzer den anschließenden Datei-Speicherdialog abbricht.
+  // Den aktuellen Bericht beim PDF-Export immer speichern.
   if(options.saveReport!==false){
     if(editingReportIndex!==null && reports[editingReportIndex]){
       const previous=reports[editingReportIndex];
@@ -874,31 +872,94 @@ async function createPdf(options={}){
   const btn=$('pdf');btn.disabled=true;btn.textContent='PDF wird erstellt …';
   let fileHandle=null;
   try{
-    // Den nativen Speichern-Dialog verwenden, wenn der Browser ihn unterstützt.
-    // Auf iPhone/iPad (Safari) gibt es showSaveFilePicker nicht; dort verwenden wir
-    // anschließend den System-Teilen-Dialog, über den der Benutzer 'In Dateien sichern'
-    // und den Zielordner auswählen kann.
     if(options.askLocation && 'showSaveFilePicker' in window){
       fileHandle=await window.showSaveFilePicker({
         suggestedName:pdfFilename(data),
         types:[{description:'PDF-Datei',accept:{'application/pdf':['.pdf']}}]
       });
     }
+
     const {PDFDocument,StandardFonts,rgb}=PDFLib;
-    const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
-    const pdf=await PDFDocument.load(bytes); const page=pdf.getPages()[0]; const W=page.getWidth(),H=page.getHeight();
-    const normal=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-    function cover(x,yTop,w,h){page.drawRectangle({x,y:H-yTop-h,width:w,height:h,color:rgb(1,1,1)})}
-    cover(225,94,165,18);cover(50,140,220,22);cover(50,165,150,40);
-    const dateText=formatDate(data.date),dateSize=fitText(normal,dateText,145,9.5,7.5);
-    page.drawText(dateText,{x:(W-normal.widthOfTextAtSize(dateText,dateSize))/2,y:H-108,size:dateSize,font:normal});
-    if(data.contractor)page.drawText(data.contractor,{x:54,y:H-158,size:11,font:bold});
-    splitLines(data.address).slice(0,2).forEach((ln,i)=>page.drawText(ln,{x:54,y:H-(180+i*20),size:9.5,font:normal}));
-    cover(180,241,375,24);drawWrapped(page,normal,data.project||'',198,H-263,350,9.5,1,2);
-    const rowTop=H-320,rowStep=20;
-    data.employees.slice(0,12).forEach((e,i)=>{const y=rowTop-i*rowStep,hours=(Number(e.hours)||0).toFixed(2).replace('.',',');if(hours!=='0,00')page.drawText(hours,{x:84,y,size:9.5,font:normal});if(e.service||e.activity)drawWrapped(page,normal,e.service||e.activity,145,y,92,9.2,1,2);if(e.name)page.drawText(e.name,{x:247,y,size:9.5,font:normal});if(e.start)page.drawText(e.start,{x:412,y,size:9.5,font:normal});if(e.end)page.drawText(e.end,{x:466,y,size:9.5,font:normal});if(Number(e.pause))page.drawText(String(e.pause),{x:517,y,size:9.5,font:normal})});
-    const contentTop=H-565;data.works.slice(0,12).forEach((v,i)=>drawWrapped(page,normal,'• '+v,54,contentTop-i*14,285,9.2,1,2));data.materials.slice(0,12).forEach((v,i)=>drawWrapped(page,normal,'• '+v,355,contentTop-i*14,195,9.2,1,2));
-    if(data.signature&&data.signature.length>100){const sigPng=await pdf.embedPng(data.signature);page.drawImage(sigPng,{x:54,y:70,width:190,height:70,opacity:1})}
+    // Die PDF wird jetzt wirklich auf der neuen Baustellentagesbericht-Skizze
+    // aufgebaut. Die Vorlage enthält nur das feste Layout; alle veränderlichen
+    // Angaben werden hier exakt in die dafür vorgesehenen Felder geschrieben.
+    const templateBytes=await fetch('template-bg-exact-clean-v2.png',{cache:'no-store'})
+      .then(r=>{if(!r.ok)throw new Error('PDF-Vorlage nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.create();
+    const W=668.539,H=946.067;
+    const page=pdf.addPage([W,H]);
+    const bg=await pdf.embedPng(templateBytes);
+    page.drawImage(bg,{x:0,y:0,width:W,height:H});
+
+    const normal=await pdf.embedFont(StandardFonts.Helvetica);
+    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
+    const sx=W/1055, sy=H/1491;
+
+    // Bildkoordinaten (oben links) -> PDF-Koordinaten.
+    function drawImgText(value, px, py, size=9, font=normal, maxPx=null){
+      if(value===undefined||value===null||String(value)==='')return;
+      let str=String(value);
+      let fs=size;
+      if(maxPx){
+        const maxW=maxPx*sx;
+        while(fs>5.5 && font.widthOfTextAtSize(str,fs)>maxW)fs-=0.2;
+      }
+      page.drawText(str,{
+        x:px*sx,
+        y:H-(py+fs)*sy,
+        size:fs,
+        font,
+        color:rgb(0.06,0.06,0.06)
+      });
+    }
+    function drawFitImg(value,px,py,maxPx,size=9,font=normal){
+      if(value===undefined||value===null||String(value).trim()==='')return;
+      drawImgText(String(value),px,py,size,font,maxPx);
+    }
+
+    // Kopf
+    const dateText=formatDate(data.date);
+    drawFitImg(dateText,45,113,360,10,normal);
+
+    // Bauvorhaben: Kunde + Bauvorhaben, exakt in der grauen Zeile.
+    const projectLabel=[cleanContractorName(data.contractor),data.project].filter(Boolean).join(' – ');
+    drawFitImg(projectLabel,326,296,635,10,normal);
+
+    // Wetterwerte
+    drawFitImg(data.temperature,126,401,145,9.5,normal);
+    drawFitImg(data.wind,620,401,300,9.5,normal);
+    drawFitImg(data.precipitation,126,478,145,9.5,normal);
+    drawFitImg(data.cloud,620,478,300,9.5,normal);
+
+    // Mitarbeiter: eine Zeile pro Mitarbeiter, ohne zusätzliche Aufzählungszeichen.
+    // Die Spalten entsprechen der neuen Vorlage.
+    const employeeRows=(data.employees||[]).slice(0,5);
+    employeeRows.forEach((e,i)=>{
+      const top=614+i*48;
+      drawFitImg(e.name,47,top,205,8.7,normal);
+      drawFitImg(e.role,281,top,110,8.7,normal);
+      drawFitImg(e.start,404,top,115,8.7,normal);
+      drawFitImg(e.end,565,top,115,8.7,normal);
+      if(Number(e.pause)>0)drawFitImg(`${e.pause} min`,738,top,90,8.7,normal);
+      if(Number(e.hours)>0)drawFitImg((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',875,top,105,8.7,normal);
+    });
+
+    // Ausgeführte Arbeiten – kein Punkt vor dem Eintrag.
+    (data.works||[]).slice(0,7).forEach((v,i)=>{
+      drawFitImg(v,48,908+i*29,450,8.4,normal);
+    });
+
+    // Materiallieferung – kein Punkt vor dem Eintrag.
+    (data.materials||[]).slice(0,7).forEach((v,i)=>{
+      drawFitImg(v,540,908+i*29,450,8.4,normal);
+    });
+
+    // Unterschrift liegt auf der vorhandenen Linie der Vorlage.
+    if(data.signature&&data.signature.length>100){
+      const sig=await pdf.embedPng(data.signature);
+      page.drawImage(sig,{x:45*sx,y:H-(1260+80)*sy,width:230*sx,height:70*sy});
+    }
+
     const out=await pdf.save({useObjectStreams:false});
     if(fileHandle){
       const writable=await fileHandle.createWritable();
@@ -907,10 +968,6 @@ async function createPdf(options={}){
     }else{
       const blob=new Blob([out],{type:'application/pdf'});
       const filename=pdfFilename(data);
-      // Auf mobilen Browsern, insbesondere iOS/iPadOS, gibt es keinen universellen
-      // 'Speichern unter'-Dialog für Web-Downloads. Der System-Teilen-Dialog bietet
-      // dort die Möglichkeit, die PDF über 'In Dateien sichern' an einem frei
-      // wählbaren Ort abzulegen.
       if(options.askLocation && navigator.share && navigator.canShare){
         const file=new File([blob],filename,{type:'application/pdf'});
         if(navigator.canShare({files:[file]})){
@@ -918,18 +975,22 @@ async function createPdf(options={}){
           return true;
         }
       }
-      // Fallback für Browser ohne Speichern-/Teilen-Dialog.
       const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+      const a=document.createElement('a');
+      a.href=url;a.download=filename;a.style.display='none';
+      document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
     return true;
   }catch(err){
     if(err?.name==='AbortError') return false;
-    console.error(err);alert('PDF konnte nicht erstellt/gespeichert werden: '+err.message);return false;
-  }finally{btn.disabled=false;btn.textContent='PDF erstellen'}
+    console.error(err);
+    alert('PDF konnte nicht erstellt/gespeichert werden: '+err.message);
+    return false;
+  }finally{
+    btn.disabled=false;btn.textContent='PDF erstellen';
+  }
 }
-
 
 let reportSignatureCanvas, reportSignatureCtx, reportSignatureDown=false;
 let reportSignatureReady=false;
@@ -965,21 +1026,18 @@ function collectTagesbericht(){
 }
 function renderTagesberichtSummary(){
   const d=collectTagesbericht();
-  const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
-  const list=(arr)=>arr.length?`<ul class="reportSummaryList">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>';
+  const date=formatDate(d.date)||'—';
+  const projectLabel=[d.customer,d.project].filter(Boolean).join(' – ')||'—';
+  const rows=(d.employees||[]).map(e=>`<tr><td>${esc(e.name||'—')}</td><td>${esc(e.role||'—')}</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td></tr>`).join('');
+  const lineRows=arr=>{const values=(arr||[]).slice(0,6);return Array.from({length:6},(_,i)=>`<div class="reportEntryLine">${values[i]?esc(values[i]):''}</div>`).join('')};
+  const sig=hasReportSignature()?`<img class="reportPreviewSignature" src="${reportSignatureCanvas.toDataURL('image/png')}" alt="">`:'';
   $('reportSummaryContent').innerHTML=`
-    <div class="reportSummaryGrid">
-      <div><span>Datum</span><b>${esc(formatDate(d.date)||'—')}</b></div>
-      <div><span>Kunde</span><b>${esc(d.customer||'—')}</b></div>
-      <div class="wide"><span>Bauvorhaben</span><b>${esc(d.project||'—')}</b></div>
-      <div><span>🌡️ Temperatur</span><b>${esc(d.temperature)}</b></div>
-      <div><span>🌧️ Niederschlag</span><b>${esc(d.precipitation)}</b></div>
-      <div><span>💨 Wind</span><b>${esc(d.wind)}</b></div>
-      <div><span>☁️ Bewölkung</span><b>${esc(d.cloud)}</b></div>
-    </div>
-    <div class="reportSummarySection"><h3>Mitarbeiter</h3>${emp||'<div class="empty">Keine Mitarbeiter eingetragen.</div>'}</div>
-    <div class="reportSummarySection"><h3>Ausgeführte Arbeiten</h3>${list(d.works)}</div>
-    <div class="reportSummarySection"><h3>Materiallieferung</h3>${list(d.materials)}</div>`;
+    <div class="reportPaperHeader"><div class="reportHeaderLeft"><h1>Baustellentagesbericht</h1><div class="reportRedRule"></div><div class="reportDate">${esc(date)}</div><div class="reportCompany">Dählmann Erdbau GmbH</div><div>Südring 11</div><div>27404 Zeven</div></div><img class="reportLogo" src="dahlmann-erdbau-logo.jpg" alt="Dählmann Erdbau GmbH"></div>
+    <div class="reportInfoBox"><div class="reportProjectRow"><span class="reportDocIcon" aria-hidden="true">▤</span><b>Bauvorhaben:</b><span class="reportProjectValue">${esc(projectLabel)}</span></div><div class="reportWeatherRows"><div><b>Temperatur:</b><span>${esc(d.temperature)}</span></div><div><b>Wind:</b><span>${esc(d.wind)}</span></div><div><b>Niederschlag:</b><span>${esc(d.precipitation)}</span></div><div><b>Bewölkung:</b><span>${esc(d.cloud)}</span></div></div></div>
+    <div class="reportEmployeeTableWrap"><table class="reportEmployeeTable"><thead><tr><th>Mitarbeiter</th><th>Funktion</th><th>Arbeitsbeginn</th><th>Arbeitsende</th><th>Pause</th><th>Gesamt</th></tr></thead><tbody>${rows}${Array.from({length:Math.max(0,5-(d.employees||[]).length)},()=>'<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table></div>
+    <div class="reportTwoCols"><section class="reportListBox"><h3><span class="gearIcon">⚙</span>Ausgeführte Arbeiten:</h3><div class="reportLines">${lineRows(d.works)}</div></section><section class="reportListBox"><h3><span class="truckIcon">▰</span>Materiallieferung:</h3><div class="reportLines">${lineRows(d.materials)}</div></section></div>
+    <div class="reportSignaturePreview"><h3>Unterschrift Auftraggeber</h3><div class="signatureLine">${sig}</div></div>
+    <div class="reportFooter"><div><b>Dählmann Erdbau GmbH</b><br>Südring 11 · 27404 Zeven</div><div><b>Telefon: 04281/5179</b><br>E-Mail: info@daeh­lmann-erdbau.de</div><div>www.daeh­lmann-erdbau.de</div></div>`;
 }
 function saveTagesbericht(){
   const data=collectTagesbericht();
@@ -1075,7 +1133,7 @@ async function createTagesberichtPdf(data){
     const works=(data.works||[]).slice(0,8);
     works.forEach((v,i)=>{
       const y=H-(593+i*15);
-      drawFit('• '+v,64,y,315,8.5,normal);
+      drawFit(v,64,y,315,8.5,normal);
     });
 
     // Materiallieferungen – deutlich weiter rechts und ebenfalls strikt innerhalb
@@ -1083,7 +1141,7 @@ async function createTagesberichtPdf(data){
     const materials=(data.materials||[]).slice(0,8);
     materials.forEach((v,i)=>{
       const y=H-(593+i*15);
-      drawFit('• '+v,410,y,130,8.2,normal);
+      drawFit(v,410,y,130,8.2,normal);
     });
 
     // Unterschrift: die Vorlage selbst enthält die Beschriftung und Linie.
