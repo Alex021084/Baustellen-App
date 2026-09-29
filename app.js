@@ -1033,7 +1033,7 @@ function renderTagesberichtSummary(){
   const sig=hasReportSignature()?`<img class="reportPreviewSignature" src="${reportSignatureCanvas.toDataURL('image/png')}" alt="">`:'';
   $('reportSummaryContent').innerHTML=`
     <div class="reportPaperHeader"><div class="reportHeaderLeft"><h1>Baustellentagesbericht</h1><div class="reportRedRule"></div><div class="reportDate">${esc(date)}</div><div class="reportCompany">Dählmann Erdbau GmbH</div><div>Südring 11</div><div>27404 Zeven</div></div><img class="reportLogo" src="dahlmann-erdbau-logo.jpg" alt="Dählmann Erdbau GmbH"></div>
-    <div class="reportInfoBox"><div class="reportProjectRow"><span class="reportDocIcon" aria-hidden="true">▤</span><b>Bauvorhaben:</b><span class="reportProjectValue">${esc(projectLabel)}</span></div><div class="reportWeatherRows"><div><b>Temperatur:</b><span>${esc(d.temperature)}</span></div><div><b>Wind:</b><span>${esc(d.wind)}</span></div><div><b>Niederschlag:</b><span>${esc(d.precipitation)}</span></div><div><b>Bewölkung:</b><span>${esc(d.cloud)}</span></div></div></div>
+    <div class="reportInfoBox"><div class="reportProjectRow"><span class="reportDocIcon" aria-hidden="true">▤</span><b>Bauvorhaben:</b><span class="reportProjectValue">${esc(projectLabel)}</span></div><div class="reportWeatherRows"><div><span class="reportWeatherIcon">🌡️</span><span>${esc(d.temperature)}</span></div><div><span class="reportWeatherIcon">💨</span><span>${esc(d.wind)}</span></div><div><span class="reportWeatherIcon">🌧️</span><span>${esc(d.precipitation)}</span></div><div><span class="reportWeatherIcon">☁️</span><span>${esc(d.cloud)}</span></div></div></div>
     <div class="reportEmployeeTableWrap"><table class="reportEmployeeTable"><thead><tr><th>Mitarbeiter</th><th>Funktion</th><th>Arbeitsbeginn</th><th>Arbeitsende</th><th>Pause</th><th>Gesamt</th></tr></thead><tbody>${rows}${Array.from({length:Math.max(0,5-(d.employees||[]).length)},()=>'<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table></div>
     <div class="reportTwoCols"><section class="reportListBox"><h3><span class="gearIcon">⚙</span>Ausgeführte Arbeiten:</h3><div class="reportLines">${lineRows(d.works)}</div></section><section class="reportListBox"><h3><span class="truckIcon">▰</span>Materiallieferung:</h3><div class="reportLines">${lineRows(d.materials)}</div></section></div>
     <div class="reportSignaturePreview"><h3>Unterschrift Auftraggeber</h3><div class="signatureLine">${sig}</div></div>
@@ -1067,124 +1067,94 @@ async function createTagesberichtPdf(data){
   if(!window.PDFLib){tagesberichtPdfBusy=false;alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
   try{
-    // Die Originalvorlage wird als gerastertes Hintergrundbild eingebettet.
-    // Dadurch entsteht eine neue, nicht geschützte PDF-Datei, die Safari/iOS
-    // problemlos über den Teilen-Dialog weitergeben kann. Das Layout der Vorlage
-    // bleibt dabei pixelgenau erhalten.
-    const templateBytes=await fetch('template-bg.png',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('PDF-Vorlage nicht gefunden');return r.arrayBuffer()});
+    const templateBytes=await fetch('template-bg-v53.png',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('PDF-Vorlage nicht gefunden');return r.arrayBuffer()});
     const pdf=await PDFDocument.create();
     const W=668.539, H=946.067;
     const page=pdf.addPage([W,H]);
     const bg=await pdf.embedPng(templateBytes);
     page.drawImage(bg,{x:0,y:0,width:W,height:H});
     const normal=await pdf.embedFont(StandardFonts.Helvetica);
-    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-
     const black=rgb(0.06,0.06,0.06);
-    const drawFit=(txt,x,y,maxW,size=9,font=normal)=>{
-      txt=String(txt??'').trim();
-      if(!txt)return;
-      let s=size;
-      while(s>6 && font.widthOfTextAtSize(txt,s)>maxW)s-=0.25;
-      page.drawText(txt,{x,y,size:s,font,color:black});
+    const fit=(value,x,y,maxW,size=9)=>{
+      const txt=String(value??'').trim(); if(!txt)return;
+      let fs=size;
+      while(fs>6 && normal.widthOfTextAtSize(txt,fs)>maxW)fs-=0.2;
+      page.drawText(txt,{x,y,size:fs,font:normal,color:black});
     };
-    const drawWrapped=(txt,x,y,maxW,size=8.8,maxLines=8)=>{
-      const words=String(txt||'').split(/\s+/).filter(Boolean);
-      let line='', lines=[];
-      for(const w of words){
-        const t=line?line+' '+w:w;
-        if(normal.widthOfTextAtSize(t,size)<=maxW) line=t;
-        else { if(line)lines.push(line); line=w; }
+    const wrap=(value,x,y,maxW,size=8.2,lineH=11,maxLines=2)=>{
+      const words=String(value??'').trim().split(/\\s+/).filter(Boolean); if(!words.length)return;
+      let lines=[],line='';
+      for(const word of words){
+        const test=line?line+' '+word:word;
+        if(normal.widthOfTextAtSize(test,size)<=maxW)line=test;
+        else{if(line)lines.push(line);line=word;}
       }
       if(line)lines.push(line);
-      lines.slice(0,maxLines).forEach((ln,i)=>drawFit(ln,x,y-i*13,maxW,size,normal));
-      return Math.min(lines.length,maxLines);
+      lines.slice(0,maxLines).forEach((ln,i)=>fit(ln,x,y-i*lineH,maxW,size));
     };
 
-    // Datum
-    drawFit(formatDate(data.date),266,H-102,140,10,normal);
+    // Datum unter dem Titel, links.
+    fit(formatLongDate(data.date)||formatDate(data.date)||'',30,H-78,250,9.5);
 
-    // Bauvorhaben: Kunde + Bauvorhaben wie in der Originalvorlage.
-    const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' - ');
-    drawFit(projectLabel,199,H-282,455,9.2,normal);
+    // Kunde + Bauvorhaben im grauen Feld.
+    const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' – ');
+    fit(projectLabel,195,H-197,430,9.0);
 
-    // Wetter exakt in die vier vorgesehenen Felder der Vorlage.
-    drawFit(data.temperature||'—',150,H-322,145,9.2,normal);
-    drawFit(data.wind||'—',392,H-322,145,9.2,normal);
-    drawFit(data.precipitation||'—',155,H-350,145,9.2,normal);
-    drawFit(data.cloud||'—',392,H-350,145,9.2,normal);
+    // Wetter: nur Werte, die Symbole sind Bestandteil der Vorlage.
+    fit(data.temperature||'—',105,H-266,145,9.2);
+    fit(data.wind||'—',390,H-266,150,9.2);
+    fit(data.precipitation||'—',105,H-307,145,9.2);
+    fit(data.cloud||'—',390,H-307,150,9.2);
 
-    // Mitarbeiter – die Vorlage hat vier freie Zeilen unter den drei Beispielzeilen.
-    const employees=(data.employees||[]).slice(0,7);
-    const rowTops=[417,437,457,477,497,517,537];
+    // Mitarbeiter.
+    const employees=(data.employees||[]).slice(0,5);
+    const rowYs=[H-406,H-437,H-468,H-499,H-530];
     employees.forEach((e,i)=>{
-      const y=H-rowTops[i];
-      drawFit(e.name||'',64,y,100,8.8,normal);
-      drawFit(e.role||'',172,y,68,8.5,normal);
-      if(e.start)drawFit(e.start,270,y,45,8.8,normal);
-      if(e.end)drawFit(e.end,360,y,45,8.8,normal);
-      if(e.pause)drawFit(String(e.pause),437,y,45,8.5,normal);
-      if(Number(e.hours)>0)drawFit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',500,y,60,8.5,normal);
+      const y=rowYs[i];
+      fit(e.name||'',38,y,135,7.7);
+      fit(e.role||'',172,y,78,7.7);
+      fit(e.start||'',273,y,72,7.7);
+      fit(e.end||'',365,y,72,7.7);
+      if(e.pause)fit(String(e.pause)+' min',448,y,58,7.4);
+      if(Number(e.hours)>0)fit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',522,y,70,7.4);
     });
 
-    // Ausgeführte Arbeiten – innerhalb des linken Tabellenfeldes halten.
-    // Eine Zeile pro Eintrag verhindert, dass lange Texte in die Nachbarspalte
-    // oder aus dem Tabellenrahmen laufen. Die Schrift wird bei Bedarf verkleinert.
-    const works=(data.works||[]).slice(0,8);
-    works.forEach((v,i)=>{
-      const y=H-(593+i*15);
-      drawFit(v,64,y,315,8.5,normal);
-    });
+    // Keine Aufzählungspunkte; lange Einträge bleiben im jeweiligen Feld.
+    const works=(data.works||[]).filter(Boolean).slice(0,6);
+    const materials=(data.materials||[]).filter(Boolean).slice(0,6);
+    works.forEach((v,i)=>wrap(v,43,H-(614+i*25),300));
+    materials.forEach((v,i)=>wrap(v,385,H-(614+i*25),245));
 
-    // Materiallieferungen – deutlich weiter rechts und ebenfalls strikt innerhalb
-    // des rechten Tabellenfeldes.
-    const materials=(data.materials||[]).slice(0,8);
-    materials.forEach((v,i)=>{
-      const y=H-(593+i*15);
-      drawFit(v,410,y,130,8.2,normal);
-    });
-
-    // Unterschrift: die Vorlage selbst enthält die Beschriftung und Linie.
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:70,y:58,width:220,height:82,opacity:1});
+      page.drawImage(sig,{x:48,y:58,width:180,height:58});
     }
 
     const out=await pdf.save({useObjectStreams:false});
     const blob=new Blob([out],{type:'application/pdf'});
     const filename=tagesberichtPdfFilename(data);
-
     if(navigator.share&&navigator.canShare){
       const file=new File([blob],filename,{type:'application/pdf'});
       if(navigator.canShare({files:[file]})){
-        if(tagesberichtShareBusy) return false;
         tagesberichtShareBusy=true;
-        try{
-          await navigator.share({files:[file]});
-          return true;
-        }catch(err){
-          if(err?.name==='AbortError') return false;
-          // Safari/iOS can report an active share sheet when the user taps twice.
-          if(String(err?.message||'').toLowerCase().includes('already in progress')) return false;
+        try{await navigator.share({files:[file]});return true;}
+        catch(err){
+          if(err?.name==='AbortError')return false;
+          if(String(err?.message||'').toLowerCase().includes('already in progress'))return false;
           throw err;
-        }finally{
-          tagesberichtShareBusy=false;
-        }
+        }finally{tagesberichtShareBusy=false;}
       }
     }
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=filename;
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     return true;
   }catch(err){
     console.error(err);
     if(err?.name==='AbortError')return false;
     alert('PDF konnte nicht erstellt werden: '+err.message);
     return false;
-  }finally{
-    tagesberichtPdfBusy=false;
-  }
+  }finally{tagesberichtPdfBusy=false;}
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
