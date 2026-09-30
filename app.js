@@ -86,12 +86,10 @@ function initTagesbericht(){
   loadReportWeather();
 }
 
-function setReportWeather(temp='—', precipitation='—', status='', wind='—', cloud='—'){
-  const t=$('reportTemperature'), p=$('reportPrecipitation'), w=$('reportWind'), c=$('reportCloud'), s=$('reportWeatherStatus');
+function setReportWeather(temp='—', precipitation='—', status=''){
+  const t=$('reportTemperature'), p=$('reportPrecipitation'), s=$('reportWeatherStatus');
   if(t)t.textContent=temp;
   if(p)p.textContent=precipitation;
-  if(w)w.textContent=wind;
-  if(c)c.textContent=cloud;
   if(s)s.textContent=status;
 }
 function normalizeAddress(address){
@@ -124,7 +122,7 @@ async function fetchDailyWeather(lat,lon,date){
   const todayDate=today();
   const params=new URLSearchParams({
     latitude:String(lat),longitude:String(lon),
-    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,cloud_cover_mean',
+    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum',
     temperature_unit:'celsius',precipitation_unit:'mm',timezone:'auto',
     start_date:date,end_date:date
   });
@@ -139,9 +137,7 @@ async function fetchDailyWeather(lat,lon,date){
   return {
     min:data.daily.temperature_2m_min?.[idx],
     max:data.daily.temperature_2m_max?.[idx],
-    precipitation:data.daily.precipitation_sum?.[idx],
-    windMax:data.daily.wind_speed_10m_max?.[idx],
-    cloudMean:data.daily.cloud_cover_mean?.[idx]
+    precipitation:data.daily.precipitation_sum?.[idx]
   };
 }
 let weatherRequestToken=0;
@@ -149,8 +145,8 @@ async function loadReportWeather(){
   const token=++weatherRequestToken;
   const date=$('reportDate')?.value;
   const customerId=$('reportCustomerSelect')?.value;
-  if(!date||!customerId){setReportWeather('—','—','','—','—');return;}
-  setReportWeather('…','…','Standort des Handys wird ermittelt …','…','…');
+  if(!date||!customerId){setReportWeather('—','—','');return;}
+  setReportWeather('…','…','Standort des Handys wird ermittelt …');
   try{
     let geo=null;
     let locationLabel='Handy-Standort';
@@ -159,7 +155,7 @@ async function loadReportWeather(){
     }catch(locationErr){
       const customer=customers.find(c=>c.id===customerId);
       if(customer?.address){
-        setReportWeather('…','…','Handy-Standort nicht verfügbar – Anschrift wird versucht …','…','…');
+        setReportWeather('…','…','Handy-Standort nicht verfügbar – Anschrift wird versucht …');
         geo=await geocodeCustomerAddress(customer.address);
         locationLabel='Baustellenanschrift';
       }else throw locationErr;
@@ -172,12 +168,10 @@ async function loadReportWeather(){
     const max=Number.isFinite(weather.max)?Math.round(weather.max):null;
     const temp=min!==null&&max!==null?`${min}–${max} °C`:max!==null?`${max} °C`:min!==null?`${min} °C`:'—';
     const precip=Number.isFinite(weather.precipitation)?`${weather.precipitation.toLocaleString('de-DE',{maximumFractionDigits:1})} mm`:'—';
-    const wind=Number.isFinite(weather.windMax)?`${Math.round(weather.windMax)} km/h`:'—';
-    const cloud=Number.isFinite(weather.cloudMean)?`${Math.round(weather.cloudMean)} %`:'—';
-    setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`,wind,cloud);
+    setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`);
   }catch(err){
     if(token!==weatherRequestToken)return;
-    setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.','—','—');
+    setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.');
   }
 }
 
@@ -524,13 +518,8 @@ function timeOptions(selected=''){
       value=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
     }
   }
-  // Arbeitszeiten sind in allen Bereichen auf 04:00 bis 22:00 Uhr begrenzt.
-  // Werte außerhalb dieses Bereichs werden nicht vorausgewählt.
-  const selectedMinutes = value ? (() => { const [h,m]=value.split(':').map(Number); return h*60+m; })() : -1;
-  if(selectedMinutes < 240 || selectedMinutes > 1320) value='';
   let html='<option value="">— Uhrzeit —</option>';
-  for(let total=240; total<=1320; total+=15){
-    const h=Math.floor(total/60), min=total%60;
+  for(let h=0;h<24;h++) for(const min of [0,15,30,45]){
     const v=String(h).padStart(2,'0')+':'+String(min).padStart(2,'0');
     html+=`<option value="${v}"${v===value?' selected':''}>${v}</option>`;
   }
@@ -954,8 +943,6 @@ function collectTagesbericht(){
     project:$('reportProjectSelect')?.selectedOptions?.[0]?.textContent?.trim()||'',
     temperature:$('reportTemperature')?.textContent?.trim()||'—',
     precipitation:$('reportPrecipitation')?.textContent?.trim()||'—',
-    wind:$('reportWind')?.textContent?.trim()||'—',
-    cloud:$('reportCloud')?.textContent?.trim()||'—',
     employees:collectReportEmployees(),
     works:collectReportList('reportWorksEntries'),
     materials:collectReportList('reportMaterialsEntries'),
@@ -974,27 +961,18 @@ function renderTagesberichtSummary(){
       <div class="wide"><span>Bauvorhaben</span><b>${esc(d.project||'—')}</b></div>
       <div><span>🌡️ Temperatur</span><b>${esc(d.temperature)}</b></div>
       <div><span>🌧️ Niederschlag</span><b>${esc(d.precipitation)}</b></div>
-      <div><span>💨 Wind</span><b>${esc(d.wind)}</b></div>
-      <div><span>☁️ Bewölkung</span><b>${esc(d.cloud)}</b></div>
     </div>
     <div class="reportSummarySection"><h3>Mitarbeiter</h3>${emp||'<div class="empty">Keine Mitarbeiter eingetragen.</div>'}</div>
     <div class="reportSummarySection"><h3>Ausgeführte Arbeiten</h3>${list(d.works)}</div>
     <div class="reportSummarySection"><h3>Materiallieferung</h3>${list(d.materials)}</div>`;
 }
-function saveTagesbericht(){
+function saveTagesberichtAndPdf(){
+  if(!hasReportSignature()){alert('Bitte zuerst unterschreiben.');return;}
   const data=collectTagesbericht();
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
-  const key=(data.date||'')+'|'+(data.customer||'')+'|'+(data.project||'');
-  const idx=reportsSaved.findIndex(r=>((r.date||'')+'|'+(r.customer||'')+'|'+(r.project||''))===key);
-  const signed=hasReportSignature();
-  const saved={...data,signed,signedAt:signed?new Date().toISOString():''};
-  if(idx>=0) reportsSaved[idx]=saved; else reportsSaved.unshift(saved);
+  reportsSaved.unshift({...data,signed:true,signedAt:new Date().toISOString()});
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
-  return true;
-}
-function saveTagesberichtAndPdf(){
-  if(!saveTagesbericht()) return;
-  createTagesberichtPdf(collectTagesbericht()).then(ok=>{if(ok)alert('PDF erstellt.');});
+  createTagesberichtPdf(data).then(ok=>{if(ok)alert('Bericht gespeichert und PDF erstellt.');});
 }
 function tagesberichtPdfFilename(data){
   const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
@@ -1003,100 +981,29 @@ function tagesberichtPdfFilename(data){
 async function createTagesberichtPdf(data){
   if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
-  try{
-    const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
-    const pdf=await PDFDocument.load(bytes);
-    const page=pdf.getPages()[0];
-    const W=page.getWidth(), H=page.getHeight();
-    const normal=await pdf.embedFont(StandardFonts.Helvetica);
-    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-
-    const black=rgb(0.06,0.06,0.06);
-    const drawFit=(txt,x,y,maxW,size=9,font=normal)=>{
-      txt=String(txt??'').trim();
-      if(!txt)return;
-      let s=size;
-      while(s>6 && font.widthOfTextAtSize(txt,s)>maxW)s-=0.25;
-      page.drawText(txt,{x,y,size:s,font,color:black});
-    };
-    const drawWrapped=(txt,x,y,maxW,size=8.8,maxLines=8)=>{
-      const words=String(txt||'').split(/\s+/).filter(Boolean);
-      let line='', lines=[];
-      for(const w of words){
-        const t=line?line+' '+w:w;
-        if(normal.widthOfTextAtSize(t,size)<=maxW) line=t;
-        else { if(line)lines.push(line); line=w; }
-      }
-      if(line)lines.push(line);
-      lines.slice(0,maxLines).forEach((ln,i)=>drawFit(ln,x,y-i*13,maxW,size,normal));
-      return Math.min(lines.length,maxLines);
-    };
-
-    // Datum
-    drawFit(formatDate(data.date),266,H-112,140,10,normal);
-
-    // Bauvorhaben: Kunde + Bauvorhaben wie in der Originalvorlage.
-    const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' - ');
-    drawFit(projectLabel,199,H-292,455,9.2,normal);
-
-    // Wetter exakt in die vier vorgesehenen Felder der Vorlage.
-    drawFit(data.temperature||'—',150,H-332,145,9.2,normal);
-    drawFit(data.wind||'—',392,H-332,145,9.2,normal);
-    drawFit(data.precipitation||'—',155,H-360,145,9.2,normal);
-    drawFit(data.cloud||'—',392,H-360,145,9.2,normal);
-
-    // Mitarbeiter – die Vorlage hat vier freie Zeilen unter den drei Beispielzeilen.
-    const employees=(data.employees||[]).slice(0,7);
-    const rowTops=[427,447,467,487,507,527,547];
-    employees.forEach((e,i)=>{
-      const y=H-rowTops[i];
-      drawFit(e.name||'',64,y,100,8.8,normal);
-      drawFit(e.role||'',172,y,68,8.5,normal);
-      if(e.start)drawFit(e.start,270,y,45,8.8,normal);
-      if(e.end)drawFit(e.end,360,y,45,8.8,normal);
-      if(e.pause)drawFit(String(e.pause),437,y,45,8.5,normal);
-      if(Number(e.hours)>0)drawFit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',500,y,60,8.5,normal);
-    });
-
-    // Ausgeführte Arbeiten
-    const works=(data.works||[]).slice(0,12);
-    works.forEach((v,i)=>{
-      const y=H-(603+i*15);
-      drawWrapped('• '+v,64,y,285,8.5,2);
-    });
-
-    // Materiallieferungen
-    const materials=(data.materials||[]).slice(0,12);
-    materials.forEach((v,i)=>{
-      const y=H-(603+i*15);
-      drawWrapped('• '+v,385,y,165,8.2,2);
-    });
-
-    // Unterschrift: die Vorlage selbst enthält die Beschriftung und Linie.
-    if(data.signature&&data.signature.length>100){
-      const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:70,y:48,width:220,height:82,opacity:1});
-    }
-
-    const out=await pdf.save({useObjectStreams:false});
-    const blob=new Blob([out],{type:'application/pdf'});
-    const filename=tagesberichtPdfFilename(data);
-
-    if(navigator.share&&navigator.canShare){
-      const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
-    }
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
-    return true;
-  }catch(err){
-    console.error(err);
-    if(err?.name==='AbortError')return false;
-    alert('PDF konnte nicht erstellt werden: '+err.message);
-    return false;
-  }
+  const pdf=await PDFDocument.create();
+  const normal=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
+  let page=pdf.addPage([595,842]), W=595,H=842;
+  let y=800;
+  const margin=42, maxW=W-margin*2;
+  const text=(txt,size=10,font=normal,x=margin)=>{page.drawText(String(txt||''),{x,y,size,font});y-=size+6};
+  const line=()=>{page.drawLine({start:{x:margin,y},end:{x:W-margin,y},thickness:1,color:rgb(.82,.84,.86)});y-=12};
+  const section=(title)=>{if(y<90){page=pdf.addPage([595,842]);y=800} page.drawText(title,{x:margin,y,size:14,font:bold});y-=24};
+  const wrap=(txt,size=10,font=normal)=>{const words=String(txt||'').split(/\s+/).filter(Boolean);let l='';for(const w of words){const t=l?l+' '+w:w;if(font.widthOfTextAtSize(t,size)>maxW){text(l,size,font);l=w}else l=t}if(l)text(l,size,font)};
+  page.drawText('Tagesbericht',{x:margin,y,size:22,font:bold});y-=34;
+  text(formatDate(data.date),11,normal); text(data.customer,11,bold); text(data.project,11,bold); y-=4; line();
+  section('Wetter'); text(`Temperatur: ${data.temperature}`,10); text(`Niederschlag: ${data.precipitation}`,10); y-=4;
+  section('Mitarbeiter');
+  data.employees.forEach(e=>{wrap(`${e.name} – ${e.role} – ${e.start} bis ${e.end} – ${e.pause?e.pause+' Min. Pause':'keine Pause'} – ${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.`,10);});
+  section('Ausgeführte Arbeiten'); data.works.forEach(v=>wrap('• '+v,10)); if(!data.works.length)text('Keine Angaben.',10);
+  section('Materiallieferung'); data.materials.forEach(v=>wrap('• '+v,10)); if(!data.materials.length)text('Keine Angaben.',10);
+  if(y<170){page=pdf.addPage([595,842]);y=800}
+  section('Unterschrift Auftraggeber'); text(data.signerName||'Name nicht angegeben',10); y-=8;
+  if(data.signature&&data.signature.length>100){const sig=await pdf.embedPng(data.signature);page.drawImage(sig,{x:margin,y:y-95,width:260,height:90});y-=110}
+  const out=await pdf.save({useObjectStreams:false});
+  const blob=new Blob([out],{type:'application/pdf'}), filename=tagesberichtPdfFilename(data);
+  if(navigator.share&&navigator.canShare){const file=new File([blob],filename,{type:'application/pdf'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);return true;
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
@@ -1109,8 +1016,8 @@ $('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
 function continueTagesberichtEmployees(){
   const entries=collectReportEmployees();
   if(!entries.length){ alert('Bitte mindestens einen Mitarbeiter auswählen.'); return; }
-  const incomplete=entries.some(e=>!e.name||!e.role);
-  if(incomplete){ alert('Bitte Mitarbeiter und Funktion auswählen. Arbeitszeiten sind optional.'); return; }
+  const incomplete=entries.some(e=>!e.name||!e.role||!e.start||!e.end);
+  if(incomplete){ alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.'); return; }
   reportEmployeeEntries=entries;
   initTagesberichtWorks();
   show('tagesberichtWorks',{replaceHistory:false});
@@ -1120,7 +1027,6 @@ $('reportAddWork')?.addEventListener('click',()=>addReportListEntry('reportWorks
 $('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportMaterialsEntries'));
 $('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();clearReportSignature();$('reportSignerName').value='';show('tagesberichtSummary',{replaceHistory:false})});
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
-$('saveReport')?.addEventListener('click',()=>{if(saveTagesbericht())alert('Bericht gespeichert.');});
 $('saveReportAndPdf')?.addEventListener('click',saveTagesberichtAndPdf);
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
