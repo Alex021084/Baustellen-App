@@ -323,7 +323,6 @@ function goBackOneStep(){
 
   // Tagesbericht hat seinen eigenen, festen Schrittverlauf.
   // Dadurch kann die globale Tagelohn-Historie nicht mehr dazwischenfunken.
-  if(current==='pdfAlignerScreen'){ show('tagesberichtSummary',{replaceHistory:true}); return; }
   if(current==='tagesberichtSummary'){ show('tagesberichtWorks',{replaceHistory:true}); return; }
   if(current==='tagesberichtWorks'){ show('tagesberichtEmployees',{replaceHistory:true}); return; }
   if(current==='tagesberichtEmployees'){ show('tagesbericht',{replaceHistory:true}); return; }
@@ -857,7 +856,9 @@ function pdfFilename(data){
 
 async function createPdf(options={}){
   const data=collect();
-  // Den aktuellen Bericht beim PDF-Export immer speichern.
+  // Auch beim direkten Erstellen einer PDF wird der aktuelle Nachweis in der
+  // App gespeichert. So bleibt er unter "Nachweise" erhalten, unabhängig
+  // davon, ob der Benutzer den anschließenden Datei-Speicherdialog abbricht.
   if(options.saveReport!==false){
     if(editingReportIndex!==null && reports[editingReportIndex]){
       const previous=reports[editingReportIndex];
@@ -873,94 +874,31 @@ async function createPdf(options={}){
   const btn=$('pdf');btn.disabled=true;btn.textContent='PDF wird erstellt …';
   let fileHandle=null;
   try{
+    // Den nativen Speichern-Dialog verwenden, wenn der Browser ihn unterstützt.
+    // Auf iPhone/iPad (Safari) gibt es showSaveFilePicker nicht; dort verwenden wir
+    // anschließend den System-Teilen-Dialog, über den der Benutzer 'In Dateien sichern'
+    // und den Zielordner auswählen kann.
     if(options.askLocation && 'showSaveFilePicker' in window){
       fileHandle=await window.showSaveFilePicker({
         suggestedName:pdfFilename(data),
         types:[{description:'PDF-Datei',accept:{'application/pdf':['.pdf']}}]
       });
     }
-
     const {PDFDocument,StandardFonts,rgb}=PDFLib;
-    // Die PDF wird jetzt wirklich auf der neuen Baustellentagesbericht-Skizze
-    // aufgebaut. Die Vorlage enthält nur das feste Layout; alle veränderlichen
-    // Angaben werden hier exakt in die dafür vorgesehenen Felder geschrieben.
-    const templateBytes=await fetch('template-bg-exact-clean-v2.png',{cache:'no-store'})
-      .then(r=>{if(!r.ok)throw new Error('PDF-Vorlage nicht gefunden');return r.arrayBuffer()});
-    const pdf=await PDFDocument.create();
-    const W=668.539,H=946.067;
-    const page=pdf.addPage([W,H]);
-    const bg=await pdf.embedPng(templateBytes);
-    page.drawImage(bg,{x:0,y:0,width:W,height:H});
-
-    const normal=await pdf.embedFont(StandardFonts.Helvetica);
-    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-    const sx=W/1055, sy=H/1491;
-
-    // Bildkoordinaten (oben links) -> PDF-Koordinaten.
-    function drawImgText(value, px, py, size=9, font=normal, maxPx=null){
-      if(value===undefined||value===null||String(value)==='')return;
-      let str=String(value);
-      let fs=size;
-      if(maxPx){
-        const maxW=maxPx*sx;
-        while(fs>5.5 && font.widthOfTextAtSize(str,fs)>maxW)fs-=0.2;
-      }
-      page.drawText(str,{
-        x:px*sx,
-        y:H-(py+fs)*sy,
-        size:fs,
-        font,
-        color:rgb(0.06,0.06,0.06)
-      });
-    }
-    function drawFitImg(value,px,py,maxPx,size=9,font=normal){
-      if(value===undefined||value===null||String(value).trim()==='')return;
-      drawImgText(String(value),px,py,size,font,maxPx);
-    }
-
-    // Kopf
-    const dateText=formatDate(data.date);
-    drawFitImg(dateText,45,113,360,10,normal);
-
-    // Bauvorhaben: Kunde + Bauvorhaben, exakt in der grauen Zeile.
-    const projectLabel=[cleanContractorName(data.contractor),data.project].filter(Boolean).join(' – ');
-    drawFitImg(projectLabel,326,296,635,10,normal);
-
-    // Wetterwerte
-    drawFitImg(data.temperature,126,401,145,9.5,normal);
-    drawFitImg(data.wind,620,401,300,9.5,normal);
-    drawFitImg(data.precipitation,126,478,145,9.5,normal);
-    drawFitImg(data.cloud,620,478,300,9.5,normal);
-
-    // Mitarbeiter: eine Zeile pro Mitarbeiter, ohne zusätzliche Aufzählungszeichen.
-    // Die Spalten entsprechen der neuen Vorlage.
-    const employeeRows=(data.employees||[]).slice(0,5);
-    employeeRows.forEach((e,i)=>{
-      const top=614+i*48;
-      drawFitImg(e.name,47,top,205,8.7,normal);
-      drawFitImg(e.role,281,top,110,8.7,normal);
-      drawFitImg(e.start,404,top,115,8.7,normal);
-      drawFitImg(e.end,565,top,115,8.7,normal);
-      if(Number(e.pause)>0)drawFitImg(`${e.pause} min`,738,top,90,8.7,normal);
-      if(Number(e.hours)>0)drawFitImg((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',875,top,105,8.7,normal);
-    });
-
-    // Ausgeführte Arbeiten – kein Punkt vor dem Eintrag.
-    (data.works||[]).slice(0,7).forEach((v,i)=>{
-      drawFitImg(v,48,908+i*29,450,8.4,normal);
-    });
-
-    // Materiallieferung – kein Punkt vor dem Eintrag.
-    (data.materials||[]).slice(0,7).forEach((v,i)=>{
-      drawFitImg(v,540,908+i*29,450,8.4,normal);
-    });
-
-    // Unterschrift liegt auf der vorhandenen Linie der Vorlage.
-    if(data.signature&&data.signature.length>100){
-      const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:45*sx,y:H-(1260+80)*sy,width:230*sx,height:70*sy});
-    }
-
+    const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.load(bytes); const page=pdf.getPages()[0]; const W=page.getWidth(),H=page.getHeight();
+    const normal=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
+    function cover(x,yTop,w,h){page.drawRectangle({x,y:H-yTop-h,width:w,height:h,color:rgb(1,1,1)})}
+    cover(225,94,165,18);cover(50,140,220,22);cover(50,165,150,40);
+    const dateText=formatDate(data.date),dateSize=fitText(normal,dateText,145,9.5,7.5);
+    page.drawText(dateText,{x:(W-normal.widthOfTextAtSize(dateText,dateSize))/2,y:H-108,size:dateSize,font:normal});
+    if(data.contractor)page.drawText(data.contractor,{x:54,y:H-158,size:11,font:bold});
+    splitLines(data.address).slice(0,2).forEach((ln,i)=>page.drawText(ln,{x:54,y:H-(180+i*20),size:9.5,font:normal}));
+    cover(180,241,375,24);drawWrapped(page,normal,data.project||'',198,H-263,350,9.5,1,2);
+    const rowTop=H-320,rowStep=20;
+    data.employees.slice(0,12).forEach((e,i)=>{const y=rowTop-i*rowStep,hours=(Number(e.hours)||0).toFixed(2).replace('.',',');if(hours!=='0,00')page.drawText(hours,{x:84,y,size:9.5,font:normal});if(e.service||e.activity)drawWrapped(page,normal,e.service||e.activity,145,y,92,9.2,1,2);if(e.name)page.drawText(e.name,{x:247,y,size:9.5,font:normal});if(e.start)page.drawText(e.start,{x:412,y,size:9.5,font:normal});if(e.end)page.drawText(e.end,{x:466,y,size:9.5,font:normal});if(Number(e.pause))page.drawText(String(e.pause),{x:517,y,size:9.5,font:normal})});
+    const contentTop=H-565;data.works.slice(0,12).forEach((v,i)=>drawWrapped(page,normal,'• '+v,54,contentTop-i*14,285,9.2,1,2));data.materials.slice(0,12).forEach((v,i)=>drawWrapped(page,normal,'• '+v,355,contentTop-i*14,195,9.2,1,2));
+    if(data.signature&&data.signature.length>100){const sigPng=await pdf.embedPng(data.signature);page.drawImage(sigPng,{x:54,y:70,width:190,height:70,opacity:1})}
     const out=await pdf.save({useObjectStreams:false});
     if(fileHandle){
       const writable=await fileHandle.createWritable();
@@ -969,6 +907,10 @@ async function createPdf(options={}){
     }else{
       const blob=new Blob([out],{type:'application/pdf'});
       const filename=pdfFilename(data);
+      // Auf mobilen Browsern, insbesondere iOS/iPadOS, gibt es keinen universellen
+      // 'Speichern unter'-Dialog für Web-Downloads. Der System-Teilen-Dialog bietet
+      // dort die Möglichkeit, die PDF über 'In Dateien sichern' an einem frei
+      // wählbaren Ort abzulegen.
       if(options.askLocation && navigator.share && navigator.canShare){
         const file=new File([blob],filename,{type:'application/pdf'});
         if(navigator.canShare({files:[file]})){
@@ -976,22 +918,18 @@ async function createPdf(options={}){
           return true;
         }
       }
+      // Fallback für Browser ohne Speichern-/Teilen-Dialog.
       const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;a.download=filename;a.style.display='none';
-      document.body.appendChild(a);a.click();a.remove();
+      const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
     return true;
   }catch(err){
     if(err?.name==='AbortError') return false;
-    console.error(err);
-    alert('PDF konnte nicht erstellt/gespeichert werden: '+err.message);
-    return false;
-  }finally{
-    btn.disabled=false;btn.textContent='PDF erstellen';
-  }
+    console.error(err);alert('PDF konnte nicht erstellt/gespeichert werden: '+err.message);return false;
+  }finally{btn.disabled=false;btn.textContent='PDF erstellen'}
 }
+
 
 let reportSignatureCanvas, reportSignatureCtx, reportSignatureDown=false;
 let reportSignatureReady=false;
@@ -1027,18 +965,21 @@ function collectTagesbericht(){
 }
 function renderTagesberichtSummary(){
   const d=collectTagesbericht();
-  const date=formatDate(d.date)||'—';
-  const projectLabel=[d.customer,d.project].filter(Boolean).join(' – ')||'—';
-  const rows=(d.employees||[]).map(e=>`<tr><td>${esc(e.name||'—')}</td><td>${esc(e.role||'—')}</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td></tr>`).join('');
-  const lineRows=arr=>{const values=(arr||[]).slice(0,6);return Array.from({length:6},(_,i)=>`<div class="reportEntryLine">${values[i]?esc(values[i]):''}</div>`).join('')};
-  const sig=hasReportSignature()?`<img class="reportPreviewSignature" src="${reportSignatureCanvas.toDataURL('image/png')}" alt="">`:'';
+  const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
+  const list=(arr)=>arr.length?`<ul class="reportSummaryList">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>';
   $('reportSummaryContent').innerHTML=`
-    <div class="reportPaperHeader"><div class="reportHeaderLeft"><h1>Baustellentagesbericht</h1><div class="reportRedRule"></div><div class="reportDate">${esc(date)}</div><div class="reportCompany">Dählmann Erdbau GmbH</div><div>Südring 11</div><div>27404 Zeven</div></div><img class="reportLogo" src="dahlmann-erdbau-logo.jpg" alt="Dählmann Erdbau GmbH"></div>
-    <div class="reportInfoBox"><div class="reportProjectRow"><span class="reportDocIcon" aria-hidden="true">▤</span><b>Bauvorhaben:</b><span class="reportProjectValue">${esc(projectLabel)}</span></div><div class="reportWeatherRows"><div><b>Temperatur:</b><span>${esc(d.temperature)}</span></div><div><b>Wind:</b><span>${esc(d.wind)}</span></div><div><b>Niederschlag:</b><span>${esc(d.precipitation)}</span></div><div><b>Bewölkung:</b><span>${esc(d.cloud)}</span></div></div></div>
-    <div class="reportEmployeeTableWrap"><table class="reportEmployeeTable"><thead><tr><th>Mitarbeiter</th><th>Funktion</th><th>Arbeitsbeginn</th><th>Arbeitsende</th><th>Pause</th><th>Gesamt</th></tr></thead><tbody>${rows}${Array.from({length:Math.max(0,5-(d.employees||[]).length)},()=>'<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table></div>
-    <div class="reportTwoCols"><section class="reportListBox"><h3><span class="gearIcon">⚙</span>Ausgeführte Arbeiten:</h3><div class="reportLines">${lineRows(d.works)}</div></section><section class="reportListBox"><h3><span class="truckIcon">▰</span>Materiallieferung:</h3><div class="reportLines">${lineRows(d.materials)}</div></section></div>
-    <div class="reportSignaturePreview"><h3>Unterschrift Auftraggeber</h3><div class="signatureLine">${sig}</div></div>
-    <div class="reportFooter"><div><b>Dählmann Erdbau GmbH</b><br>Südring 11 · 27404 Zeven</div><div><b>Telefon: 04281/5179</b><br>E-Mail: info@daeh­lmann-erdbau.de</div><div>www.daeh­lmann-erdbau.de</div></div>`;
+    <div class="reportSummaryGrid">
+      <div><span>Datum</span><b>${esc(formatDate(d.date)||'—')}</b></div>
+      <div><span>Kunde</span><b>${esc(d.customer||'—')}</b></div>
+      <div class="wide"><span>Bauvorhaben</span><b>${esc(d.project||'—')}</b></div>
+      <div><span>🌡️ Temperatur</span><b>${esc(d.temperature)}</b></div>
+      <div><span>🌧️ Niederschlag</span><b>${esc(d.precipitation)}</b></div>
+      <div><span>💨 Wind</span><b>${esc(d.wind)}</b></div>
+      <div><span>☁️ Bewölkung</span><b>${esc(d.cloud)}</b></div>
+    </div>
+    <div class="reportSummarySection"><h3>Mitarbeiter</h3>${emp||'<div class="empty">Keine Mitarbeiter eingetragen.</div>'}</div>
+    <div class="reportSummarySection"><h3>Ausgeführte Arbeiten</h3>${list(d.works)}</div>
+    <div class="reportSummarySection"><h3>Materiallieferung</h3>${list(d.materials)}</div>`;
 }
 function saveTagesbericht(){
   const data=collectTagesbericht();
@@ -1051,10 +992,7 @@ function saveTagesbericht(){
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
   return true;
 }
-let tagesberichtPdfBusy=false;
-let tagesberichtShareBusy=false;
 function saveTagesberichtAndPdf(){
-  if(tagesberichtPdfBusy || tagesberichtShareBusy) return;
   if(!saveTagesbericht()) return;
   createTagesberichtPdf(collectTagesbericht()).then(ok=>{if(ok)alert('PDF erstellt.');});
 }
@@ -1062,229 +1000,103 @@ function tagesberichtPdfFilename(data){
   const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
   return `${customer} - ${shortDate(data.date).replaceAll('.','.') } - Tagesbericht - ${project}.pdf`;
 }
-const PDF_TEMPLATE_W=668.539;
-const PDF_TEMPLATE_H=946.067;
-const PDF_COORDS_KEY='tagesberichtPdfCoordinatesV1';
-const DEFAULT_PDF_COORDS={
-  date:{x:500,y:82,w:120,size:10},
-  project:{x:64,y:284,w:540,size:9.5},
-  temperature:{x:72,y:329,w:170,size:9.2},
-  wind:{x:337,y:329,w:170,size:9.2},
-  precipitation:{x:72,y:356,w:170,size:9.2},
-  cloud:{x:337,y:356,w:170,size:9.2},
-  employeeName:{x:64,y:314,w:125,size:8.8},
-  employeeStart:{x:248,y:314,w:75,size:8.8},
-  employeeEnd:{x:339,y:314,w:75,size:8.8},
-  employeePause:{x:430,y:314,w:65,size:8.8},
-  employeeHours:{x:514,y:314,w:90,size:8.8},
-  employeeRowGap:22,
-  works:{x:64,y:451,w:355,size:8.5},
-  materials:{x:425,y:451,w:170,size:8.5},
-  textRowGap:14,
-  signature:{x:60,y:625,w:220,h:72}
-};
-function loadPdfCoords(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(PDF_COORDS_KEY)||'null');
-    return {...DEFAULT_PDF_COORDS,...(saved||{}),signature:{...DEFAULT_PDF_COORDS.signature,...(saved?.signature||{})}};
-  }catch(e){return JSON.parse(JSON.stringify(DEFAULT_PDF_COORDS))}
-}
-function savePdfCoords(coords){localStorage.setItem(PDF_COORDS_KEY,JSON.stringify(coords));}
-function resetPdfCoords(){localStorage.removeItem(PDF_COORDS_KEY);return loadPdfCoords()}
-
-const ALIGN_FIELDS=[
-  ['date','Datum','Datum'],
-  ['project','Bauvorhaben','Bauvorhaben'],
-  ['temperature','Temperatur','Temperatur'],
-  ['wind','Wind','Wind'],
-  ['precipitation','Niederschlag','Niederschlag'],
-  ['cloud','Bewölkung','Bewölkung'],
-  ['employeeName','Mitarbeiter','Mitarbeiter'],
-  ['employeeStart','Arbeitsbeginn','Arbeitsbeginn'],
-  ['employeeEnd','Arbeitsende','Arbeitsende'],
-  ['employeePause','Pause','Pause'],
-  ['employeeHours','Gesamt','Gesamt'],
-  ['works','Ausgeführte Arbeiten','Ausgeführte Arbeiten'],
-  ['materials','Materiallieferung','Materiallieferung'],
-  ['signature','Unterschrift','Unterschrift']
-];
-let pdfAlignCoords=loadPdfCoords();
-let pdfAlignPointer=null;
-function pdfAlignSampleData(data){
-  const emp=(data?.employees||[])[0]||{};
-  return {
-    date:formatDate(data?.date)||'24.09.2026',
-    project:[data?.customer,data?.project].filter(Boolean).join(' – ')||'Bauvorhaben',
-    temperature:data?.temperature||'18 °C', wind:data?.wind||'12 km/h',
-    precipitation:data?.precipitation||'0,0 mm', cloud:data?.cloud||'35 %',
-    employeeName:emp.name||'Max Mustermann', employeeStart:emp.start||'07:00',
-    employeeEnd:emp.end||'16:00', employeePause:emp.pause?`${emp.pause} min`:'30 min',
-    employeeHours:Number(emp.hours)?`${Number(emp.hours).toFixed(2).replace('.',',')} Std.`:'8,50 Std.',
-    works:(data?.works||[])[0]||'Ausgeführte Arbeiten',
-    materials:(data?.materials||[])[0]||'Material / sonstige Leistungen',
-    signature:'Unterschrift'
-  };
-}
-function renderPdfAligner(data=collectTagesbericht()){
-  const stage=$('pdfAlignStage'); if(!stage)return;
-  pdfAlignCoords=loadPdfCoords();
-  const sample=pdfAlignSampleData(data);
-  stage.innerHTML='';
-  ALIGN_FIELDS.forEach(([key,label])=>{
-    const el=document.createElement('div');
-    el.className='pdfAlignField'; el.dataset.field=key; el.title=`${label} – ziehen`;
-    el.textContent=sample[key];
-    const c=pdfAlignCoords[key];
-    el.style.left=`${(c.x/PDF_TEMPLATE_W)*100}%`;
-    el.style.top=`${(c.y/PDF_TEMPLATE_H)*100}%`;
-    el.style.maxWidth=`${Math.max(45,c.w||100)/PDF_TEMPLATE_W*100}%`;
-    if(c.size)el.style.fontSize=`${Math.max(8,c.size*1.6)}px`;
-    el.addEventListener('pointerdown',e=>startPdfAlignDrag(e,el));
-    stage.appendChild(el);
-  });
-  const gap=$('pdfEmployeeGap'); if(gap)gap.value=pdfAlignCoords.employeeRowGap||22;
-  const textGap=$('pdfTextGap'); if(textGap)textGap.value=pdfAlignCoords.textRowGap||14;
-}
-function startPdfAlignDrag(e,el){
-  e.preventDefault();
-  const stage=$('pdfAlignStage'); if(!stage)return;
-  const rect=stage.getBoundingClientRect();
-  const field=el.dataset.field;
-  const c=pdfAlignCoords[field];
-  pdfAlignPointer={field,el,rect,startX:e.clientX,startY:e.clientY,x:c.x,y:c.y};
-  el.setPointerCapture?.(e.pointerId);
-  el.classList.add('dragging');
-  const move=ev=>{
-    if(!pdfAlignPointer)return;
-    const dx=(ev.clientX-pdfAlignPointer.startX)/rect.width*PDF_TEMPLATE_W;
-    const dy=(ev.clientY-pdfAlignPointer.startY)/rect.height*PDF_TEMPLATE_H;
-    const nc=pdfAlignCoords[field];
-    nc.x=Math.max(0,Math.min(PDF_TEMPLATE_W-10,pdfAlignPointer.x+dx));
-    nc.y=Math.max(0,Math.min(PDF_TEMPLATE_H-10,pdfAlignPointer.y+dy));
-    el.style.left=`${nc.x/PDF_TEMPLATE_W*100}%`;
-    el.style.top=`${nc.y/PDF_TEMPLATE_H*100}%`;
-    updatePdfCoordReadout(field);
-  };
-  const up=()=>{
-    el.classList.remove('dragging');
-    window.removeEventListener('pointermove',move);
-    window.removeEventListener('pointerup',up);
-    pdfAlignPointer=null;
-  };
-  window.addEventListener('pointermove',move);
-  window.addEventListener('pointerup',up,{once:true});
-}
-function updatePdfCoordReadout(field){
-  const c=pdfAlignCoords[field]; const out=$('pdfCoordReadout');
-  if(out&&c)out.textContent=`${field}: X ${c.x.toFixed(1)} pt · Y ${c.y.toFixed(1)} pt`;
-}
-function openPdfAligner(){
-  renderPdfAligner(collectTagesbericht());
-  show('pdfAlignerScreen');
-}
-function savePdfAlignment(){
-  const gap=Number($('pdfEmployeeGap')?.value); if(Number.isFinite(gap)&&gap>0)pdfAlignCoords.employeeRowGap=gap;
-  const textGap=Number($('pdfTextGap')?.value); if(Number.isFinite(textGap)&&textGap>0)pdfAlignCoords.textRowGap=textGap;
-  savePdfCoords(pdfAlignCoords);
-  alert('PDF-Positionen gespeichert. Diese Koordinaten werden ab jetzt für alle Tagesberichte verwendet.');
-}
-function resetPdfAlignment(){
-  pdfAlignCoords=resetPdfCoords();
-  renderPdfAligner(collectTagesbericht());
-}
-function wrapPdfLines(font,text,size,maxW,maxLines){
-  const words=String(text||'').split(/\s+/).filter(Boolean); let line=''; const lines=[];
-  for(const word of words){
-    const test=line?`${line} ${word}`:word;
-    if(font.widthOfTextAtSize(test,size)<=maxW)line=test;
-    else{if(line)lines.push(line);line=word;}
-  }
-  if(line)lines.push(line);
-  return lines.slice(0,maxLines);
-}
-
 async function createTagesberichtPdf(data){
-  if(tagesberichtPdfBusy || tagesberichtShareBusy) return false;
-  tagesberichtPdfBusy=true;
-  if(!window.PDFLib){tagesberichtPdfBusy=false;alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
+  if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
   try{
-    // WICHTIG: Die hochgeladene Blanko-PDF bleibt die echte PDF-Seite.
-    // Es wird nichts gerastert oder neu gezeichnet. Dadurch bleibt die Vorlage
-    // beim starken Hineinzoomen scharf und exakt erhalten.
-    const templateBytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('OriginalTemplate.pdf nicht gefunden');return r.arrayBuffer()});
-    const pdf=await PDFDocument.load(templateBytes);
+    const bytes=await fetch('OriginalTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Vorlage nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.load(bytes);
     const page=pdf.getPages()[0];
+    const W=page.getWidth(), H=page.getHeight();
     const normal=await pdf.embedFont(StandardFonts.Helvetica);
-    const black=rgb(0.06,0.06,0.06);
-    const coords=loadPdfCoords();
-    const drawFit=(txt,c,opts={})=>{
-      txt=String(txt??'').trim(); if(!txt)return;
-      const maxW=(c.w||160); let size=c.size||opts.size||9;
-      while(size>5.5 && normal.widthOfTextAtSize(txt,size)>maxW)size-=0.2;
-      page.drawText(txt,{x:c.x,y:PDF_TEMPLATE_H-(c.y+size),size,font:normal,color:black});
-    };
-    const dateText=formatDate(data.date);
-    drawFit(dateText,coords.date);
-    const project=[data.customer,data.project].filter(Boolean).join(' – ');
-    drawFit(project,coords.project);
-    drawFit(data.temperature,coords.temperature);
-    drawFit(data.wind,coords.wind);
-    drawFit(data.precipitation,coords.precipitation);
-    drawFit(data.cloud,coords.cloud);
+    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
 
-    const employees=(data.employees||[]).slice(0,7);
-    employees.forEach((e,i)=>{
-      const yOffset=i*(coords.employeeRowGap||22);
-      for(const key of ['employeeName','employeeStart','employeeEnd','employeePause','employeeHours']){
-        const base=coords[key]; const c={...base,y:base.y+yOffset};
-        let value='';
-        if(key==='employeeName')value=e.name||'';
-        if(key==='employeeStart')value=e.start||'';
-        if(key==='employeeEnd')value=e.end||'';
-        if(key==='employeePause')value=Number(e.pause)>0?`${e.pause} min`:'';
-        if(key==='employeeHours')value=Number(e.hours)>0?`${Number(e.hours).toFixed(2).replace('.',',')} Std.`:'';
-        drawFit(value,c);
+    const black=rgb(0.06,0.06,0.06);
+    const drawFit=(txt,x,y,maxW,size=9,font=normal)=>{
+      txt=String(txt??'').trim();
+      if(!txt)return;
+      let s=size;
+      while(s>6 && font.widthOfTextAtSize(txt,s)>maxW)s-=0.25;
+      page.drawText(txt,{x,y,size:s,font,color:black});
+    };
+    const drawWrapped=(txt,x,y,maxW,size=8.8,maxLines=8)=>{
+      const words=String(txt||'').split(/\s+/).filter(Boolean);
+      let line='', lines=[];
+      for(const w of words){
+        const t=line?line+' '+w:w;
+        if(normal.widthOfTextAtSize(t,size)<=maxW) line=t;
+        else { if(line)lines.push(line); line=w; }
       }
+      if(line)lines.push(line);
+      lines.slice(0,maxLines).forEach((ln,i)=>drawFit(ln,x,y-i*13,maxW,size,normal));
+      return Math.min(lines.length,maxLines);
+    };
+
+    // Datum
+    drawFit(formatDate(data.date),266,H-112,140,10,normal);
+
+    // Bauvorhaben: Kunde + Bauvorhaben wie in der Originalvorlage.
+    const projectLabel=[data.customer||'',data.project||''].filter(Boolean).join(' - ');
+    drawFit(projectLabel,199,H-292,455,9.2,normal);
+
+    // Wetter exakt in die vier vorgesehenen Felder der Vorlage.
+    drawFit(data.temperature||'—',150,H-332,145,9.2,normal);
+    drawFit(data.wind||'—',392,H-332,145,9.2,normal);
+    drawFit(data.precipitation||'—',155,H-360,145,9.2,normal);
+    drawFit(data.cloud||'—',392,H-360,145,9.2,normal);
+
+    // Mitarbeiter – die Vorlage hat vier freie Zeilen unter den drei Beispielzeilen.
+    const employees=(data.employees||[]).slice(0,7);
+    const rowTops=[427,447,467,487,507,527,547];
+    employees.forEach((e,i)=>{
+      const y=H-rowTops[i];
+      drawFit(e.name||'',64,y,100,8.8,normal);
+      drawFit(e.role||'',172,y,68,8.5,normal);
+      if(e.start)drawFit(e.start,270,y,45,8.8,normal);
+      if(e.end)drawFit(e.end,360,y,45,8.8,normal);
+      if(e.pause)drawFit(String(e.pause),437,y,45,8.5,normal);
+      if(Number(e.hours)>0)drawFit((Number(e.hours)||0).toFixed(2).replace('.',',')+' Std.',500,y,60,8.5,normal);
     });
 
-    const drawWrappedField=(values,c,gap,maxLines)=>{
-      const items=(values||[]).filter(v=>String(v||'').trim()).slice(0,maxLines);
-      items.forEach((v,i)=>{
-        const lines=wrapPdfLines(normal,v,c.size||8.5,c.w||150,2);
-        lines.forEach((line,j)=>drawFit(line,{...c,y:c.y+(i*gap)+(j*(c.size||8.5)+3),w:c.w,size:c.size}));
-      });
-    };
-    drawWrappedField(data.works,coords.works,coords.textRowGap||14,7);
-    drawWrappedField(data.materials,coords.materials,coords.textRowGap||14,7);
+    // Ausgeführte Arbeiten
+    const works=(data.works||[]).slice(0,12);
+    works.forEach((v,i)=>{
+      const y=H-(603+i*15);
+      drawWrapped('• '+v,64,y,285,8.5,2);
+    });
 
+    // Materiallieferungen
+    const materials=(data.materials||[]).slice(0,12);
+    materials.forEach((v,i)=>{
+      const y=H-(603+i*15);
+      drawWrapped('• '+v,385,y,165,8.2,2);
+    });
+
+    // Unterschrift: die Vorlage selbst enthält die Beschriftung und Linie.
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
-      const c=coords.signature;
-      page.drawImage(sig,{x:c.x,y:PDF_TEMPLATE_H-(c.y+c.h),width:c.w,height:c.h});
+      page.drawImage(sig,{x:70,y:48,width:220,height:82,opacity:1});
     }
 
     const out=await pdf.save({useObjectStreams:false});
     const blob=new Blob([out],{type:'application/pdf'});
     const filename=tagesberichtPdfFilename(data);
+
     if(navigator.share&&navigator.canShare){
       const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.canShare({files:[file]})){
-        if(tagesberichtShareBusy)return false;
-        tagesberichtShareBusy=true;
-        try{await navigator.share({files:[file]});return true}
-        catch(err){if(err?.name==='AbortError')return false;throw err}
-        finally{tagesberichtShareBusy=false}
-      }
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
     }
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),60000);
     return true;
   }catch(err){
-    console.error(err); if(err?.name==='AbortError')return false;
-    alert('PDF konnte nicht erstellt werden: '+err.message); return false;
-  }finally{tagesberichtPdfBusy=false}
+    console.error(err);
+    if(err?.name==='AbortError')return false;
+    alert('PDF konnte nicht erstellt werden: '+err.message);
+    return false;
+  }
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
@@ -1310,10 +1122,6 @@ $('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
 $('saveReport')?.addEventListener('click',()=>{if(saveTagesbericht())alert('Bericht gespeichert.');});
 $('saveReportAndPdf')?.addEventListener('click',saveTagesberichtAndPdf);
-$('openPdfAligner')?.addEventListener('click',openPdfAligner);
-$('savePdfAlignment')?.addEventListener('click',savePdfAlignment);
-$('resetPdfAlignment')?.addEventListener('click',resetPdfAlignment);
-$('backFromPdfAligner')?.addEventListener('click',()=>{renderTagesberichtSummary();show('tagesberichtSummary',{replaceHistory:true})});
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();

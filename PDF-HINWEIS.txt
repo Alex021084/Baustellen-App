@@ -1,4 +1,1 @@
-Tagesbericht-PDF: OriginalTemplate.pdf ist die vom Nutzer bereitgestellte Blanko-PDF.
-Die App legt die eingegebenen Daten als Text/Bild direkt über diese originale PDF.
-Im Menü „PDF ausrichten“ können die Koordinaten per Drag & Drop verschoben und gespeichert werden.
-Die Ausrichtungsvorschau ist nur eine PNG-Vorschau; die erzeugte PDF verwendet weiterhin die originale Vektor-PDF.
+PDF-FIX: Verwendet die vom Benutzer gelieferte Originalvorlage. Die PDF wird mit useObjectStreams:false gespeichert und direkt heruntergeladen statt in einem neuen Tab geöffnet.
