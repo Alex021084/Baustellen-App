@@ -122,7 +122,7 @@ async function fetchDailyWeather(lat,lon,date){
   const todayDate=today();
   const params=new URLSearchParams({
     latitude:String(lat),longitude:String(lon),
-    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    daily:'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,cloud_cover_mean',
     temperature_unit:'celsius',precipitation_unit:'mm',timezone:'auto',
     start_date:date,end_date:date
   });
@@ -137,7 +137,9 @@ async function fetchDailyWeather(lat,lon,date){
   return {
     min:data.daily.temperature_2m_min?.[idx],
     max:data.daily.temperature_2m_max?.[idx],
-    precipitation:data.daily.precipitation_sum?.[idx]
+    precipitation:data.daily.precipitation_sum?.[idx],
+    wind:data.daily.wind_speed_10m_max?.[idx],
+    cloudiness:data.daily.cloud_cover_mean?.[idx]
   };
 }
 let weatherRequestToken=0;
@@ -169,8 +171,12 @@ async function loadReportWeather(){
     const temp=min!==null&&max!==null?`${min}–${max} °C`:max!==null?`${max} °C`:min!==null?`${min} °C`:'—';
     const precip=Number.isFinite(weather.precipitation)?`${weather.precipitation.toLocaleString('de-DE',{maximumFractionDigits:1})} mm`:'—';
     setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`);
+    const weatherBox=$('reportTemperature')?.closest('.weatherGrid');
+    if(weatherBox){weatherBox.dataset.wind=Number.isFinite(weather.wind)?`${Math.round(weather.wind)} km/h`:'';weatherBox.dataset.cloudiness=Number.isFinite(weather.cloudiness)?`${Math.round(weather.cloudiness)} %`:'';}
   }catch(err){
     if(token!==weatherRequestToken)return;
+    const weatherBox=$('reportTemperature')?.closest('.weatherGrid');
+    if(weatherBox){weatherBox.dataset.wind='';weatherBox.dataset.cloudiness='';}
     setReportWeather('—','—',err?.message||'Wetterdaten konnten nicht geladen werden.');
   }
 }
@@ -943,6 +949,8 @@ function collectTagesbericht(){
     project:$('reportProjectSelect')?.selectedOptions?.[0]?.textContent?.trim()||'',
     temperature:$('reportTemperature')?.textContent?.trim()||'—',
     precipitation:$('reportPrecipitation')?.textContent?.trim()||'—',
+    wind:$('reportTemperature')?.closest('.weatherGrid')?.dataset?.wind||'',
+    cloudiness:$('reportTemperature')?.closest('.weatherGrid')?.dataset?.cloudiness||'',
     employees:collectReportEmployees(),
     works:collectReportList('reportWorksEntries'),
     materials:collectReportList('reportMaterialsEntries'),
@@ -981,29 +989,87 @@ function tagesberichtPdfFilename(data){
 async function createTagesberichtPdf(data){
   if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
-  const pdf=await PDFDocument.create();
-  const normal=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
-  let page=pdf.addPage([595,842]), W=595,H=842;
-  let y=800;
-  const margin=42, maxW=W-margin*2;
-  const text=(txt,size=10,font=normal,x=margin)=>{page.drawText(String(txt||''),{x,y,size,font});y-=size+6};
-  const line=()=>{page.drawLine({start:{x:margin,y},end:{x:W-margin,y},thickness:1,color:rgb(.82,.84,.86)});y-=12};
-  const section=(title)=>{if(y<90){page=pdf.addPage([595,842]);y=800} page.drawText(title,{x:margin,y,size:14,font:bold});y-=24};
-  const wrap=(txt,size=10,font=normal)=>{const words=String(txt||'').split(/\s+/).filter(Boolean);let l='';for(const w of words){const t=l?l+' '+w:w;if(font.widthOfTextAtSize(t,size)>maxW){text(l,size,font);l=w}else l=t}if(l)text(l,size,font)};
-  page.drawText('Tagesbericht',{x:margin,y,size:22,font:bold});y-=34;
-  text(formatDate(data.date),11,normal); text(data.customer,11,bold); text(data.project,11,bold); y-=4; line();
-  section('Wetter'); text(`Temperatur: ${data.temperature}`,10); text(`Niederschlag: ${data.precipitation}`,10); y-=4;
-  section('Mitarbeiter');
-  data.employees.forEach(e=>{wrap(`${e.name} – ${e.role} – ${e.start} bis ${e.end} – ${e.pause?e.pause+' Min. Pause':'keine Pause'} – ${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.`,10);});
-  section('Ausgeführte Arbeiten'); data.works.forEach(v=>wrap('• '+v,10)); if(!data.works.length)text('Keine Angaben.',10);
-  section('Materiallieferung'); data.materials.forEach(v=>wrap('• '+v,10)); if(!data.materials.length)text('Keine Angaben.',10);
-  if(y<170){page=pdf.addPage([595,842]);y=800}
-  section('Unterschrift Auftraggeber'); text(data.signerName||'Name nicht angegeben',10); y-=8;
-  if(data.signature&&data.signature.length>100){const sig=await pdf.embedPng(data.signature);page.drawImage(sig,{x:margin,y:y-95,width:260,height:90});y-=110}
-  const out=await pdf.save({useObjectStreams:false});
-  const blob=new Blob([out],{type:'application/pdf'}), filename=tagesberichtPdfFilename(data);
-  if(navigator.share&&navigator.canShare){const file=new File([blob],filename,{type:'application/pdf'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}}
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);return true;
+  let fileHandle=null;
+  try{
+    if('showSaveFilePicker' in window){
+      fileHandle=await window.showSaveFilePicker({
+        suggestedName:tagesberichtPdfFilename(data),
+        types:[{description:'PDF-Datei',accept:{'application/pdf':['.pdf']}}]
+      });
+    }
+    const bytes=await fetch('TagesberichtTemplate.pdf',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Tagesbericht-Vorlage nicht gefunden');return r.arrayBuffer()});
+    const pdf=await PDFDocument.load(bytes);
+    const page=pdf.getPages()[0];
+    const normal=await pdf.embedFont(StandardFonts.Helvetica);
+    const bold=await pdf.embedFont(StandardFonts.HelveticaBold);
+    const white=rgb(1,1,1);
+    const cover=(x,y,w,h)=>page.drawRectangle({x,y,width:w,height:h,color:white});
+    const text=(value,x,y,size=9,font=normal,maxWidth=null)=>{
+      const v=String(value??'').trim(); if(!v)return;
+      if(maxWidth){const fitted=fitText(font,v,maxWidth,size,6.5);page.drawText(v,{x,y,size:fitted,font});}
+      else page.drawText(v,{x,y,size,font});
+    };
+    const wrap=(value,x,y,w,size=8.1,maxLines=2)=>drawWrapped(page,normal,String(value||''),x,y,w,size,1,maxLines);
+
+    // Tagesbericht-Blankovorlage: nur die vorgesehenen Felder werden ausgefüllt.
+    // Die bestehende Tagelohn-PDF-Erstellung bleibt vollständig unverändert.
+    cover(122,665,420,22);
+    text(data.project,126,673,9.5,bold,285);
+    text(`Datum: ${formatDate(data.date)}`,424,673,8.5,normal,110);
+
+    cover(91,614,205,20); cover(375,614,200,20);
+    cover(91,589,205,20); cover(375,589,200,20);
+    text(data.temperature,96,620,9.2,bold,190);
+    text(data.wind||'—',380,620,9.2,bold,185);
+    text(data.precipitation,96,595,9.2,bold,190);
+    text(data.cloudiness||'—',380,595,9.2,bold,185);
+
+    // Die Mitarbeiter-Spalte der Blankovorlage wird für den Tagesbericht
+    // in zwei Bereiche aufgeteilt: Mitarbeiter | Funktion.
+    // Die übrigen Spalten der Vorlage (Arbeitsbeginn, Arbeitsende, Pause, Gesamt)
+    // bleiben an ihrer ursprünglichen Position.
+    cover(50,542,188,22);
+    text('Mitarbeiter',64,547,8.1,bold,82);
+    text('Funktion',154,547,8.1,bold,72);
+    page.drawLine({start:{x:145,y:395.5},end:{x:145,y:562.5},color:rgb(0.55,0.55,0.55),thickness:0.6});
+
+    const rowY=527, rowStep=22;
+    data.employees.slice(0,9).forEach((e,i)=>{
+      const y=rowY-i*rowStep;
+      text(e.name||'',55,y,8.2,normal,86);
+      text(e.role||'',151,y,8.2,normal,82);
+      text(e.start||'',277,y,8.2,normal,70);
+      text(e.end||'',367,y,8.2,normal,70);
+      if(Number(e.pause)) text(`${e.pause} min`,454,y,8.2,normal,55);
+      const hours=(Number(e.hours)||0).toFixed(2).replace('.',',');
+      if(hours!=='0,00') text(hours,520,y,8.2,normal,55);
+    });
+
+    data.works.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,64,307-i*18,350,8.1,2));
+    data.materials.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,418,307-i*18,150,8.1,2));
+
+    if(data.signature&&data.signature.length>100){
+      const sig=await pdf.embedPng(data.signature);
+      page.drawImage(sig,{x:64,y:48,width:180,height:62,opacity:1});
+    }
+    if(data.signerName) text(data.signerName,250,58,8.5,normal,150);
+
+    const out=await pdf.save({useObjectStreams:false});
+    const blob=new Blob([out],{type:'application/pdf'}), filename=tagesberichtPdfFilename(data);
+    if(fileHandle){
+      const writable=await fileHandle.createWritable();
+      await writable.write(blob); await writable.close();
+    }else if(navigator.share&&navigator.canShare){
+      const file=new File([blob],filename,{type:'application/pdf'});
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
+    }else{
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
+    return true;
+  }catch(err){
+    if(err?.name==='AbortError') return false;
+    console.error(err);alert('Tagesbericht-PDF konnte nicht erstellt/gespeichert werden: '+err.message);return false;
+  }
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
