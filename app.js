@@ -1015,7 +1015,11 @@ async function createTagesberichtPdf(data){
     // Die bestehende Tagelohn-PDF-Erstellung bleibt vollständig unverändert.
     cover(122,665,420,22);
     text(data.project,126,673,9.5,bold,285);
-    text(`Datum: ${formatDate(data.date)}`,424,673,8.5,normal,110);
+    // Datum zentral unter der Überschrift platzieren – nicht mehr rechts neben dem Bauvorhaben.
+    const dateText=`Datum: ${formatDate(data.date)}`;
+    const dateSize=8.5;
+    const dateWidth=normal.widthOfTextAtSize(dateText,dateSize);
+    text(dateText,(page.getWidth()-dateWidth)/2,820,dateSize,normal);
 
     cover(91,614,205,20); cover(375,614,200,20);
     cover(91,589,205,20); cover(375,589,200,20);
