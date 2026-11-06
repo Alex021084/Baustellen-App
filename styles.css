@@ -3241,7 +3241,7 @@ body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList .emptyState {
 
 /* v18: CTA-Schriftgröße an Tagesbericht angleichen */
 body.tagelohn-clean #tagelohnHome.active > #new2 {
-  font-size:24px !important;
+  font-size:20px !important;
   font-weight:800 !important;
-  letter-spacing:-.2px !important;
+  letter-spacing:0 !important;
 }
