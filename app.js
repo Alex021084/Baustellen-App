@@ -186,6 +186,15 @@ async function fetchDailyWeather(lat,lon,date){
     cloudiness:data.daily.cloud_cover_mean?.[idx]
   };
 }
+function describeCloudiness(value){
+  if(!Number.isFinite(value)) return '—';
+  if(value<=10) return 'sonnig';
+  if(value<=25) return 'überwiegend sonnig';
+  if(value<=45) return 'teils sonnig';
+  if(value<=65) return 'leicht bewölkt';
+  if(value<=85) return 'stark bewölkt';
+  return 'bedeckt';
+}
 let weatherRequestToken=0;
 async function loadReportWeather(){
   const token=++weatherRequestToken;
@@ -216,7 +225,7 @@ async function loadReportWeather(){
     const precip=Number.isFinite(weather.precipitation)?`${weather.precipitation.toLocaleString('de-DE',{maximumFractionDigits:1})} mm`:'—';
     setReportWeather(temp,precip,`Automatisch über ${locationLabel} für ${date.split('-').reverse().join('.')} geladen.`);
     const weatherBox=$('reportTemperature')?.closest('.weatherGrid');
-    if(weatherBox){weatherBox.dataset.wind=Number.isFinite(weather.wind)?`${Math.round(weather.wind)} km/h`:'';weatherBox.dataset.cloudiness=Number.isFinite(weather.cloudiness)?`${Math.round(weather.cloudiness)} %`:'';}
+    if(weatherBox){weatherBox.dataset.wind=Number.isFinite(weather.wind)?`${Math.round(weather.wind)} km/h`:'';weatherBox.dataset.cloudiness=describeCloudiness(weather.cloudiness);}
   }catch(err){
     if(token!==weatherRequestToken)return;
     const weatherBox=$('reportTemperature')?.closest('.weatherGrid');
@@ -1197,8 +1206,14 @@ async function createTagesberichtPdf(data){
     // Bauvorhaben: rechts neben dem gedruckten Label im vorgesehenen Feld.
     text(data.project,199.2,654.4,9.5,bold,405);
 
-    // Wetterwerte an die in der Muster-PDF freien Wertpositionen setzen.
-    text(data.temperature,180,613.0,9.2,normal,145);
+    // Datum direkt unter der Überschrift zentriert ergänzen.
+    const dateText=`${formatDate(data.date)}`;
+    const dateSize=8.5;
+    const dateWidth=normal.widthOfTextAtSize(dateText,dateSize);
+    text(dateText,(page.getWidth()-dateWidth)/2,865, dateSize,normal);
+
+    // Temperatur und Regenmenge linksbündig auf derselben Wertposition.
+    text(data.temperature,167.3,613.0,9.2,normal,145);
     text(data.wind||'—',427.4,613.0,9.2,normal,145);
     text(data.precipitation,167.3,585.2,9.2,normal,150);
     text(data.cloudiness||'—',427.4,585.2,9.2,normal,145);
