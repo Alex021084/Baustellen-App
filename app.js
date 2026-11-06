@@ -1368,7 +1368,12 @@ function updateTagelohnSummarySignatureStatus(){
   const editButton=$('backToEditorFromSummary');
   if(editButton)editButton.style.display=tagelohnReadOnly?'none':'';
   const saveButton=$('saveTagelohnFromSummary');
-  if(saveButton)saveButton.style.display='';
+  if(saveButton){
+    saveButton.style.display='';
+    saveButton.textContent=(editingReportIndex!==null && reports[editingReportIndex])
+      ?'Änderungen speichern'
+      :'Dokument speichern';
+  }
 }
 
 // Schrittweiser Tagelohn-Ablauf wie beim Tagesbericht.
