@@ -721,7 +721,7 @@ function renderSummary(){
   const savedForSummary = Number.isInteger(editingReportIndex) ? reports[editingReportIndex] : null;
   const summaryIsSigned = !!(
     tagelohnReadOnly ||
-    (savedForSummary && (savedForSummary.signed || (savedForSummary.signature && savedForSummary.signature.length > 100)))
+    (savedForSummary && savedForSummary.signed === true)
   );
   const editPencil = step => summaryIsSigned ? '' :
     `<button type="button" class="summaryEditPencil" data-summary-edit="${step}" aria-label="Diesen Abschnitt bearbeiten" title="Diesen Abschnitt bearbeiten"><span aria-hidden="true">✎</span></button>`;
@@ -747,7 +747,7 @@ function renderSummary(){
       event.stopPropagation();
       const signedNow = !!(
         tagelohnReadOnly ||
-        (savedForSummary && (savedForSummary.signed || (savedForSummary.signature && savedForSummary.signature.length > 100)))
+        (savedForSummary && savedForSummary.signed === true)
       );
       if (signedNow) return;
       const targetStep = Math.max(1, Math.min(3, Number(button.getAttribute('data-summary-edit')) || 1));
@@ -993,7 +993,7 @@ function render(){
       row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
-        tagelohnReadOnly=!!(r.signed || (r.signature && r.signature.length>100));
+        tagelohnReadOnly=r.signed === true;
         fill(r);
         renderSummary();
         show('summaryScreen');
@@ -1416,7 +1416,7 @@ function updateTagelohnSummarySignatureStatus(){
   // Beim Öffnen eines gespeicherten Nachweises zählt dessen gespeicherter
   // Signaturstatus sofort – das Bild der Unterschrift wird separat geladen.
   const signed = hasSignature()
-    || !!(savedReport && (savedReport.signed || (savedReport.signature && savedReport.signature.length>100)));
+    || !!(savedReport && savedReport.signed === true);
   if(status){
     status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
     status.classList.toggle('signed',signed);
