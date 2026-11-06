@@ -1,5 +1,23 @@
 
 const $=x=>document.getElementById(x);
+
+// Hauptnavigation sofort registrieren, bevor weitere App-Initialisierung startet.
+document.addEventListener('click', function(event) {
+  const button = event.target.closest('#navStart, #navBack');
+  if (!button) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  if (button.id === 'navStart') {
+    if (typeof selectedReportCustomer !== 'undefined') selectedReportCustomer = null;
+    if (typeof selectedReportProject !== 'undefined') selectedReportProject = null;
+    if (typeof window !== 'undefined') window.currentSavedTagesbericht = null;
+    if (typeof navigationHistory !== 'undefined') navigationHistory = [];
+    show('home', {replaceHistory:true});
+  } else {
+    goBackOneStep();
+  }
+}, true);
+
 // Robuste zentrale Navigation: funktioniert auch dann, wenn einzelne ältere
 // Inline-Handler durch Browser-/Cache-Unterschiede nicht gebunden wurden.
 document.addEventListener('click', function(event){
@@ -1330,13 +1348,3 @@ window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector
 
 
 
-// Einheitliche Hauptnavigation für alle App-Bereiche.
-document.addEventListener('click',function(e){
- const b=e.target.closest('#navStart,#navBack,#backToStartFromReports,#backToStartFromTagesbericht');
- if(!b)return;
- e.preventDefault();e.stopImmediatePropagation();
- if(b.id==='navStart'||b.id==='backToStartFromReports'||b.id==='backToStartFromTagesbericht'){
-   selectedReportCustomer=null;selectedReportProject=null;window.currentSavedTagesbericht=null;
-   navigationHistory=[];show('home',{replaceHistory:true});
- }else{goBackOneStep();}
-},true);
