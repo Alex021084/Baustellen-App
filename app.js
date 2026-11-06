@@ -1406,7 +1406,7 @@ $('saveSignature').onclick=()=>{
     render();
   }
   renderSummary();
-  show('summaryScreen');
+  show('summaryScreen',{replaceHistory:true});
   updateTagelohnSummarySignatureStatus();
 };
 
