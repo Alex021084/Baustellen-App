@@ -2902,3 +2902,133 @@ body:has(#tagelohnHome.active) { overflow-y:auto !important; }
   padding:18px 20px !important; border:1px solid #dde2e6 !important;
   border-radius:20px !important; box-shadow:0 5px 16px rgba(23,35,47,.045) !important;
 }
+
+
+/* v14: Tagelohn-Übersicht im selben Layout wie Tagesberichte */
+body.tagelohn-clean #tagelohnHome.active {
+  display:block !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:calc(100dvh - 70px) !important;
+  max-height:none !important;
+  overflow:visible !important;
+  padding:42px 17px 30px !important;
+  background:#f3f5f7 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .moduleHeader {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin:0 0 32px !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .moduleHeader > div {
+  display:block !important;
+  flex:1 1 auto !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .moduleHeader h2 {
+  display:block !important;
+  margin:0 !important;
+  padding:0 !important;
+  color:#17212b !important;
+  font-size:26px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .moduleHeader #backToStartFromTagelohn {
+  display:block !important;
+  flex:0 0 auto !important;
+  min-height:44px !important;
+  margin:0 !important;
+  padding:9px 16px !important;
+  border:1px solid #d6dadd !important;
+  border-radius:14px !important;
+  background:#fff !important;
+  color:#3982e8 !important;
+  font-size:17px !important;
+  font-weight:700 !important;
+  box-shadow:none !important;
+}
+body.tagelohn-clean #tagelohnHome.active > #new2 {
+  display:block !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-height:60px !important;
+  height:60px !important;
+  margin:0 0 34px !important;
+  padding:12px 18px !important;
+  border:0 !important;
+  border-radius:16px !important;
+  background:linear-gradient(110deg,#efa633,#f6c344) !important;
+  color:#17212b !important;
+  font-size:20px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  box-shadow:0 8px 18px rgba(215,157,45,.16) !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .archiveHint {
+  display:block !important;
+  margin:0 0 12px !important;
+  padding:0 !important;
+  color:#202832 !important;
+  font-size:18px !important;
+  line-height:1.3 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .cards {
+  display:block !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn {
+  display:flex !important;
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-height:126px !important;
+  height:auto !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:18px !important;
+  margin:0 !important;
+  padding:22px 20px !important;
+  border:1px solid #dde2e6 !important;
+  border-radius:20px !important;
+  background:#fff !important;
+  color:#17212b !important;
+  text-align:left !important;
+  box-shadow:0 5px 16px rgba(23,35,47,.045) !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn .constructionCardIcon {
+  display:grid !important;
+  flex:0 0 58px !important;
+  width:58px !important;
+  height:58px !important;
+  place-items:center !important;
+  font-size:36px !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn > span:nth-child(2) {
+  display:block !important;
+  flex:1 1 auto !important;
+  font-size:16px !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn b {
+  display:block !important;
+  color:#202832 !important;
+  font-size:20px !important;
+  line-height:1.3 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn small {
+  display:block !important;
+  margin-top:4px !important;
+  color:#727b86 !important;
+  font-size:16px !important;
+}
+@media(max-width:600px) {
+  body.tagelohn-clean #tagelohnHome.active { padding:42px 17px 30px !important; }
+  body.tagelohn-clean #tagelohnHome.active > .moduleHeader h2 { font-size:26px !important; }
+  body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn { min-height:126px !important; }
+}
