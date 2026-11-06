@@ -1332,8 +1332,21 @@ let c=$('sig'),ctx=c.getContext('2d'),down=false;
 c.onpointerdown=e=>{down=true;ctx.beginPath();let p=pos(e);ctx.moveTo(p.x,p.y)};c.onpointermove=e=>{if(!down)return;let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()};window.onpointerup=()=>down=false;
 function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
-$('review').onclick=()=>{renderSummary();show('summaryScreen')};
+$('review').onclick=()=>{renderSummary();show('summaryScreen');const s=$('tagelohnSignatureStatus');if(s)s.textContent=hasSignature()?'Unterschrift vorhanden':'Noch nicht unterschrieben';};
 $('backToEditorFromSummary').onclick=()=>show('editor');
+
+$('tagelohnReviewDetails')?.addEventListener('click',()=>{$('summaryContent')?.scrollIntoView({behavior:'smooth',block:'start'});});
+$('saveTagelohnFromSummary')?.addEventListener('click',()=>{
+  try{
+    const saved=collect();
+    saved.signed=hasSignature();
+    saved.signedAt=saved.signed?(new Date().toISOString()):null;
+    if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]=saved;
+    else{reports.unshift(saved);editingReportIndex=0;}
+    save();render();updateSignatureStatus();navigationHistory=[];show('archive');
+  }catch(err){console.error(err);alert('Der Nachweis konnte nicht gespeichert werden: '+err.message);}
+});
+
 $('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()};
 $('backToSummary').onclick=()=>{renderSummary();show('summaryScreen')};
 $('cancelSignature').onclick=()=>show('summaryScreen');

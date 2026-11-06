@@ -2725,3 +2725,38 @@ body.tagelohn-clean #appNav button small {
   transform:scale(.985)!important;
   box-shadow:0 1px 4px rgba(31,45,61,.08)!important;
 }
+
+/* Tagelohn-Zusammenfassung: gleicher nummerierter Ablauf wie im Tagesbericht */
+.tagelohnWorkflow{display:grid;gap:16px;margin:22px 0}
+.tagelohnWorkflow .workflowItem{
+  padding:20px 18px;
+  border:1.5px solid #e0e5eb;
+  border-radius:24px;
+  background:#f9fafb;
+  box-shadow:0 2px 8px rgba(31,45,61,.035);
+}
+.tagelohnWorkflow .workflowHead{display:flex;align-items:center;gap:14px}
+.tagelohnWorkflow .workflowHead>span{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;flex:0 0 44px;border-radius:50%;
+  background:#fff1ce;color:#80551b;font-size:20px;font-weight:800;
+}
+.tagelohnWorkflow .workflowHead b{font-size:19px;color:#202936}
+.tagelohnWorkflow .workflowItem p{margin:14px 0 18px;color:#747e8c;font-size:16px;line-height:1.45}
+.tagelohnWorkflow .workflowButton{
+  display:block;width:100%;min-height:58px;border-radius:18px;
+  font-size:17px;font-weight:750;
+}
+.tagelohnWorkflow .workflowStatus{
+  margin:0 0 14px;padding:13px 16px;border:1.5px solid #e0e5eb;
+  border-radius:15px;background:#f1f3f5;color:#747e8c;font-size:15px;
+}
+.tagelohnWorkflow .workflowStatus.signed{background:#eaf6ee;color:#388454;border-color:#cde8d5}
+.tagelohnSaveAction{margin:18px 0 10px}
+.tagelohnSaveAction button{width:100%;min-height:62px;border-radius:18px;font-size:18px;font-weight:800}
+#reportSignatureModal #closeReportSignature::before{content:none!important;display:none!important}
+#reportSignatureModal #closeReportSignature{
+  background:linear-gradient(180deg,#f7fafc 0%,#edf2f7 100%)!important;
+  color:#344256!important;border:1.5px solid #d7e0e8!important;
+  border-radius:18px!important;font-size:18px!important;font-weight:700!important;
+}
