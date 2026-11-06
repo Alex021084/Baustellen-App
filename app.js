@@ -1248,7 +1248,10 @@ $('reportAddWork')?.addEventListener('click',()=>addReportListEntry('reportWorks
 $('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportMaterialsEntries'));
 $('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();clearReportSignature();$('reportSignerName').value='';show('tagesberichtSummary',{replaceHistory:false})});
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
-$('saveReportAndPdf')?.addEventListener('click',saveTagesberichtAndPdf);
+$('saveReportAndPdf')?.addEventListener('click',async()=>{await saveTagesberichtAndPdf(true);});
+$('openReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');m?.classList.add('open');m?.setAttribute('aria-hidden','false');});
+$('closeReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');m?.classList.remove('open');m?.setAttribute('aria-hidden','true');});
+$('saveReportUnsigned')?.addEventListener('click',()=>saveTagesberichtAndPdf(false));
 $('backToStartFromTagelohn').onclick=()=>show('home');
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();

@@ -2530,3 +2530,9 @@ body.tagelohn-clean #appNav button small {
 #tagesberichtArchiveList{display:flex;flex-direction:column;gap:10px;margin:16px 0 30px}
 #tagesberichtHome>.big{width:100%;margin:12px 0 18px}
 #tagesberichtHome .moduleHeader{display:flex;justify-content:space-between;align-items:center}
+
+.reportSignatureModal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.58);padding:18px;align-items:center;justify-content:center;overflow:auto}
+.reportSignatureModal.open{display:flex}
+.reportSignatureModal .reportSignaturePanel{width:min(100%,680px);max-height:90dvh;overflow:auto;margin:auto}
+.reportSignatureModal #reportSig{display:block;width:100%;height:190px;touch-action:none;background:#fff;border:2px solid #d1d8e2;border-radius:18px}
+.reportSignatureModal .reportSignatureActions{display:flex;flex-direction:column;gap:12px}

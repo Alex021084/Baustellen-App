@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=nav-green-20"></head><body>
+<link rel="stylesheet" href="styles.css?v=signature-modal-33"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -37,7 +37,6 @@
 <section id="tagesberichtHome" class="screen">
 <div class="moduleHeader"><div><small>TAGESBERICHT</small><h2>Tagesberichte</h2></div><button id="backToStartFromReports" type="button">Start</button></div>
 <button id="newTagesbericht" type="button" class="primary big">＋ Neuer Tagesbericht</button>
-<div class="cards"><div class="card" style="cursor:default"><span class="constructionCardIcon" aria-hidden="true">📋</span><span><b>Baustellen</b><small>Gespeicherte Tagesberichte nach Kunde und Bauvorhaben</small></span></div></div>
 <div id="tagesberichtArchiveList"></div>
 </section>
 
@@ -98,12 +97,18 @@
   <h2>Bericht prüfen</h2>
   <div id="reportSummaryContent" class="reportSummaryContent"></div>
 </div>
-<div class="panel reportSignaturePanel">
+<div class="reportSignatureActions">
+<button id="openReportSignature" type="button" class="secondary reportNextButton">✍️ Unterschreiben</button>
+<button id="saveReportUnsigned" type="button" class="primary reportNextButton">Ohne Unterschrift speichern und PDF erstellen</button>
+</div>
+<div id="reportSignatureModal" class="reportSignatureModal" aria-hidden="true"><div class="panel reportSignaturePanel">
   <h2>Unterschrift</h2>
   <p class="hint">Bitte den Bericht nach der Prüfung unterschreiben.</p>
   <canvas id="reportSig" width="900" height="300" aria-label="Unterschrift Auftraggeber"></canvas>
   <div class="reportSignatureRow"><button id="clearReportSig" type="button">Unterschrift löschen</button><input id="reportSignerName" placeholder="Name (optional)" aria-label="Name des Unterzeichners"></div>
-  <div class="reportSignatureActions"><button id="saveReportUnsigned" type="button" class="secondary reportNextButton">Ohne Unterschrift speichern und PDF erstellen</button><button id="saveReportAndPdf" type="button" class="primary reportNextButton">Mit Unterschrift speichern und PDF erstellen</button></div>
+  <div class="reportSignatureActions"><button id="saveReportAndPdf" type="button" class="primary reportNextButton">Mit Unterschrift speichern und PDF erstellen</button></div>
+</div>
+<button id="closeReportSignature" type="button" class="secondary reportNextButton">Schließen</button>
 </div>
 </section>
 
@@ -206,4 +211,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=optional-signature-32"></script></body></html>
+<script src="app.js?v=signature-modal-33"></script></body></html>
