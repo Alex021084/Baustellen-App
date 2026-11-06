@@ -1066,13 +1066,27 @@ function initReportSignature(){
   reportSignatureCanvas=$('reportSig');
   if(!reportSignatureCanvas)return;
   reportSignatureCtx=reportSignatureCanvas.getContext('2d');
-  reportSignatureCtx.lineWidth=4; reportSignatureCtx.lineCap='round'; reportSignatureCtx.lineJoin='round';
-  const pos=e=>{const r=reportSignatureCanvas.getBoundingClientRect();return{x:(e.clientX-r.left)*reportSignatureCanvas.width/r.width,y:(e.clientY-r.top)*reportSignatureCanvas.height/r.height}};
-  reportSignatureCanvas.onpointerdown=e=>{reportSignatureDown=true;reportSignatureCanvas.setPointerCapture?.(e.pointerId);const q=pos(e);reportSignatureCtx.beginPath();reportSignatureCtx.moveTo(q.x,q.y)};
-  reportSignatureCanvas.onpointermove=e=>{if(!reportSignatureDown)return;const q=pos(e);reportSignatureCtx.lineTo(q.x,q.y);reportSignatureCtx.stroke()};
+  reportSignatureCtx.lineWidth=1;
+  reportSignatureCtx.lineCap='round';
+  reportSignatureCtx.lineJoin='round';
+  const pos=e=>{
+    const r=reportSignatureCanvas.getBoundingClientRect();
+    return {x:(e.clientX-r.left)*reportSignatureCanvas.width/r.width,
+            y:(e.clientY-r.top)*reportSignatureCanvas.height/r.height};
+  };
+  reportSignatureCanvas.onpointerdown=e=>{
+    reportSignatureDown=true;
+    reportSignatureCanvas.setPointerCapture?.(e.pointerId);
+    const p=pos(e);reportSignatureCtx.beginPath();reportSignatureCtx.moveTo(p.x,p.y);
+  };
+  reportSignatureCanvas.onpointermove=e=>{
+    if(!reportSignatureDown)return;
+    const p=pos(e);reportSignatureCtx.lineTo(p.x,p.y);reportSignatureCtx.stroke();
+  };
   reportSignatureCanvas.onpointerup=()=>reportSignatureDown=false;
   reportSignatureCanvas.onpointercancel=()=>reportSignatureDown=false;
 }
+
 function clearReportSignature(){if(reportSignatureCtx){reportSignatureCtx.clearRect(0,0,reportSignatureCanvas.width,reportSignatureCanvas.height)}reportSignatureReady=false}
 function hasReportSignature(){if(!reportSignatureCtx)return false;const d=reportSignatureCtx.getImageData(0,0,reportSignatureCanvas.width,reportSignatureCanvas.height).data;for(let i=3;i<d.length;i+=4)if(d[i]>10)return true;return false}
 
@@ -1312,16 +1326,15 @@ function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.wi
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
 $('review').onclick=()=>{renderSummary();show('summaryScreen')};
 $('backToEditorFromSummary').onclick=()=>show('editor');
-$('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()}; $('saveWithoutSignature').onclick=saveTagelohnWithoutSignature;
+$('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()};
 $('backToSummary').onclick=()=>{renderSummary();show('summaryScreen')};
 $('cancelSignature').onclick=()=>show('summaryScreen');
-$('saveSignature').onclick=async()=>{
-  if(!hasSignature()){alert('Bitte zuerst unterschreiben.');return}
-  
+
 async function saveTagelohnWithoutSignature(){
- const btn=$('saveWithoutSignature'); if(btn){btn.disabled=true;btn.textContent='Speichert…';}
+ const btn=$('saveWithoutSignature');
+ if(btn){btn.disabled=true;btn.textContent='Speichert…';}
  try{
-   const saved=collect(); saved.signed=false; saved.signedAt=null;
+   const saved=collect();saved.signed=false;saved.signedAt=null;
    if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]=saved;
    else{reports.unshift(saved);editingReportIndex=0;}
    save();render();updateSignatureStatus();navigationHistory=[];
@@ -1331,22 +1344,24 @@ async function saveTagelohnWithoutSignature(){
  }catch(err){console.error(err);alert('Der Nachweis konnte nicht vollständig gespeichert werden: '+err.message);}
  finally{if(btn){btn.disabled=false;btn.textContent='Ohne Unterschrift speichern';}}
 }
-const btn=$('saveSignature');
-  btn.disabled=true; btn.textContent='✓';
-  try{
-    const signed=collect();
-    signed.signed=true;
-    signed.signedAt=new Date().toISOString();
-    if(editingReportIndex!==null && reports[editingReportIndex]) reports[editingReportIndex]=signed;
-    else {reports.unshift(signed); editingReportIndex=0;}
-    save(); render(); updateSignatureStatus();
-    navigationHistory=[];
-    const pdfSaved=await createPdf({askLocation:true});
-    if(pdfSaved) alert('Unterschrieben gespeichert und PDF gespeichert.');
-    show('archive');
-  }catch(err){console.error(err);alert('Der unterschriebene Nachweis konnte nicht vollständig gespeichert werden: '+err.message)}
-  finally{btn.disabled=false;btn.textContent='➜'}
-};
+async function saveTagelohnWithSignature(){
+ const btn=$('saveSignature');
+ if(!hasSignature()){alert('Bitte zuerst unterschreiben.');return;}
+ btn.disabled=true;
+ try{
+   const signed=collect();signed.signed=true;signed.signedAt=new Date().toISOString();
+   if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]=signed;
+   else{reports.unshift(signed);editingReportIndex=0;}
+   save();render();updateSignatureStatus();navigationHistory=[];
+   const pdfSaved=await createPdf({askLocation:true});
+   if(pdfSaved)alert('Unterschrieben gespeichert und PDF gespeichert.');
+   show('archive');
+ }catch(err){console.error(err);alert('Der unterschriebene Nachweis konnte nicht vollständig gespeichert werden: '+err.message);}
+ finally{btn.disabled=false;}
+}
+$('saveSignature').onclick=saveTagelohnWithSignature;
+$('saveWithoutSignature').onclick=saveTagelohnWithoutSignature;
+
 
 window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector('nav');if(nav)nav.style.display=document.getElementById('home')?.classList.contains('active')?'none':'flex';document.body.classList.toggle('home-screen',document.getElementById('home')?.classList.contains('active'));
   const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','reportServices','editor','summaryScreen','signatureScreen'];

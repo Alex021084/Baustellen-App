@@ -2571,3 +2571,41 @@ body.tagelohn-clean #appNav button small {
 #reportSignatureModal.open{display:flex!important;align-items:center!important;justify-content:center!important}
 #reportSignatureModal .reportSignaturePanel{width:min(100%,760px)!important;max-width:760px!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;box-sizing:border-box!important;margin:auto!important}
 #reportSignatureModal #reportSig{width:100%!important;height:42dvh!important;min-height:280px!important;max-height:460px!important;display:block!important;box-sizing:border-box!important;touch-action:none!important}
+
+/* Tagesbericht-Unterschrift: exakt dieselbe Schreibfläche wie beim Tagelohn */
+#reportSignatureModal .reportSignaturePanel{
+  width:min(100% - 24px,680px)!important;
+  max-width:680px!important;
+  padding:18px!important;
+}
+#reportSignatureModal #reportSig{
+  display:block!important;
+  width:100%!important;
+  height:240px!important;
+  min-height:240px!important;
+  max-height:240px!important;
+  box-sizing:border-box!important;
+  border:1px solid #cfd6dc!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  touch-action:none!important;
+}
+#reportSignatureModal #clearReportSig,
+#reportSignatureModal #saveReportAndPdf,
+#reportSignatureModal #closeReportSignature{
+  min-height:48px!important;
+  border-radius:12px!important;
+}
+#saveSignature{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:64px!important;
+  min-height:58px!important;
+  padding:10px 22px!important;
+  position:relative!important;
+  z-index:5!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  cursor:pointer!important;
+}

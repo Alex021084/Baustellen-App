@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=reference-exact-38"></head><body>
+<link rel="stylesheet" href="styles.css?v=signature-match-44"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -104,7 +104,7 @@
 <div id="reportSignatureModal" class="reportSignatureModal" aria-hidden="true"><div class="panel reportSignaturePanel">
   <h2>Unterschrift</h2>
   <p class="hint">Bitte den Bericht nach der Prüfung unterschreiben.</p>
-  <canvas id="reportSig" width="900" height="300" aria-label="Unterschrift Auftraggeber"></canvas>
+  <canvas id="reportSig" width="900" height="360" aria-label="Unterschrift Auftraggeber"></canvas>
   <div class="reportSignatureRow"><button id="clearReportSig" type="button">Unterschrift löschen</button><input id="reportSignerName" placeholder="Name (optional)" aria-label="Name des Unterzeichners"></div>
   <div class="reportSignatureActions"><button id="saveReportAndPdf" type="button" class="primary reportNextButton">Mit Unterschrift speichern und PDF erstellen</button></div>
 </div>
@@ -185,7 +185,7 @@
 <p class="hint">Bitte im Feld mit Finger, Maus oder Stift unterschreiben.</p>
 <canvas id="sig" width="900" height="360"></canvas>
 <div class="row"><button id="clear">Unterschrift löschen</button><input id="client" placeholder="Name (optional)"></div>
-<div class="actions signatureActions"><button id="cancelSignature">Abbrechen</button><button id="saveSignature" class="confirmSignature" aria-label="Unterschrift bestätigen" title="Unterschrift bestätigen">➜</button></div>
+<div class="actions signatureActions"><button id="cancelSignature">Abbrechen</button><button id="saveSignature" type="button" class="confirmSignature" aria-label="Unterschrift bestätigen" title="Unterschrift bestätigen">➜</button></div>
 </div>
 </section>
 
@@ -211,4 +211,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=position-nudge-43"></script></body></html>
+<script src="app.js?v=signature-match-44"></script></body></html>
