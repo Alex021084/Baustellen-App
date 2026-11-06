@@ -2460,3 +2460,10 @@ body.tagelohn-clean #appNav button small {
 .servicePickerActions button{flex:1;min-height:48px;border:0;border-radius:12px;font:inherit;font-weight:700;background:#e5a92f;color:#182230}
 .servicePickerActions button.secondary{background:#edf2f7;color:#334155}
 .selectedServiceLabel,.reportSelectedService{margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:#f1f5f9;color:#475569}
+
+/* Button-Auswahl für Leistungen und Funktionen im Mitarbeiter-Popup */
+.servicePickerDialog{position:relative}
+.servicePickerClose{position:absolute;right:0;top:0;border:0;border-radius:50%;width:48px;height:48px;font-size:30px;background:#eef1f6;color:#1687f8}
+.servicePickerButtons{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:10px;margin:22px 0}
+.serviceChoiceButton{min-height:64px;padding:12px 10px;border:2px solid #d1d7e0;border-radius:18px;background:#f7f8fa;color:#182235;font-size:17px;font-weight:700;cursor:pointer}
+.serviceChoiceButton:active,.serviceChoiceButton.selected{border-color:#1687f8;background:#eaf4ff}

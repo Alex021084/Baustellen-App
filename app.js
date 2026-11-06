@@ -206,7 +206,9 @@ async function loadReportWeather(){
 }
 
 let reportEmployeeEntries=[];
-const reportEmployeeRoles=['Vorarbeiter','Facharbeiter','Maschinist','LKW','Praktikant'];
+let reportEmployeeRoles=JSON.parse(localStorage.tagesberichtFunktionen||'null');
+if(!Array.isArray(reportEmployeeRoles)||!reportEmployeeRoles.length) reportEmployeeRoles=['Vorarbeiter','Facharbeiter','Maschinist','LKW','Praktikant'];
+function persistReportRoles(){localStorage.tagesberichtFunktionen=JSON.stringify(reportEmployeeRoles)}
 function reportEmployeeOptions(selected=''){
   return '<option value="">— Mitarbeiter auswählen —</option>'+employees.map(e=>`<option value="${esc(e)}"${e===selected?' selected':''}>${esc(e)}</option>`).join('');
 }
@@ -236,8 +238,7 @@ function addReportEmployee(entry={}){
   d.innerHTML=`<button type="button" class="reportEmployeeDelete" aria-label="Mitarbeiter entfernen">×</button>
     <div class="reportEmployeeTitle">Mitarbeiter</div>
     <label>Mitarbeiter<select class="reportName" aria-label="Mitarbeiter auswählen">${reportEmployeeOptions(entry.name||'')}</select></label>
-    <input class="reportServiceValue" type="hidden" value="${esc(entry.service||'')}"><div class="reportSelectedService">Leistung: <strong>${esc(entry.service||'Noch nicht ausgewählt')}</strong></div>
-    <label>Funktion<select class="reportRole" aria-label="Funktion auswählen">${reportRoleOptions(entry.role||'')}</select></label>
+    <input class="reportServiceValue" type="hidden" value="${esc(entry.role||'')}"><div class="reportSelectedService">Funktion: <strong>${esc(entry.role||'Noch nicht ausgewählt')}</strong></div>
     <div class="grid grid3 reportTimeGrid">
       <label>Arbeitsbeginn<select class="reportStart timeSelect" aria-label="Arbeitsbeginn auswählen">${reportTimeOptions(entry.start||'')}</select></label>
       <label>Arbeitsende<select class="reportEnd timeSelect" aria-label="Arbeitsende auswählen">${reportTimeOptions(entry.end||'')}</select></label>
@@ -247,7 +248,7 @@ function addReportEmployee(entry={}){
   d.querySelector('.reportEmployeeDelete').onclick=()=>{d.remove(); if(!document.querySelector('#reportEmployeeEntries .reportEmployeeCard')) addReportEmployee();};
   d.querySelector('.reportName').addEventListener('change',()=>{
     if(!d.querySelector('.reportName').value){d.querySelector('.reportServiceValue').value='';d.querySelector('.reportSelectedService strong').textContent='Noch nicht ausgewählt';return;}
-    openServicePicker('report',selected=>{d.querySelector('.reportServiceValue').value=selected;d.querySelector('.reportSelectedService strong').textContent=selected;},()=>{d.querySelector('.reportName').value='';d.querySelector('.reportServiceValue').value='';d.querySelector('.reportSelectedService strong').textContent='Noch nicht ausgewählt';},entry.service||'');
+    openServicePicker('report',selected=>{d.querySelector('.reportServiceValue').value=selected;d.querySelector('.reportSelectedService strong').textContent=selected;},()=>{d.querySelector('.reportName').value='';d.querySelector('.reportServiceValue').value='';d.querySelector('.reportSelectedService strong').textContent='Noch nicht ausgewählt';},entry.role||'');
   });
   ['reportStart','reportEnd','reportPause'].forEach(c=>d.querySelector('.'+c).oninput=()=>calcReportEmployeeCard(d));
   wrap.appendChild(d);
@@ -287,7 +288,7 @@ function collectReportEmployees(){
   return [...document.querySelectorAll('#reportEmployeeEntries .reportEmployeeCard')].map(d=>({
     name:d.querySelector('.reportName')?.value||'',
     service:d.querySelector('.reportServiceValue')?.value||'',
-    role:d.querySelector('.reportRole')?.value||'',
+    role:d.querySelector('.reportServiceValue')?.value||'',
     start:d.querySelector('.reportStart')?.value||'',
     end:d.querySelector('.reportEnd')?.value||'',
     pause:+(d.querySelector('.reportPause')?.value||0),
@@ -331,27 +332,27 @@ function addService(){
 function openReportServices(){renderReportServices();show('reportServices')}
 function renderReportServices(){
   const l=$('reportServiceList'); if(!l)return; l.innerHTML='';
-  reportServices.forEach((name,i)=>{
+  reportEmployeeRoles.forEach((name,i)=>{
     const d=document.createElement('div'); d.className='serviceRow';
-    d.innerHTML=`<input class="serviceEdit" value="${esc(name)}" aria-label="Tagesbericht-Leistung">`;
+    d.innerHTML=`<input class="serviceEdit" value="${esc(name)}" aria-label="Funktion">`;
     const input=d.querySelector('.serviceEdit');
     const saveEdit=()=>{
       const value=input.value.trim();
-      if(!value || value===reportServices[i]) return;
-      if(reportServices.some((x,j)=>j!==i&&x.toLowerCase()===value.toLowerCase())){input.value=reportServices[i];alert('Diese Leistung gibt es bereits.');return;}
-      reportServices[i]=value; persistReportServices();
+      if(!value || value===reportEmployeeRoles[i]) return;
+      if(reportEmployeeRoles.some((x,j)=>j!==i&&x.toLowerCase()===value.toLowerCase())){input.value=reportEmployeeRoles[i];alert('Diese Funktion gibt es bereits.');return;}
+      reportEmployeeRoles[i]=value; persistReportRoles();
     };
     input.addEventListener('change',saveEdit); input.addEventListener('blur',saveEdit);
-    enableSwipeDelete(d,()=>{reportServices.splice(i,1);persistReportServices();renderReportServices();});
+    enableSwipeDelete(d,()=>{reportEmployeeRoles.splice(i,1);persistReportRoles();renderReportServices();});
     l.append(d);
   });
-  if(!reportServices.length)l.innerHTML='<div class="empty">Noch keine Tagesbericht-Leistungen angelegt.</div>';
+  if(!reportEmployeeRoles.length)l.innerHTML='<div class="empty">Noch keine Funktionen angelegt.</div>';
 }
 function addReportService(){
   const value=$('reportServiceName').value.trim();
   if(!value){alert('Bitte eine Bezeichnung eingeben.');return}
-  if(reportServices.some(s=>s.toLowerCase()===value.toLowerCase())){alert('Diese Leistung gibt es bereits.');return}
-  reportServices.push(value);persistReportServices();$('reportServiceName').value='';renderReportServices();
+  if(reportEmployeeRoles.some(s=>s.toLowerCase()===value.toLowerCase())){alert('Diese Funktion gibt es bereits.');return}
+  reportEmployeeRoles.push(value);persistReportRoles();$('reportServiceName').value='';renderReportServices();
 }
 let previousScreen='home';
 function show(id, options={}){
@@ -596,28 +597,33 @@ function pauseOptions(selected=0){
   return `<option value="0"${value==='0'?' selected':''}>Keine Pause</option><option value="15"${value==='15'?' selected':''}>15 Minuten</option><option value="30"${value==='30'?' selected':''}>30 Minuten</option><option value="45"${value==='45'?' selected':''}>45 Minuten</option>`;
 }
 function openServicePicker(kind,onChoose,onCancel,selected=''){
-  const list=kind==='report'?reportServices:services;
+  const list=kind==='report'?reportEmployeeRoles:services;
   let modal=document.getElementById('requiredServicePicker');
   if(!modal){
     modal=document.createElement('div'); modal.id='requiredServicePicker'; modal.className='servicePickerOverlay';
     modal.innerHTML=`<div class="servicePickerDialog" role="dialog" aria-modal="true" aria-labelledby="servicePickerTitle">
-      <h2 id="servicePickerTitle">Leistung auswählen</h2><p>Bitte ordne dem Mitarbeiter eine Leistung zu.</p>
-      <select id="requiredServiceSelect" aria-label="Leistung auswählen"></select>
-      <div class="servicePickerActions"><button type="button" id="servicePickerCancel" class="secondary">Abbrechen</button><button type="button" id="servicePickerConfirm">Übernehmen</button></div>
+      <button type="button" class="servicePickerClose" aria-label="Schließen">×</button>
+      <h2 id="servicePickerTitle"></h2><p id="servicePickerHint"></p>
+      <div id="requiredServiceButtons" class="servicePickerButtons"></div>
+      <div class="servicePickerActions"><button type="button" id="servicePickerCancel" class="secondary">Abbrechen</button></div>
     </div>`;
     document.body.append(modal);
   }
-  const select=modal.querySelector('#requiredServiceSelect');
-  select.innerHTML='<option value="">— Leistung auswählen —</option>'+list.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
-  select.value=list.includes(selected)?selected:'';
+  const isReport=kind==='report';
+  modal.querySelector('#servicePickerTitle').textContent=isReport?'Funktion auswählen':'Leistung auswählen';
+  modal.querySelector('#servicePickerHint').textContent=isReport?'Bitte die passende Funktion auswählen.':'Bitte die passende Leistung auswählen.';
+  const buttons=modal.querySelector('#requiredServiceButtons'); buttons.innerHTML='';
+  let chosen=selected;
+  list.forEach(value=>{
+    const b=document.createElement('button'); b.type='button'; b.className='serviceChoiceButton'+(value===selected?' selected':''); b.textContent=value;
+    b.onclick=()=>{chosen=value;modal.classList.remove('open');onChoose(value);};
+    buttons.append(b);
+  });
   const cancel=()=>{modal.classList.remove('open');onCancel?.();};
   modal.querySelector('#servicePickerCancel').onclick=cancel;
-  modal.querySelector('#servicePickerConfirm').onclick=()=>{
-    if(!select.value){alert('Bitte zuerst eine Leistung auswählen.');return;}
-    const value=select.value;modal.classList.remove('open');onChoose(value);
-  };
+  modal.querySelector('.servicePickerClose').onclick=cancel;
   modal.onclick=e=>{if(e.target===modal)cancel();};
-  if(!list.length){alert(kind==='report'?'Bitte lege zuerst unter Verwaltung eine Leistung für den Tagesbericht an.':'Bitte lege zuerst unter Verwaltung eine Tagelohn-Leistung an.');onCancel?.();return;}
+  if(!list.length){alert(isReport?'Bitte lege zuerst unter Verwaltung eine Funktion für den Tagesbericht an.':'Bitte lege zuerst unter Verwaltung eine Tagelohn-Leistung an.');onCancel?.();return;}
   modal.classList.add('open');
 }
 function addEmp(e={}){
