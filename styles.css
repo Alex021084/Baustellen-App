@@ -2787,3 +2787,13 @@ body.tagelohn-clean #appNav button small {
 .tagelohnWorkflow .workflowStatus.signed{
   background:#eaf6ee;color:#267344;border-color:#bfe2ca;
 }
+
+/* Leistungs-Auswahl auf kleinen Displays: kompaktere Schrift, Wörter nicht zerreißen */
+.serviceChoiceButton{
+  font-size:clamp(14px,3.5vw,16px)!important;
+  line-height:1.22;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+  padding:10px 8px;
+}

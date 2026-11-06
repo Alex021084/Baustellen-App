@@ -470,7 +470,7 @@ function goBackOneStep(){
   if(current==='tagelohnHome') show('home');
   else show('tagelohnHome');
 }
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
 function formatLongDate(value){
   if(!value)return '';
   const m=String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -1346,6 +1346,8 @@ function updateTagelohnSummarySignatureStatus(){
 // Schrittweiser Tagelohn-Ablauf wie beim Tagesbericht.
 let tagelohnWizardStep=1;
 function renderTagelohnWizard(){
+  const dateField=$('date');
+  if(dateField&&!dateField.value){dateField.value=today();syncDateDisplay();}
   const editor=$('editor');
   if(!editor)return;
   [1,2,3,4].forEach(n=>{
@@ -1398,39 +1400,28 @@ $('saveTagelohnFromSummary')?.addEventListener('click',()=>{
 
 $('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()};
 $('backToSummary').onclick=()=>{renderSummary();show('summaryScreen');updateTagelohnSummarySignatureStatus()};
-$('cancelSignature').onclick=()=>show('summaryScreen');
+$('cancelSignature').onclick=()=>{renderSummary();show('summaryScreen');updateTagelohnSummarySignatureStatus()};
 
-async function saveTagelohnWithoutSignature(){
+async function createTagelohnPdfFromSummary(){
  const btn=$('saveWithoutSignature');
- if(btn){btn.disabled=true;btn.textContent='Speichert…';}
+ if(btn){btn.disabled=true;btn.textContent='PDF wird erstellt…';}
  try{
-   const saved=collect();saved.signed=false;saved.signedAt=null;
-   if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]=saved;
-   else{reports.unshift(saved);editingReportIndex=0;}
-   save();render();updateSignatureStatus();navigationHistory=[];
-   const pdfSaved=await createPdf({askLocation:true});
-   if(pdfSaved)alert('Nachweis ohne Unterschrift gespeichert und PDF gespeichert.');
-   show('archive');
- }catch(err){console.error(err);alert('Der Nachweis konnte nicht vollständig gespeichert werden: '+err.message);}
- finally{if(btn){btn.disabled=false;btn.textContent='Ohne Unterschrift speichern';}}
+   const current=collect();
+   current.signed=hasSignature();
+   current.signedAt=current.signed?(new Date().toISOString()):null;
+   if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]={...reports[editingReportIndex],...current};
+   else{reports.unshift(current);editingReportIndex=0;}
+   save();render();
+   await createPdf({askLocation:true,saveReport:false});
+   updateTagelohnSummarySignatureStatus();
+ }catch(err){
+   console.error(err);
+   alert('Die PDF konnte nicht erstellt werden: '+err.message);
+ }finally{
+   if(btn){btn.disabled=false;btn.textContent='PDF erstellen';}
+ }
 }
-async function saveTagelohnWithSignature(){
- const btn=$('saveSignature');
- if(!hasSignature()){alert('Bitte zuerst unterschreiben.');return;}
- btn.disabled=true;
- try{
-   const signed=collect();signed.signed=true;signed.signedAt=new Date().toISOString();
-   if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]=signed;
-   else{reports.unshift(signed);editingReportIndex=0;}
-   save();render();updateSignatureStatus();navigationHistory=[];
-   const pdfSaved=await createPdf({askLocation:true});
-   if(pdfSaved)alert('Unterschrieben gespeichert und PDF gespeichert.');
-   show('archive');
- }catch(err){console.error(err);alert('Der unterschriebene Nachweis konnte nicht vollständig gespeichert werden: '+err.message);}
- finally{btn.disabled=false;}
-}
-$('saveSignature').onclick=saveTagelohnWithSignature;
-$('saveWithoutSignature').onclick=saveTagelohnWithoutSignature;
+$('saveWithoutSignature').onclick=createTagelohnPdfFromSummary;
 
 
 window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector('nav');if(nav)nav.style.display=document.getElementById('home')?.classList.contains('active')?'none':'flex';document.body.classList.toggle('home-screen',document.getElementById('home')?.classList.contains('active'));
