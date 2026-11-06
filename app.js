@@ -382,6 +382,15 @@ function show(id, options={}){
 
 function goBackOneStep(){
   const current=document.querySelector('.screen.active')?.id;
+  if(current==='tagesberichtSummary' && window.currentSavedTagesbericht){
+    window.currentSavedTagesbericht=null;
+    show('tagesberichtHome',{replaceHistory:true});renderTagesberichtArchive();return;
+  }
+  if(current==='tagesberichtHome'){
+    if(selectedReportProject){selectedReportProject=null;renderTagesberichtArchive();return;}
+    if(selectedReportCustomer){selectedReportCustomer=null;renderTagesberichtArchive();return;}
+    show('home',{replaceHistory:true});return;
+  }
 
   // Tagesbericht hat seinen eigenen, festen Schrittverlauf.
   // Dadurch kann die globale Tagelohn-Historie nicht mehr dazwischenfunken.
@@ -1084,11 +1093,15 @@ function renderTagesberichtArchive(){
  });
 }
 function showSavedTagesbericht(r){
- const lines=[`Datum: ${formatDate(r.date)||'—'}`,`Kunde: ${r.customer||'—'}`,`Bauvorhaben: ${r.project||'—'}`,
- `Mitarbeiter: ${(r.employees||[]).map(e=>`${e.name||''} (${e.role||e.service||''})`).join(', ')||'—'}`,
- `Ausgeführte Arbeiten: ${(r.works||[]).join('; ')||'—'}`,`Materiallieferung: ${(r.materials||[]).join('; ')||'—'}`];
- alert(lines.join('\\n'));
+  const saved={...r};
+  saved.employees=Array.isArray(saved.employees)?saved.employees:[];
+  saved.works=Array.isArray(saved.works)?saved.works:[];
+  saved.materials=Array.isArray(saved.materials)?saved.materials:[];
+  renderTagesberichtSummary(saved);
+  window.currentSavedTagesbericht=saved;
+  show('tagesberichtSummary');
 }
+
 function collectTagesbericht(){
   return {
     type:'tagesbericht',
@@ -1106,8 +1119,7 @@ function collectTagesbericht(){
     signature:reportSignatureCanvas?.toDataURL('image/png')||''
   };
 }
-function renderTagesberichtSummary(){
-  const d=collectTagesbericht();
+function renderTagesberichtSummary(d=collectTagesbericht()){
   const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>Leistung: ${esc(e.service||'—')} · ${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
   const list=(arr)=>arr.length?`<ul class="reportSummaryList">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>';
   $('reportSummaryContent').innerHTML=`
@@ -1316,15 +1328,15 @@ window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector
   document.body.classList.toggle('tagelohn-clean', tagelohnIds.some(id=>document.getElementById(id)?.classList.contains('active')));
 });
 
-document.getElementById('navStart')?.addEventListener('click',()=>show('home'));
-document.getElementById('navBack')?.addEventListener('click',goBackOneStep);
 
-// Navigation robust verdrahten (auch auf den Tagesbericht-Unterseiten).
+
+// Einheitliche Hauptnavigation für alle App-Bereiche.
 document.addEventListener('click',function(e){
  const b=e.target.closest('#navStart,#navBack,#backToStartFromReports,#backToStartFromTagesbericht');
  if(!b)return;
- e.preventDefault();e.stopPropagation();
+ e.preventDefault();e.stopImmediatePropagation();
  if(b.id==='navStart'||b.id==='backToStartFromReports'||b.id==='backToStartFromTagesbericht'){
-   selectedReportCustomer=null;selectedReportProject=null;show('home');
+   selectedReportCustomer=null;selectedReportProject=null;window.currentSavedTagesbericht=null;
+   navigationHistory=[];show('home',{replaceHistory:true});
  }else{goBackOneStep();}
 },true);
