@@ -963,7 +963,7 @@ function render(){
       row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
-        tagelohnReadOnly=!!r.signed;
+        tagelohnReadOnly=!!(r.signed || (r.signature && r.signature.length>100));
         fill(r);
         renderSummary();
         show('summaryScreen');
@@ -1360,6 +1360,17 @@ $('saveSignature').onclick=()=>{
     alert('Bitte zuerst unterschreiben oder abbrechen.');
     return;
   }
+  const signatureData=$('sig').toDataURL('image/png');
+  if(editingReportIndex!==null && reports[editingReportIndex]){
+    const current=collect();
+    current.signature=signatureData;
+    current.signed=true;
+    current.signedAt=new Date().toISOString();
+    reports[editingReportIndex]={...reports[editingReportIndex],...current};
+    tagelohnReadOnly=true;
+    save();
+    render();
+  }
   renderSummary();
   show('summaryScreen');
   updateTagelohnSummarySignatureStatus();
@@ -1374,7 +1385,8 @@ function updateTagelohnSummarySignatureStatus(){
 
   // Beim Öffnen eines gespeicherten Nachweises zählt dessen gespeicherter
   // Signaturstatus sofort – das Bild der Unterschrift wird separat geladen.
-  const signed = hasSignature() || !!(savedReport && savedReport.signed);
+  const signed = hasSignature()
+    || !!(savedReport && (savedReport.signed || (savedReport.signature && savedReport.signature.length>100)));
   if(status){
     status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
     status.classList.toggle('signed',signed);
@@ -1395,7 +1407,8 @@ function updateTagelohnSummarySignatureStatus(){
   if(editButton)editButton.style.display=tagelohnReadOnly?'none':'';
   const saveButton=$('saveTagelohnFromSummary');
   if(saveButton){
-    saveButton.style.display='';
+    const lockedSignedRecord=editingExisting && signed;
+    saveButton.style.display=lockedSignedRecord?'none':'';
     saveButton.textContent=editingExisting?'Änderungen speichern':'Dokument speichern';
   }
 }
