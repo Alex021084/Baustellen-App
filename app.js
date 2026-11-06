@@ -1333,6 +1333,16 @@ c.onpointerdown=e=>{down=true;ctx.beginPath();let p=pos(e);ctx.moveTo(p.x,p.y)};
 function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
 
+
+function updateTagelohnSummarySignatureStatus(){
+  const status=$('tagelohnSignatureStatus');
+  if(!status)return;
+  const signed=hasSignature();
+  status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
+  status.classList.toggle('signed',signed);
+  status.classList.toggle('unsigned',!signed);
+}
+
 // Schrittweiser Tagelohn-Ablauf wie beim Tagesbericht.
 let tagelohnWizardStep=1;
 function renderTagelohnWizard(){
@@ -1365,14 +1375,13 @@ $('tagelohnStepNext')?.addEventListener('click',()=>{
   }
   renderSummary();
   show('summaryScreen');
-  const status=$('tagelohnSignatureStatus');
-  if(status)status.textContent=hasSignature()?'Unterschrift vorhanden':'Noch nicht unterschrieben';
+  updateTagelohnSummarySignatureStatus();
 });
 $('tagelohnStepBack')?.addEventListener('click',()=>{
   if(tagelohnWizardStep>1){tagelohnWizardStep--;renderTagelohnWizard();window.scrollTo(0,0);}
   else goBackOneStep();
 });
-$('review').onclick=()=>{renderSummary();show('summaryScreen');const s=$('tagelohnSignatureStatus');if(s)s.textContent=hasSignature()?'Unterschrift vorhanden':'Noch nicht unterschrieben';};
+$('review').onclick=()=>{renderSummary();show('summaryScreen');updateTagelohnSummarySignatureStatus();};
 $('backToEditorFromSummary').onclick=()=>tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
 
 $('tagelohnReviewDetails')?.addEventListener('click',()=>{$('summaryContent')?.scrollIntoView({behavior:'smooth',block:'start'});});
@@ -1388,7 +1397,7 @@ $('saveTagelohnFromSummary')?.addEventListener('click',()=>{
 });
 
 $('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()};
-$('backToSummary').onclick=()=>{renderSummary();show('summaryScreen')};
+$('backToSummary').onclick=()=>{renderSummary();show('summaryScreen');updateTagelohnSummarySignatureStatus()};
 $('cancelSignature').onclick=()=>show('summaryScreen');
 
 async function saveTagelohnWithoutSignature(){

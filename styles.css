@@ -2775,3 +2775,15 @@ body.tagelohn-clean #appNav button small {
   margin:4px 0 16px;padding:12px 16px;border-radius:14px;
   background:#fff4d8;color:#78551d;font-size:15px;font-weight:750;
 }
+
+/* Feinschliff Tagelohn-Schrittbutton und Status der Unterschrift */
+#tagelohnStepNext{
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding-left:20px;padding-right:20px;
+}
+.tagelohnWorkflow .workflowStatus.unsigned{
+  background:#fff0f0;color:#b42318;border-color:#f2c6c6;
+}
+.tagelohnWorkflow .workflowStatus.signed{
+  background:#eaf6ee;color:#267344;border-color:#bfe2ca;
+}
