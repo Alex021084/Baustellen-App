@@ -7,6 +7,7 @@ document.addEventListener('click', function(event){
   if(!button) return;
   const routes={
     openTagelohn:()=>show('tagelohnHome'),
+    new2:()=>{editingReportIndex=null;fill({});show('editor')},
     openTagesbericht:()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=[]},
     openManagementGlobal:()=>show('managementHome'),
     manageEmployeesGlobal:()=>openEmployees(),
@@ -626,7 +627,7 @@ function addEmp(e={}){
   <label>Name des Mitarbeiters<select class="name" aria-label="Mitarbeiter auswählen">${employeeOptions(e.name||'')}</select></label>
   <input class="service" type="hidden" value="${esc(selectedService)}">
   <div class="selectedServiceLabel">Leistung: <strong>${esc(selectedService||'Noch nicht ausgewählt')}</strong></div>
-  <label>Stunden<input class="hours" type="number" step=".25" value="${e.hours??0}"></label>
+  <label>Stunden<input class="hours" type="number" step=".25" value="${e.hours??''}"></label>
   <div class="grid grid3"><label>Anfang<select class="start timeSelect" aria-label="Anfang auswählen">${timeOptions(e.start||'')}</select></label><label>Ende<select class="end timeSelect" aria-label="Ende auswählen">${timeOptions(e.end||'')}</select></label><label>Pause<select class="pause" aria-label="Pause auswählen">${pauseOptions(e.pause??0)}</select></label></div>`;
   d.querySelector('.del').onclick=()=>d.remove();
   d.querySelector('.name').addEventListener('change',()=>{
