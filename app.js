@@ -235,6 +235,7 @@ function addReportEmployee(entry={}){
   d.innerHTML=`<button type="button" class="reportEmployeeDelete" aria-label="Mitarbeiter entfernen">×</button>
     <div class="reportEmployeeTitle">Mitarbeiter</div>
     <label>Mitarbeiter<select class="reportName" aria-label="Mitarbeiter auswählen">${reportEmployeeOptions(entry.name||'')}</select></label>
+    <input class="reportServiceValue" type="hidden" value="${esc(entry.service||'')}"><div class="reportSelectedService">Leistung: <strong>${esc(entry.service||'Noch nicht ausgewählt')}</strong></div>
     <label>Funktion<select class="reportRole" aria-label="Funktion auswählen">${reportRoleOptions(entry.role||'')}</select></label>
     <div class="grid grid3 reportTimeGrid">
       <label>Arbeitsbeginn<select class="reportStart timeSelect" aria-label="Arbeitsbeginn auswählen">${reportTimeOptions(entry.start||'')}</select></label>
@@ -243,6 +244,10 @@ function addReportEmployee(entry={}){
     </div>
     <label class="reportHoursLabel">Gesamt (Std.)<input class="reportHours" type="number" step="0.25" readonly value="${entry.hours??''}"></label>`;
   d.querySelector('.reportEmployeeDelete').onclick=()=>{d.remove(); if(!document.querySelector('#reportEmployeeEntries .reportEmployeeCard')) addReportEmployee();};
+  d.querySelector('.reportName').addEventListener('change',()=>{
+    if(!d.querySelector('.reportName').value){d.querySelector('.reportServiceValue').value='';d.querySelector('.reportSelectedService strong').textContent='Noch nicht ausgewählt';return;}
+    openServicePicker('report',selected=>{d.querySelector('.reportServiceValue').value=selected;d.querySelector('.reportSelectedService strong').textContent=selected;},()=>{d.querySelector('.reportName').value='';d.querySelector('.reportServiceValue').value='';d.querySelector('.reportSelectedService strong').textContent='Noch nicht ausgewählt';},entry.service||'');
+  });
   ['reportStart','reportEnd','reportPause'].forEach(c=>d.querySelector('.'+c).oninput=()=>calcReportEmployeeCard(d));
   wrap.appendChild(d);
   calcReportEmployeeCard(d);
@@ -280,6 +285,7 @@ function collectReportList(containerId){
 function collectReportEmployees(){
   return [...document.querySelectorAll('#reportEmployeeEntries .reportEmployeeCard')].map(d=>({
     name:d.querySelector('.reportName')?.value||'',
+    service:d.querySelector('.reportServiceValue')?.value||'',
     role:d.querySelector('.reportRole')?.value||'',
     start:d.querySelector('.reportStart')?.value||'',
     end:d.querySelector('.reportEnd')?.value||'',
@@ -588,15 +594,45 @@ function pauseOptions(selected=0){
   const value=String(selected ?? 0);
   return `<option value="0"${value==='0'?' selected':''}>Keine Pause</option><option value="15"${value==='15'?' selected':''}>15 Minuten</option><option value="30"${value==='30'?' selected':''}>30 Minuten</option><option value="45"${value==='45'?' selected':''}>45 Minuten</option>`;
 }
+function openServicePicker(kind,onChoose,onCancel,selected=''){
+  const list=kind==='report'?reportServices:services;
+  let modal=document.getElementById('requiredServicePicker');
+  if(!modal){
+    modal=document.createElement('div'); modal.id='requiredServicePicker'; modal.className='servicePickerOverlay';
+    modal.innerHTML=`<div class="servicePickerDialog" role="dialog" aria-modal="true" aria-labelledby="servicePickerTitle">
+      <h2 id="servicePickerTitle">Leistung auswählen</h2><p>Bitte ordne dem Mitarbeiter eine Leistung zu.</p>
+      <select id="requiredServiceSelect" aria-label="Leistung auswählen"></select>
+      <div class="servicePickerActions"><button type="button" id="servicePickerCancel" class="secondary">Abbrechen</button><button type="button" id="servicePickerConfirm">Übernehmen</button></div>
+    </div>`;
+    document.body.append(modal);
+  }
+  const select=modal.querySelector('#requiredServiceSelect');
+  select.innerHTML='<option value="">— Leistung auswählen —</option>'+list.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  select.value=list.includes(selected)?selected:'';
+  const cancel=()=>{modal.classList.remove('open');onCancel?.();};
+  modal.querySelector('#servicePickerCancel').onclick=cancel;
+  modal.querySelector('#servicePickerConfirm').onclick=()=>{
+    if(!select.value){alert('Bitte zuerst eine Leistung auswählen.');return;}
+    const value=select.value;modal.classList.remove('open');onChoose(value);
+  };
+  modal.onclick=e=>{if(e.target===modal)cancel();};
+  if(!list.length){alert(kind==='report'?'Bitte lege zuerst unter Verwaltung eine Leistung für den Tagesbericht an.':'Bitte lege zuerst unter Verwaltung eine Tagelohn-Leistung an.');onCancel?.();return;}
+  modal.classList.add('open');
+}
 function addEmp(e={}){
   const selectedService=e.service||e.activity||'';
   const d=document.createElement('div'); d.className='employee';
   d.innerHTML=`<button type="button" class="del">Löschen</button><b>Mitarbeiter</b>
   <label>Name des Mitarbeiters<select class="name" aria-label="Mitarbeiter auswählen">${employeeOptions(e.name||'')}</select></label>
-  <div class="grid"><label>Leistung<select class="service" aria-label="Leistung für Mitarbeiter auswählen">${serviceOptions(selectedService)}</select></label>
-  <label>Stunden<input class="hours" type="number" step=".25" value="${e.hours??0}"></label></div>
+  <input class="service" type="hidden" value="${esc(selectedService)}">
+  <div class="selectedServiceLabel">Leistung: <strong>${esc(selectedService||'Noch nicht ausgewählt')}</strong></div>
+  <label>Stunden<input class="hours" type="number" step=".25" value="${e.hours??0}"></label>
   <div class="grid grid3"><label>Anfang<select class="start timeSelect" aria-label="Anfang auswählen">${timeOptions(e.start||'')}</select></label><label>Ende<select class="end timeSelect" aria-label="Ende auswählen">${timeOptions(e.end||'')}</select></label><label>Pause<select class="pause" aria-label="Pause auswählen">${pauseOptions(e.pause??0)}</select></label></div>`;
   d.querySelector('.del').onclick=()=>d.remove();
+  d.querySelector('.name').addEventListener('change',()=>{
+    if(!d.querySelector('.name').value){d.querySelector('.service').value='';d.querySelector('.selectedServiceLabel strong').textContent='Noch nicht ausgewählt';return;}
+    openServicePicker('tagelohn',selected=>{d.querySelector('.service').value=selected;d.querySelector('.selectedServiceLabel strong').textContent=selected;},()=>{d.querySelector('.name').value='';d.querySelector('.service').value='';d.querySelector('.selectedServiceLabel strong').textContent='Noch nicht ausgewählt';},selectedService);
+  });
   ['start','end','pause'].forEach(c=>d.querySelector('.'+c).oninput=()=>calc(d));
   $('employees').append(d);
 }
@@ -1013,7 +1049,7 @@ function collectTagesbericht(){
 }
 function renderTagesberichtSummary(){
   const d=collectTagesbericht();
-  const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
+  const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>Leistung: ${esc(e.service||'—')} · ${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
   const list=(arr)=>arr.length?`<ul class="reportSummaryList">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>';
   $('reportSummaryContent').innerHTML=`
     <div class="reportSummaryGrid">
@@ -1142,8 +1178,8 @@ $('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
 function continueTagesberichtEmployees(){
   const entries=collectReportEmployees();
   if(!entries.length){ alert('Bitte mindestens einen Mitarbeiter auswählen.'); return; }
-  const incomplete=entries.some(e=>!e.name||!e.role||!e.start||!e.end);
-  if(incomplete){ alert('Bitte Mitarbeiter, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.'); return; }
+  const incomplete=entries.some(e=>!e.name||!e.service||!e.role||!e.start||!e.end);
+  if(incomplete){ alert('Bitte Mitarbeiter, Leistung, Funktion, Arbeitsbeginn und Arbeitsende vollständig auswählen.'); return; }
   reportEmployeeEntries=entries;
   initTagesberichtWorks();
   show('tagesberichtWorks',{replaceHistory:false});
@@ -1160,7 +1196,7 @@ initTagesbericht();
 initReportSignature();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
 $('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
-$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;
+$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
 $('customersBtn')?.addEventListener('click',openCustomers);
 $('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService; $('homeFromReportServices').onclick=()=>show('managementHome'); $('addReportService').onclick=addReportService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});

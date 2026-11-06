@@ -2448,3 +2448,15 @@ body.tagelohn-clean #appNav button small {
 #home.active .startChoiceManage small{display:block!important;margin-top:5px!important;font-weight:500!important;color:inherit!important;opacity:.82}
 .managementHint{margin:8px 0 18px}
 .managementCards{display:flex;flex-direction:column;gap:14px}
+
+/* Pflichtauswahl Leistung nach Mitarbeiterauswahl */
+.servicePickerOverlay{display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.58);align-items:center;justify-content:center;padding:20px}
+.servicePickerOverlay.open{display:flex}
+.servicePickerDialog{width:min(100%,440px);background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.servicePickerDialog h2{margin:0 0 8px;font-size:1.35rem}
+.servicePickerDialog p{margin:0 0 18px;color:#687385}
+.servicePickerDialog select{width:100%;min-height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;font:inherit;background:#fff}
+.servicePickerActions{display:flex;gap:10px;margin-top:20px}
+.servicePickerActions button{flex:1;min-height:48px;border:0;border-radius:12px;font:inherit;font-weight:700;background:#e5a92f;color:#182230}
+.servicePickerActions button.secondary{background:#edf2f7;color:#334155}
+.selectedServiceLabel,.reportSelectedService{margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:#f1f5f9;color:#475569}
