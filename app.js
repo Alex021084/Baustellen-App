@@ -1,4 +1,27 @@
+
 const $=x=>document.getElementById(x);
+// Robuste zentrale Navigation: funktioniert auch dann, wenn einzelne ältere
+// Inline-Handler durch Browser-/Cache-Unterschiede nicht gebunden wurden.
+document.addEventListener('click', function(event){
+  const button=event.target.closest('button');
+  if(!button) return;
+  const routes={
+    openTagelohn:()=>show('tagelohnHome'),
+    openTagesbericht:()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=[]},
+    openManagementGlobal:()=>show('managementHome'),
+    manageEmployeesGlobal:()=>openEmployees(),
+    manageTagelohnServicesGlobal:()=>openServices(),
+    manageReportServicesGlobal:()=>openReportServices(),
+    manageCustomersGlobal:()=>openCustomers(),
+    backToStartFromManagement:()=>show('home')
+  };
+  const action=routes[button.id];
+  if(!action) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  action();
+}, true);
+
 let reports=JSON.parse(localStorage.tagelohn||'[]');
 let editingReportIndex=null;
 let navigationHistory=[];
