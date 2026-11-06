@@ -1300,10 +1300,11 @@ function continueTagesberichtEmployees(){
 $('reportEmployeeNext')?.addEventListener('click',continueTagesberichtEmployees);
 $('reportAddWork')?.addEventListener('click',()=>addReportListEntry('reportWorksEntries'));
 $('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportMaterialsEntries'));
-$('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();clearReportSignature();$('reportSignerName').value='';show('tagesberichtSummary',{replaceHistory:false})});
+$('reportWorksNext')?.addEventListener('click',()=>{const modal=$('reportSignatureModal');modal?.classList.remove('open');modal?.setAttribute('aria-hidden','true');renderTagesberichtSummary();clearReportSignature();$('reportSignerName').value='';show('tagesberichtSummary',{replaceHistory:false})});
+$('reportSummaryBack')?.addEventListener('click',()=>show('tagesberichtWorks',{replaceHistory:false}));
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
 $('saveReportAndPdf')?.addEventListener('click',async()=>{await saveTagesberichtAndPdf(true);});
-$('openReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');if(m&&m.parentElement!==document.body)document.body.appendChild(m);m?.classList.add('open');m?.setAttribute('aria-hidden','false');});
+$('openReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');m?.classList.add('open');m?.setAttribute('aria-hidden','false');});
 $('closeReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');m?.classList.remove('open');m?.setAttribute('aria-hidden','true');});
 $('saveReportUnsigned')?.addEventListener('click',()=>saveTagesberichtAndPdf(false));
 $('backToStartFromTagelohn').onclick=()=>show('home');

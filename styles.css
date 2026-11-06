@@ -2665,3 +2665,16 @@ body.tagelohn-clean #appNav button small {
   }
   #reportSignatureModal #closeReportSignature{width:calc(100vw - 24px)!important}
 }
+
+/* Summary/signature flow: popup belongs to summary and must not overlay other steps. */
+#tagesberichtSummary:not(.active) #reportSignatureModal{
+  display:none!important;
+}
+#tagesberichtSummary.active #reportSignatureModal:not(.open){
+  display:none!important;
+}
+#tagesberichtSummary.active #reportSignatureModal.open{
+  display:flex!important;
+}
+#tagesberichtSummary .moduleHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#reportSummaryBack{min-height:44px;padding:8px 18px;border-radius:12px}
