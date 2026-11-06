@@ -105,7 +105,9 @@
 <p class="hint managementHint">Wähle, was du verwalten möchtest.</p>
 <div class="cards managementCards">
 <button class="card" id="manageEmployeesGlobal"><span class="constructionCardIcon" aria-hidden="true">👷</span><span><b>Mitarbeiter</b><small>Mitarbeiter anlegen und bearbeiten</small></span>›</button>
-<button class="card" id="manageServicesGlobal"><span class="constructionCardIcon" aria-hidden="true">⚙️</span><span><b>Leistungen</b><small>Leistungen für Mitarbeiter und Maschinen verwalten</small></span>›</button>
+<button class="card" id="manageTagelohnServicesGlobal"><span class="constructionCardIcon" aria-hidden="true">⚙️</span><span><b>Leistungen Tagelohn</b><small>Leistungen für den Tagelohnnachweis verwalten</small></span>›</button>
+<button class="card" id="manageReportServicesGlobal"><span class="constructionCardIcon" aria-hidden="true">📝</span><span><b>Leistungen Tagesbericht</b><small>Arbeiten für den Tagesbericht verwalten</small></span>›</button>
+<button class="card" id="manageCustomersGlobal"><span class="constructionCardIcon" aria-hidden="true">🏢</span><span><b>Kunden</b><small>Kunden und Bauvorhaben verwalten</small></span>›</button>
 </div>
 </section>
 
@@ -113,6 +115,12 @@
 <div class="title"><h2>Leistungen verwalten</h2><button id="homeFromServices">Baustellen</button></div>
 <div class="panel addPanel"><div class="addBar"><input id="serviceName" placeholder="Neue Leistung..." aria-label="Neue Leistung"><button id="addService" class="primary saveManage">Speichern</button></div></div>
 <div class="panel"><h2>Vorhandene Leistungen</h2><div id="serviceList"></div></div>
+</section>
+
+<section id="reportServices" class="screen">
+<div class="title"><h2>Leistungen Tagesbericht</h2><button id="homeFromReportServices">Verwaltung</button></div>
+<div class="panel addPanel"><div class="addBar"><input id="reportServiceName" placeholder="Neue Tagesbericht-Leistung..." aria-label="Neue Tagesbericht-Leistung"><button id="addReportService" class="primary saveManage">Speichern</button></div></div>
+<div class="panel"><h2>Vorhandene Tagesbericht-Leistungen</h2><div id="reportServiceList"></div></div>
 </section>
 
 <section id="employeeManager" class="screen">

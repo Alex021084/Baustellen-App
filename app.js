@@ -267,6 +267,9 @@ function collectReportEmployees(){
 
 function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
 function persistServices(){localStorage.tagelohnServices=JSON.stringify(services)}
+let reportServices=JSON.parse(localStorage.tagesberichtServices||'null');
+if(!Array.isArray(reportServices)) reportServices=[];
+function persistReportServices(){localStorage.tagesberichtServices=JSON.stringify(reportServices)}
 function persistEmployees(){localStorage.tagelohnEmployees=JSON.stringify(employees)}
 function openServices(){renderServices();show('services')}
 function renderServices(){
@@ -294,6 +297,32 @@ function addService(){
   if(services.some(s=>s.toLowerCase()===value.toLowerCase())){alert('Diese Leistung gibt es bereits.');return}
   services.push(value);persistServices();$('serviceName').value='';renderServices();
 }
+
+function openReportServices(){renderReportServices();show('reportServices')}
+function renderReportServices(){
+  const l=$('reportServiceList'); if(!l)return; l.innerHTML='';
+  reportServices.forEach((name,i)=>{
+    const d=document.createElement('div'); d.className='serviceRow';
+    d.innerHTML=`<input class="serviceEdit" value="${esc(name)}" aria-label="Tagesbericht-Leistung">`;
+    const input=d.querySelector('.serviceEdit');
+    const saveEdit=()=>{
+      const value=input.value.trim();
+      if(!value || value===reportServices[i]) return;
+      if(reportServices.some((x,j)=>j!==i&&x.toLowerCase()===value.toLowerCase())){input.value=reportServices[i];alert('Diese Leistung gibt es bereits.');return;}
+      reportServices[i]=value; persistReportServices();
+    };
+    input.addEventListener('change',saveEdit); input.addEventListener('blur',saveEdit);
+    enableSwipeDelete(d,()=>{reportServices.splice(i,1);persistReportServices();renderReportServices();});
+    l.append(d);
+  });
+  if(!reportServices.length)l.innerHTML='<div class="empty">Noch keine Tagesbericht-Leistungen angelegt.</div>';
+}
+function addReportService(){
+  const value=$('reportServiceName').value.trim();
+  if(!value){alert('Bitte eine Bezeichnung eingeben.');return}
+  if(reportServices.some(s=>s.toLowerCase()===value.toLowerCase())){alert('Diese Leistung gibt es bereits.');return}
+  reportServices.push(value);persistReportServices();$('reportServiceName').value='';renderReportServices();
+}
 let previousScreen='home';
 function show(id, options={}){
   const current=document.querySelector('.screen.active')?.id;
@@ -313,7 +342,7 @@ function show(id, options={}){
   if(nav) nav.style.display=(id==='home')?'none':'flex';
 
   document.body.classList.toggle('home-screen',id==='home');
-  const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','editor','summaryScreen','signatureScreen'];
+  const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','reportServices','editor','summaryScreen','signatureScreen'];
   document.body.classList.toggle('tagelohn-clean',tagelohnIds.includes(id));
   scrollTo(0,0);
 }
@@ -422,7 +451,8 @@ function contractorName(){
   if(id==='__manual__')return $('contractorSelect').dataset.manualName||'';
   const c=customers.find(x=>x.id===id); return c?.name||'';
 }
-function openCustomers(){renderCustomers();renderProjectCustomerSelect();show('customers')}
+let customersReturnScreen='home';
+function openCustomers(){customersReturnScreen=document.querySelector('.screen.active')?.id||'home';renderCustomers();renderProjectCustomerSelect();show('customers')}
 function renderProjectCustomerSelect(selectedId=''){
   const s=$('projectCustomerSelect'); if(!s)return;
   s.innerHTML=customers.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
@@ -1080,7 +1110,8 @@ $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('e
 $('openTagelohn').onclick=()=>show('tagelohnHome');
 $('openManagementGlobal').onclick=()=>show('managementHome');
 $('manageEmployeesGlobal').onclick=openEmployees;
-$('manageServicesGlobal').onclick=openServices;
+$('manageTagelohnServicesGlobal').onclick=openServices; $('manageReportServicesGlobal').onclick=openReportServices;
+$('manageCustomersGlobal').onclick=openCustomers;
 $('backToStartFromManagement').onclick=()=>show('home');
 $('openTagesbericht').onclick=()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=[]};
 $('reportNext')?.addEventListener('click',()=>{initTagesberichtEmployees();show('tagesberichtEmployees')});
@@ -1105,10 +1136,10 @@ $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
 initReportSignature();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
-$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show('home');
+$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
 $('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;
 $('customersBtn')?.addEventListener('click',openCustomers);
-$('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
+$('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService; $('homeFromReportServices').onclick=()=>show('managementHome'); $('addReportService').onclick=addReportService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
 $('date').addEventListener('change',syncDateDisplay);
 syncDateDisplay();
@@ -1143,7 +1174,7 @@ $('saveSignature').onclick=async()=>{
 };
 
 window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector('nav');if(nav)nav.style.display=document.getElementById('home')?.classList.contains('active')?'none':'flex';document.body.classList.toggle('home-screen',document.getElementById('home')?.classList.contains('active'));
-  const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','editor','summaryScreen','signatureScreen'];
+  const tagelohnIds=['tagelohnHome','archive','customers','services','employeeManager','reportServices','editor','summaryScreen','signatureScreen'];
   document.body.classList.toggle('tagelohn-clean', tagelohnIds.some(id=>document.getElementById(id)?.classList.contains('active')));
 });
 
