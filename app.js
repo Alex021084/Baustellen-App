@@ -45,6 +45,7 @@ document.addEventListener('click', function(event){
 
 let reports=JSON.parse(localStorage.tagelohn||'[]');
 let editingReportIndex=null;
+let tagelohnReadOnly=false;
 let navigationHistory=[];
 let archiveSelectedContractor=null;
 let archiveSelectedProject=null;
@@ -738,6 +739,7 @@ function fill(r){
   // Die gespeicherten Kunden/Projekte bleiben erhalten, werden aber nicht als
   // zuletzt verwendete Auswahl in einen neuen Nachweis übernommen.
   const isNew=!r || Object.keys(r).length===0;
+  if(isNew)tagelohnReadOnly=false;
   $('date').value=isNew?today():(r.date||today());
   syncDateDisplay();
 
@@ -950,8 +952,11 @@ function render(){
       row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
+        tagelohnReadOnly=!!r.signed;
         fill(r);
-        tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
+        renderSummary();
+        show('summaryScreen');
+        updateTagelohnSummarySignatureStatus();
       };
       enableSwipeDelete(row,()=>removeReport(i));
       l.append(row);
@@ -1357,6 +1362,13 @@ function updateTagelohnSummarySignatureStatus(){
   status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
   status.classList.toggle('signed',signed);
   status.classList.toggle('unsigned',!signed);
+  status.style.textAlign='center';
+  const signButton=$('signNow');
+  if(signButton)signButton.style.display=(signed||tagelohnReadOnly)?'none':'';
+  const editButton=$('backToEditorFromSummary');
+  if(editButton)editButton.style.display=tagelohnReadOnly?'none':'';
+  const saveButton=$('saveTagelohnFromSummary');
+  if(saveButton)saveButton.style.display='none';
 }
 
 // Schrittweiser Tagelohn-Ablauf wie beim Tagesbericht.
@@ -1400,7 +1412,11 @@ $('tagelohnStepBack')?.addEventListener('click',()=>{
   else goBackOneStep();
 });
 $('review').onclick=()=>{renderSummary();show('summaryScreen');updateTagelohnSummarySignatureStatus();};
-$('backToEditorFromSummary').onclick=()=>tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
+$('backToEditorFromSummary').onclick=()=>{
+  if(tagelohnReadOnly){return;}
+  tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
+};
+renderTagelohnWizard();show('editor');
 
 $('tagelohnReviewDetails')?.addEventListener('click',()=>{$('summaryContent')?.scrollIntoView({behavior:'smooth',block:'start'});});
 $('saveTagelohnFromSummary')?.addEventListener('click',()=>{
