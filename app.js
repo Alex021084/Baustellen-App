@@ -1562,7 +1562,7 @@ $('backToEditorFromSummary').onclick=()=>{
   if(tagelohnReadOnly){return;}
   tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
 };
-renderTagelohnWizard();show('editor');
+renderTagelohnWizard();show('home',{replaceHistory:true});
 
 $('tagelohnReviewDetails')?.addEventListener('click',()=>{$('summaryContent')?.scrollIntoView({behavior:'smooth',block:'start'});});
 $('saveTagelohnFromSummary')?.addEventListener('click',()=>{
