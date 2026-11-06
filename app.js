@@ -700,8 +700,16 @@ function item(id,v=''){
 }
 
 function hasSignature(){
+  // Nur tatsächlich sichtbare Striche zählen. Ein leerer, weißer/undurchsichtiger
+  // Canvas-Hintergrund darf nicht als Unterschrift gelten.
   const data=ctx.getImageData(0,0,c.width,c.height).data;
-  for(let i=3;i<data.length;i+=4) if(data[i]>10) return true;
+  for(let i=0;i<data.length;i+=4){
+    const alpha=data[i+3];
+    if(alpha>10){
+      const luminance=0.2126*data[i]+0.7152*data[i+1]+0.0722*data[i+2];
+      if(luminance<242) return true;
+    }
+  }
   return false;
 }
 function updateSignatureStatus(){
@@ -719,7 +727,7 @@ function renderSummary(){
   const rows=data.employees.filter(e=>e.name||e.service||e.hours||e.start||e.end||e.pause).map(e=>`
     <tr><td>${esc(e.name||'—')}</td><td>${esc(e.service||'—')}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td></tr>`).join('');
   const savedForSummary = Number.isInteger(editingReportIndex) ? reports[editingReportIndex] : null;
-  const summaryIsSigned = !!tagelohnReadOnly;
+  const summaryIsSigned = hasSignature();
   const editPencil = step => summaryIsSigned ? '' :
     `<button type="button" class="summaryEditPencil" data-summary-edit="${step}" aria-label="Diesen Abschnitt bearbeiten" title="Diesen Abschnitt bearbeiten"><span aria-hidden="true">✎</span></button>`;
   $('summaryContent').innerHTML=`
@@ -742,10 +750,7 @@ function renderSummary(){
     button.onclick = event => {
       event.preventDefault();
       event.stopPropagation();
-      const signedNow = !!(
-        tagelohnReadOnly ||
-        (savedForSummary && savedForSummary.signed === true)
-      );
+      const signedNow = hasSignature();
       if (signedNow) return;
       const targetStep = Math.max(1, Math.min(3, Number(button.getAttribute('data-summary-edit')) || 1));
       tagelohnWizardStep = targetStep;
@@ -806,42 +811,14 @@ function fill(r){
   if(r.signature){
     let img=new Image();
     img.onload=()=>{
-      ctx.clearRect(0,0,c.width,c.height);
       ctx.drawImage(img,0,0,c.width,c.height);
-      // Entscheidend sind sichtbare Pixel der geladenen Unterschrift, nicht ein alter signed-Flag.
-      const actualSigned=hasSignature();
-      tagelohnReadOnly=actualSigned;
-      if(Number.isInteger(editingReportIndex) && reports[editingReportIndex]){
-        reports[editingReportIndex].signed=actualSigned;
-        reports[editingReportIndex].signedAt=actualSigned
-          ? (reports[editingReportIndex].signedAt || new Date().toISOString())
-          : null;
-        save();
-        render();
-      }
+      tagelohnReadOnly=hasSignature();
       updateSignatureStatus();
-      renderSummary();
-      updateTagelohnSummarySignatureStatus();
-    };
-    img.onerror=()=>{
-      tagelohnReadOnly=false;
-      if(Number.isInteger(editingReportIndex) && reports[editingReportIndex]){
-        reports[editingReportIndex].signed=false;
-        reports[editingReportIndex].signedAt=null;
-        save(); render();
-      }
-      updateSignatureStatus();
-      renderSummary();
       updateTagelohnSummarySignatureStatus();
     };
     img.src=r.signature;
   } else {
     tagelohnReadOnly=false;
-    if(Number.isInteger(editingReportIndex) && reports[editingReportIndex]){
-      reports[editingReportIndex].signed=false;
-      reports[editingReportIndex].signedAt=null;
-      save(); render();
-    }
     updateSignatureStatus();
     updateTagelohnSummarySignatureStatus();
   }
@@ -1020,7 +997,6 @@ function render(){
       row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
-        // Den gespeicherten Alt-Status erst nach Prüfung der tatsächlichen Bilddaten übernehmen.
         tagelohnReadOnly=false;
         fill(r);
         renderSummary();
