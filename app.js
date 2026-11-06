@@ -783,7 +783,7 @@ function item(id,v=''){
   $(id).append(d);
 }
 
-let c=$('sig'),ctx=c.getContext('2d'),down=false;
+var c=$('sig'),ctx=c.getContext('2d'),down=false;
 
 function hasSignature(){
   // Nur tatsächlich sichtbare Striche zählen. Ein leerer, weißer/undurchsichtiger
@@ -1485,7 +1485,7 @@ $('saveReportAndPdf')?.addEventListener('click',async()=>{await saveTagesbericht
 $('openReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');if(!m)return;m.classList.add('open');m.setAttribute('aria-hidden','false');m.style.display='flex';});
 $('closeReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');if(!m)return;m.classList.remove('open');m.setAttribute('aria-hidden','true');m.style.display='none';});
 $('saveReportUnsigned')?.addEventListener('click',()=>saveTagesberichtAndPdf(false));
-$('backToStartFromTagelohn').onclick=()=>show('home');
+$('backToStartFromTagelohn')?.addEventListener('click',()=>show('home'));
 $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
 initReportSignature();
