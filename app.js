@@ -689,7 +689,14 @@ function addEmp(e={}){
   $('employees').append(d);
 }
 function calc(d){let s=d.querySelector('.start').value,e=d.querySelector('.end').value,p=+(d.querySelector('.pause').value||0);if(s&&e){let a=s.split(':').map(Number),b=e.split(':').map(Number),m=b[0]*60+b[1]-a[0]*60-a[1]-p;if(m>=0)d.querySelector('.hours').value=(m/60).toFixed(2)}}
-function item(id,v=''){let d=document.createElement('div');d.className='item';d.innerHTML=`<input value="${esc(v)}"><button class="del">×</button>`;d.querySelector('button').onclick=()=>d.remove();$(id).append(d)}
+function item(id,v=''){
+  const d=document.createElement('div');
+  d.className='item';
+  const fieldName=id==='works'?'tagelohn-work-entry':'tagelohn-material-entry';
+  d.innerHTML=`<input type="text" name="${fieldName}" value="${esc(v)}" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="Eintrag eingeben…"><button type="button" class="del" aria-label="Eintrag entfernen">×</button>`;
+  d.querySelector('button').onclick=()=>d.remove();
+  $(id).append(d);
+}
 
 function hasSignature(){
   const data=ctx.getImageData(0,0,c.width,c.height).data;
@@ -1332,6 +1339,15 @@ let c=$('sig'),ctx=c.getContext('2d'),down=false;
 c.onpointerdown=e=>{down=true;ctx.beginPath();let p=pos(e);ctx.moveTo(p.x,p.y)};c.onpointermove=e=>{if(!down)return;let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()};window.onpointerup=()=>down=false;
 function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
+$('saveSignature').onclick=()=>{
+  if(!hasSignature()){
+    alert('Bitte zuerst unterschreiben oder abbrechen.');
+    return;
+  }
+  renderSummary();
+  show('summaryScreen');
+  updateTagelohnSummarySignatureStatus();
+};
 
 
 function updateTagelohnSummarySignatureStatus(){
