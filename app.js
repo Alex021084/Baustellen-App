@@ -1194,20 +1194,19 @@ async function createTagesberichtPdf(data){
 
     // Tagesbericht-Blankovorlage: nur die vorgesehenen Felder werden ausgefüllt.
     // Die bestehende Tagelohn-PDF-Erstellung bleibt vollständig unverändert.
-    cover(122,665,420,22);
-    text(data.project,126,673,9.5,bold,285);
+    // Bauvorhaben: Wert rechts neben der bereits gedruckten Beschriftung im grünen Feld.
+    text(data.project,112,578,9.5,bold,405);
     // Datum zentral unter der Überschrift platzieren – nicht mehr rechts neben dem Bauvorhaben.
     const dateText=`Datum: ${formatDate(data.date)}`;
     const dateSize=8.5;
     const dateWidth=normal.widthOfTextAtSize(dateText,dateSize);
     text(dateText,(page.getWidth()-dateWidth)/2,820,dateSize,normal);
 
-    cover(91,614,205,20); cover(375,614,200,20);
-    cover(91,589,205,20); cover(375,589,200,20);
-    text(data.temperature,96,620,9.2,bold,190);
-    text(data.wind||'—',380,620,9.2,bold,185);
-    text(data.precipitation,96,595,9.2,bold,190);
-    text(data.cloudiness||'—',380,595,9.2,bold,185);
+    // Werte stehen neben den roten Vorlagen-Beschriftungen; nichts überdecken.
+    text(data.temperature,86,553,9.2,bold,175);
+    text(data.wind||'—',338,553,9.2,bold,165);
+    text(data.precipitation,86,528,9.2,bold,175);
+    text(data.cloudiness||'—',338,528,9.2,bold,165);
 
     // Die Mitarbeiter-Spalte der Blankovorlage wird für den Tagesbericht
     // in zwei Bereiche aufgeteilt: Mitarbeiter | Funktion.
@@ -1230,8 +1229,9 @@ async function createTagesberichtPdf(data){
       if(hours!=='0,00') text(hours,520,y,8.2,normal,55);
     });
 
-    data.works.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,64,307-i*18,350,8.1,2));
-    data.materials.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,418,307-i*18,150,8.1,2));
+    data.works.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,64,337-i*18,285,8.1,2));
+    // Materialfeld beginnt rechts der senkrechten Trennlinie.
+    data.materials.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,378,337-i*18,155,8.1,2));
 
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
@@ -1282,7 +1282,7 @@ $('reportAddMaterial')?.addEventListener('click',()=>addReportListEntry('reportM
 $('reportWorksNext')?.addEventListener('click',()=>{renderTagesberichtSummary();clearReportSignature();$('reportSignerName').value='';show('tagesberichtSummary',{replaceHistory:false})});
 $('clearReportSig')?.addEventListener('click',clearReportSignature);
 $('saveReportAndPdf')?.addEventListener('click',async()=>{await saveTagesberichtAndPdf(true);});
-$('openReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');m?.classList.add('open');m?.setAttribute('aria-hidden','false');});
+$('openReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');if(m&&m.parentElement!==document.body)document.body.appendChild(m);m?.classList.add('open');m?.setAttribute('aria-hidden','false');});
 $('closeReportSignature')?.addEventListener('click',()=>{const m=$('reportSignatureModal');m?.classList.remove('open');m?.setAttribute('aria-hidden','true');});
 $('saveReportUnsigned')?.addEventListener('click',()=>saveTagesberichtAndPdf(false));
 $('backToStartFromTagelohn').onclick=()=>show('home');
