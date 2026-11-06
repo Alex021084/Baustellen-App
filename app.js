@@ -957,6 +957,8 @@ function render(){
         renderSummary();
         show('summaryScreen');
         updateTagelohnSummarySignatureStatus();
+        const saveExistingButton=$('saveTagelohnFromSummary');
+        if(saveExistingButton)saveExistingButton.textContent='Änderungen speichern';
       };
       enableSwipeDelete(row,()=>removeReport(i));
       l.append(row);
@@ -1370,9 +1372,9 @@ function updateTagelohnSummarySignatureStatus(){
   const saveButton=$('saveTagelohnFromSummary');
   if(saveButton){
     saveButton.style.display='';
-    saveButton.textContent=(editingReportIndex!==null && reports[editingReportIndex])
-      ?'Änderungen speichern'
-      :'Dokument speichern';
+    const editingExisting = Number.isInteger(editingReportIndex)
+      && editingReportIndex >= 0 && !!reports[editingReportIndex];
+    saveButton.textContent=editingExisting?'Änderungen speichern':'Dokument speichern';
   }
 }
 
