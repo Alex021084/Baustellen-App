@@ -1560,7 +1560,7 @@ function updateTagelohnSummarySignatureStatus(){
 }
 
 // Schrittweiser Tagelohn-Ablauf wie beim Tagesbericht.
-let tagelohnWizardStep=1;
+var tagelohnWizardStep=1;
 function renderTagelohnWizard(){
   const dateField=$('date');
   if(dateField&&!dateField.value){dateField.value=today();syncDateDisplay();}
