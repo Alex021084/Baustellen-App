@@ -2678,3 +2678,12 @@ body.tagelohn-clean #appNav button small {
 }
 #tagesberichtSummary .moduleHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #reportSummaryBack{min-height:44px;padding:8px 18px;border-radius:12px}
+
+/* Sichtbarkeit des Tagesbericht-Unterschriftenfensters ausschließlich per JS steuern. */
+#reportSignatureModal.reportSignatureModal,
+#reportSignatureModal.reportSignatureModal.open{
+  display:none!important;
+}
+#reportSignatureModal.reportSignatureModal.open{
+  display:flex!important;
+}
