@@ -718,9 +718,13 @@ function renderSummary(){
   const data=collect();
   const rows=data.employees.filter(e=>e.name||e.service||e.hours||e.start||e.end||e.pause).map(e=>`
     <tr><td>${esc(e.name||'—')}</td><td>${esc(e.service||'—')}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td></tr>`).join('');
-  const summaryIsSigned=!!(tagelohnReadOnly || (Number.isInteger(editingReportIndex) && reports[editingReportIndex] &&
-    (reports[editingReportIndex].signed || (reports[editingReportIndex].signature && reports[editingReportIndex].signature.length>100))));
-  const editPencil=(step)=>summaryIsSigned?'':`<button type="button" class="summaryEditPencil" data-summary-edit="${step}" aria-label="Abschnitt bearbeiten" title="Abschnitt bearbeiten">✎</button>`;
+  const savedForSummary = Number.isInteger(editingReportIndex) ? reports[editingReportIndex] : null;
+  const summaryIsSigned = !!(
+    tagelohnReadOnly ||
+    (savedForSummary && (savedForSummary.signed || (savedForSummary.signature && savedForSummary.signature.length > 100)))
+  );
+  const editPencil = step => summaryIsSigned ? '' :
+    `<button type="button" class="summaryEditPencil" data-summary-edit="${step}" aria-label="Diesen Abschnitt bearbeiten" title="Diesen Abschnitt bearbeiten"><span aria-hidden="true">✎</span></button>`;
   $('summaryContent').innerHTML=`
     <div class="summaryBlock"><div class="summaryBlockHead"><h3>Tagelohnnachweis</h3>${editPencil(1)}</div><div class="summaryMeta">
       <div><b>Datum</b>${esc(formatDate(data.date)||'—')}</div>
@@ -734,17 +738,28 @@ function renderSummary(){
     <div class="summaryBlock"><div class="summaryBlockHead"><h3>Ausgeführte Arbeiten</h3>${editPencil(3)}</div>${data.works.length?`<ul class="summaryList">${data.works.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>'}</div>
     <div class="summaryBlock"><div class="summaryBlockHead"><h3>Material / sonstige Leistungen</h3>${editPencil(3)}</div>${data.materials.length?`<ul class="summaryList">${data.materials.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>'}</div>
     <div class="summaryBlock"><div class="summaryBlockHead"><h3>Unterschrift Auftraggeber</h3></div><div class="hint">Mit der Unterschrift bestätigt der Auftraggeber die oben angezeigten Angaben.</div></div>`;
-  $('summaryContent').querySelectorAll('[data-summary-edit]').forEach(button=>{
-    button.addEventListener('click',()=>{
-      if(summaryIsSigned || tagelohnReadOnly)return;
-      tagelohnWizardStep=Number(button.dataset.summaryEdit)||1;
+
+  // Buttons are bound after the summary HTML is rebuilt. The step is explicitly
+  // selected before opening the editor, so the pencil cannot land on a stale step.
+  $('summaryContent').querySelectorAll('button[data-summary-edit]').forEach(button => {
+    button.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const signedNow = !!(
+        tagelohnReadOnly ||
+        (savedForSummary && (savedForSummary.signed || (savedForSummary.signature && savedForSummary.signature.length > 100)))
+      );
+      if (signedNow) return;
+      const targetStep = Math.max(1, Math.min(3, Number(button.getAttribute('data-summary-edit')) || 1));
+      tagelohnWizardStep = targetStep;
       renderTagelohnWizard();
       show('editor');
-      requestAnimationFrame(()=>{
-        const target=$('tagelohnStep'+tagelohnWizardStep);
-        if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+      window.scrollTo(0, 0);
+      requestAnimationFrame(() => {
+        const panel = $('tagelohnStep' + targetStep);
+        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-    });
+    };
   });
 }
 
