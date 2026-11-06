@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=summary-readonly-center-54"></head><body>
+<link rel="stylesheet" href="styles.css?v=summary-document-save-54"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -180,20 +180,12 @@
 <section id="summaryScreen" class="screen">
 <div class="title"><div><small>Kundenprüfung</small><h2>Tagelohnnachweis prüfen</h2></div><button id="backToEditorFromSummary">Baustellen</button></div>
 <div id="summaryContent" class="summaryContent"></div>
-<div class="tagelohnWorkflow">
-  <div class="workflowItem">
-    <div class="workflowHead"><span>1</span><b>Unterschrift</b></div>
-    <p>Der Kunde unterschreibt nach der Prüfung.</p>
-    <div id="tagelohnSignatureStatus" class="workflowStatus">Noch nicht unterschrieben</div>
-    <button id="signNow" class="secondary workflowButton" type="button">✍️ Unterschreiben</button>
-  </div>
-  <div class="workflowItem">
-    <div class="workflowHead"><span>2</span><b>PDF erstellen</b></div>
-    <p>Den fertigen Nachweis als PDF erstellen.</p>
-    <button id="saveWithoutSignature" class="primary workflowButton" type="button">PDF erstellen</button>
-  </div>
+<div class="tagelohnSummaryActions">
+  <div id="tagelohnSignatureStatus" class="workflowStatus">Noch nicht unterschrieben</div>
+  <button id="signNow" class="secondary workflowButton" type="button">✍️ Unterschreiben</button>
+  <button id="saveWithoutSignature" class="primary workflowButton" type="button">PDF erstellen</button>
+  <button id="saveTagelohnFromSummary" class="secondary workflowButton saveDocumentButton" type="button">Dokument speichern</button>
 </div>
-<div class="actions tagelohnSaveAction"><button id="saveTagelohnFromSummary" class="primary" type="button">Nachweis speichern</button></div>
 </section>
 
 <section id="signatureScreen" class="screen">
@@ -228,4 +220,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=summary-readonly-center-54"></script></body></html>
+<script src="app.js?v=summary-document-save-54"></script></body></html>
