@@ -697,7 +697,7 @@ function addEmp(e={}){
   <label>Name des Mitarbeiters<select class="name" aria-label="Mitarbeiter auswählen">${employeeOptions(e.name||'')}</select></label>
   <input class="service" type="hidden" value="${esc(selectedService)}">
   <div class="selectedServiceLabel">Leistung: <strong>${esc(selectedService||'Noch nicht ausgewählt')}</strong></div>
-  <label>Stunden<input class="hours" type="number" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" step=".25" value="${e.hours??''}"></label>
+  <label>Stunden<input class="hours" type="number" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" step=".25" value="${e.hours??''}"></label>
   <div class="grid grid3"><label>Anfang<select class="start timeSelect" aria-label="Anfang auswählen">${timeOptions(e.start||'')}</select></label><label>Ende<select class="end timeSelect" aria-label="Ende auswählen">${timeOptions(e.end||'')}</select></label><label>Pause<select class="pause" aria-label="Pause auswählen">${pauseOptions(e.pause??0)}</select></label></div>`;
   d.querySelector('.del').onclick=()=>d.remove();
   d.querySelector('.name').addEventListener('change',()=>{
