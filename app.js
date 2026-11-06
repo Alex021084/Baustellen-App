@@ -2,6 +2,94 @@
 
 const $=x=>document.getElementById(x);
 
+// Zuverlässige Bedienung der Tagelohn-Prüf- und Unterschriftsansicht.
+// Die Aktionen werden zentral im Capture-Handler verarbeitet, bevor ältere
+// Einzelhandler oder Browser-Formularverhalten dazwischenfunken.
+document.addEventListener('click', async function(event){
+  const button=event.target.closest(
+    '#backToEditorFromSummary, #signNow, #saveWithoutSignature, #saveTagelohnFromSummary, #backToSummary, #cancelSignature, #saveSignature'
+  );
+  if(!button)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+
+  try{
+    switch(button.id){
+      case 'backToEditorFromSummary':
+        if(tagelohnReadOnly)return;
+        tagelohnWizardStep=1;
+        renderTagelohnWizard();
+        show('editor');
+        break;
+
+      case 'signNow':
+        show('signatureScreen');
+        updateSignatureStatus();
+        break;
+
+      case 'backToSummary':
+      case 'cancelSignature':
+        renderSummary();
+        show('summaryScreen');
+        updateTagelohnSummarySignatureStatus();
+        break;
+
+      case 'saveSignature': {
+        if(!hasSignature()){
+          alert('Bitte zuerst unterschreiben oder abbrechen.');
+          return;
+        }
+        const signedData=collect();
+        signedData.signature=$('sig').toDataURL('image/png');
+        signedData.signed=true;
+        signedData.signedAt=new Date().toISOString();
+
+        if(editingReportIndex!==null && reports[editingReportIndex]){
+          reports[editingReportIndex]={...reports[editingReportIndex],...signedData};
+        }else{
+          reports.unshift(signedData);
+          editingReportIndex=0;
+        }
+        tagelohnReadOnly=true;
+        save();
+        render();
+        renderSummary();
+        show('summaryScreen');
+        updateTagelohnSummarySignatureStatus();
+        break;
+      }
+
+      case 'saveTagelohnFromSummary': {
+        const saved=collect();
+        saved.signature=$('sig').toDataURL('image/png');
+        saved.signed=hasSignature();
+        saved.signedAt=saved.signed?(new Date().toISOString()):null;
+        if(editingReportIndex!==null && reports[editingReportIndex]){
+          reports[editingReportIndex]={...reports[editingReportIndex],...saved};
+        }else{
+          reports.unshift(saved);
+          editingReportIndex=0;
+        }
+        save();
+        render();
+        updateSignatureStatus();
+        navigationHistory=[];
+        show('archive');
+        break;
+      }
+
+      case 'saveWithoutSignature':
+        await createTagelohnPdfFromSummary();
+        break;
+    }
+  }catch(error){
+    console.error('Aktion im Tagelohnnachweis fehlgeschlagen:',error);
+    alert('Die Aktion konnte nicht ausgeführt werden: '+(error?.message||error));
+  }
+}, true);
+
+
+
 // Eigenes Stunden-Zahlenfeld: verhindert zuverlässig die iOS-Safari-Tastatur.
 let activeHoursInput=null;
 function ensureHoursKeypad(){
