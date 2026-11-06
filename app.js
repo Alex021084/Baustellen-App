@@ -1204,7 +1204,7 @@ async function createTagesberichtPdf(data){
     // Koordinaten exakt an der vom Nutzer gelieferten Muster-PDF ausgerichtet.
     // PDF-Seite: 668.54 × 946.07 pt; PDF-Lib-Koordinaten haben den Ursprung unten links.
     // Bauvorhaben: rechts neben dem gedruckten Label im vorgesehenen Feld.
-    text(data.project,199.2,654.4,9.5,bold,405);
+    text(data.project,199.2,649.4,9.5,bold,405);
 
     // Datum direkt unter der Überschrift zentriert ergänzen.
     const dateText=`${formatDate(data.date)}`;
@@ -1242,7 +1242,7 @@ async function createTagesberichtPdf(data){
 
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:64,y:72,width:180,height:62,opacity:1});
+      page.drawImage(sig,{x:64,y:96,width:180,height:62,opacity:1});
     }
     if(data.signerName) text(data.signerName,250,58,8.5,normal,150);
 
