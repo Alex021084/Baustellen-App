@@ -776,7 +776,18 @@ function fill(r){
   $('works').innerHTML='';(r.works||[]).forEach(v=>item('works',v));
   $('materials').innerHTML='';(r.materials||[]).forEach(v=>item('materials',v));
   clearSignature();
-  if(r.signature){let img=new Image();img.onload=()=>{ctx.drawImage(img,0,0,c.width,c.height);updateSignatureStatus()};img.src=r.signature;} else updateSignatureStatus();
+  if(r.signature){
+    let img=new Image();
+    img.onload=()=>{
+      ctx.drawImage(img,0,0,c.width,c.height);
+      updateSignatureStatus();
+      updateTagelohnSummarySignatureStatus();
+    };
+    img.src=r.signature;
+  } else {
+    updateSignatureStatus();
+    updateTagelohnSummarySignatureStatus();
+  }
 }
 function collect(){return{date:$('date').value,contractor:contractorName(),address:$('address').value,project:$('project').value,client:$('client').value,employees:[...document.querySelectorAll('.employee')].map(d=>{const service=d.querySelector('.service').value;return {hours:+d.querySelector('.hours').value||0,service,activity:service,name:d.querySelector('.name').value,start:d.querySelector('.start').value,end:d.querySelector('.end').value,pause:+d.querySelector('.pause').value||0}}),works:[...document.querySelectorAll('#works input')].map(x=>x.value).filter(Boolean),materials:[...document.querySelectorAll('#materials input')].map(x=>x.value).filter(Boolean),signature:$('sig').toDataURL()}}
 function save(){localStorage.tagelohn=JSON.stringify(reports);$('count').textContent=reports.length+' Nachweis'+(reports.length==1?'':'e')}
@@ -957,8 +968,6 @@ function render(){
         renderSummary();
         show('summaryScreen');
         updateTagelohnSummarySignatureStatus();
-        const saveExistingButton=$('saveTagelohnFromSummary');
-        if(saveExistingButton)saveExistingButton.textContent='Änderungen speichern';
       };
       enableSwipeDelete(row,()=>removeReport(i));
       l.append(row);
@@ -1359,12 +1368,27 @@ $('saveSignature').onclick=()=>{
 
 function updateTagelohnSummarySignatureStatus(){
   const status=$('tagelohnSignatureStatus');
-  if(!status)return;
-  const signed=hasSignature();
-  status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
-  status.classList.toggle('signed',signed);
-  status.classList.toggle('unsigned',!signed);
-  status.style.textAlign='center';
+  const editingExisting = Number.isInteger(editingReportIndex)
+    && editingReportIndex >= 0 && !!reports[editingReportIndex];
+  const savedReport = editingExisting ? reports[editingReportIndex] : null;
+
+  // Beim Öffnen eines gespeicherten Nachweises zählt dessen gespeicherter
+  // Signaturstatus sofort – das Bild der Unterschrift wird separat geladen.
+  const signed = hasSignature() || !!(savedReport && savedReport.signed);
+  if(status){
+    status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
+    status.classList.toggle('signed',signed);
+    status.classList.toggle('unsigned',!signed);
+    Object.assign(status.style,{
+      display:'flex',alignItems:'center',justifyContent:'center',
+      textAlign:'center',boxSizing:'border-box',width:'100%',
+      minHeight:'58px',padding:'13px 16px',borderRadius:'15px',
+      border:'1.5px solid '+(signed?'#bfe2ca':'#f2c6c6'),
+      background:signed?'#eaf6ee':'#fff0f0',
+      color:signed?'#267344':'#b42318',
+      fontSize:'17px',fontWeight:'650'
+    });
+  }
   const signButton=$('signNow');
   if(signButton)signButton.style.display=(signed||tagelohnReadOnly)?'none':'';
   const editButton=$('backToEditorFromSummary');
@@ -1372,8 +1396,6 @@ function updateTagelohnSummarySignatureStatus(){
   const saveButton=$('saveTagelohnFromSummary');
   if(saveButton){
     saveButton.style.display='';
-    const editingExisting = Number.isInteger(editingReportIndex)
-      && editingReportIndex >= 0 && !!reports[editingReportIndex];
     saveButton.textContent=editingExisting?'Änderungen speichern':'Dokument speichern';
   }
 }
