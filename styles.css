@@ -2687,3 +2687,41 @@ body.tagelohn-clean #appNav button small {
 #reportSignatureModal.reportSignatureModal.open{
   display:flex!important;
 }
+
+/* Eleganter Schließen-Button im Tagesbericht-Unterschriftenfenster */
+#reportSignatureModal #closeReportSignature{
+  width:100%!important;
+  min-height:54px!important;
+  margin-top:14px!important;
+  padding:13px 22px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  border:1.5px solid #d7e0e8!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,#f8fafc 0%,#edf2f7 100%)!important;
+  color:#344256!important;
+  box-shadow:0 3px 10px rgba(31,45,61,.07)!important;
+  font-size:17px!important;
+  font-weight:650!important;
+  letter-spacing:.01em!important;
+  transition:background .15s ease,transform .15s ease,box-shadow .15s ease!important;
+}
+#reportSignatureModal #closeReportSignature::before{
+  content:"×";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:25px;height:25px;
+  border-radius:50%;
+  background:#e1e8ef;
+  color:#526174;
+  font-size:21px;
+  line-height:1;
+  font-weight:500;
+}
+#reportSignatureModal #closeReportSignature:active{
+  transform:scale(.985)!important;
+  box-shadow:0 1px 4px rgba(31,45,61,.08)!important;
+}
