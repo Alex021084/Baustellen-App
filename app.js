@@ -73,7 +73,7 @@ document.addEventListener('click', function(event){
   if(!button) return;
   const routes={
     openTagelohn:()=>show('tagelohnHome'),
-    new2:()=>{editingReportIndex=null;fill({});tagelohnWizardStep=1;renderTagelohnWizard();show('editor')},
+    new2:()=>startNewTagelohn(),
     openTagesbericht:()=>{navigationHistory=[];renderTagesberichtArchive();show('tagesberichtHome');navigationHistory=[]},
     newTagesbericht:()=>{initTagesbericht();show('tagesbericht');},
     backToStartFromReports:()=>{selectedReportCustomer=null;selectedReportProject=null;show('home');},
@@ -90,6 +90,19 @@ document.addEventListener('click', function(event){
   event.stopImmediatePropagation();
   action();
 }, true);
+
+function startNewTagelohn(){
+  try{
+    editingReportIndex=null;
+    fill({});
+    tagelohnWizardStep=1;
+    renderTagelohnWizard();
+    show('editor');
+  }catch(error){
+    console.error('Neuer Tagelohn konnte nicht geöffnet werden:',error);
+    alert('Der neue Tagelohn konnte nicht geöffnet werden: '+(error?.message||error));
+  }
+}
 
 let reports=JSON.parse(localStorage.tagelohn||'[]');
 let editingReportIndex=null;
@@ -1441,7 +1454,7 @@ async function createTagesberichtPdf(data){
   }
 }
 
-$('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});tagelohnWizardStep=1;renderTagelohnWizard();show('editor')};
+$('new').onclick=$('new2').onclick=startNewTagelohn;
 $('openTagelohn').onclick=()=>{renderTagelohnHome();show('tagelohnHome')};
 $('openManagementGlobal').onclick=()=>show('managementHome');
 $('manageEmployeesGlobal').onclick=openEmployees;
