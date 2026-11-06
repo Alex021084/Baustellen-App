@@ -2609,3 +2609,59 @@ body.tagelohn-clean #appNav button small {
   touch-action:manipulation!important;
   cursor:pointer!important;
 }
+
+/* Endgültige Popup-Anordnung: Unterschriftenfeld volle Breite, Schließen darunter. */
+#reportSignatureModal.reportSignatureModal,
+#reportSignatureModal.reportSignatureModal.open{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:12px!important;
+  width:100vw!important;
+  max-width:100vw!important;
+  padding:16px!important;
+  box-sizing:border-box!important;
+  overflow-y:auto!important;
+}
+#reportSignatureModal > .reportSignaturePanel{
+  display:block!important;
+  flex:0 0 auto!important;
+  width:calc(100vw - 32px)!important;
+  max-width:680px!important;
+  min-width:0!important;
+  max-height:calc(100dvh - 90px)!important;
+  overflow-y:auto!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:20px!important;
+}
+#reportSignatureModal #reportSig{
+  display:block!important;
+  width:100%!important;
+  height:240px!important;
+  min-height:240px!important;
+  max-height:240px!important;
+  box-sizing:border-box!important;
+  touch-action:none!important;
+}
+#reportSignatureModal #closeReportSignature{
+  position:static!important;
+  flex:0 0 auto!important;
+  display:block!important;
+  width:calc(100vw - 32px)!important;
+  max-width:680px!important;
+  min-height:52px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+@media(max-width:520px){
+  #reportSignatureModal.reportSignatureModal,
+  #reportSignatureModal.reportSignatureModal.open{padding:12px!important}
+  #reportSignatureModal > .reportSignaturePanel{
+    width:calc(100vw - 24px)!important;
+    max-height:calc(100dvh - 88px)!important;
+    padding:18px!important;
+  }
+  #reportSignatureModal #closeReportSignature{width:calc(100vw - 24px)!important}
+}
