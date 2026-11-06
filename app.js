@@ -91,6 +91,58 @@ document.addEventListener('click', function(event){
   action();
 }, true);
 
+
+// Weiter-Schaltfläche des Tagelohn-Assistenten robust im Capture-Handler
+// behandeln, damit kein älterer Formular-/Navigationshandler den Klick abfängt.
+document.addEventListener('click', function(event){
+  const button=event.target.closest('#tagelohnStepNext');
+  if(!button)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  try{
+    const customer=$('contractorSelect');
+    const projectSelect=$('projectSelect');
+    const projectInput=$('project');
+    const customerSelected=!!(customer && customer.value && customer.value!=='');
+    const projectSelected=!!(
+      (projectSelect && projectSelect.value && projectSelect.value!=='') ||
+      (projectInput && projectInput.value.trim())
+    );
+
+    if(tagelohnWizardStep===1){
+      if(!customerSelected){
+        alert('Bitte zuerst einen Kunden auswählen.');
+        return;
+      }
+      if(!projectSelected){
+        alert('Bitte zuerst eine Baustelle auswählen oder eingeben.');
+        return;
+      }
+      tagelohnWizardStep=2;
+      renderTagelohnWizard();
+      window.scrollTo(0,0);
+      return;
+    }
+    if(tagelohnWizardStep===2){
+      const entries=document.querySelectorAll('#employees .employee');
+      if(!entries.length){
+        alert('Bitte mindestens einen Mitarbeiter hinzufügen.');
+        return;
+      }
+      tagelohnWizardStep=3;
+      renderTagelohnWizard();
+      window.scrollTo(0,0);
+      return;
+    }
+    renderSummary();
+    show('summaryScreen');
+    updateTagelohnSummarySignatureStatus();
+  }catch(error){
+    console.error('Weiter im Tagelohn-Assistenten fehlgeschlagen:',error);
+    alert('Der nächste Schritt konnte nicht geöffnet werden: '+(error?.message||error));
+  }
+}, true);
+
 function startNewTagelohn(){
   try{
     editingReportIndex=null;
