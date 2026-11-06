@@ -1050,7 +1050,13 @@ function fill(r){
   }
 }
 function collect(){return{date:$('date').value,contractor:contractorName(),address:$('address').value,project:$('project').value,client:$('client').value,employees:[...document.querySelectorAll('.employee')].map(d=>{const service=d.querySelector('.service').value;return {hours:parseHoursValue(d.querySelector('.hours').value),service,activity:service,name:d.querySelector('.name').value,start:d.querySelector('.start').value,end:d.querySelector('.end').value,pause:+d.querySelector('.pause').value||0}}),works:[...document.querySelectorAll('#works input')].map(x=>x.value).filter(Boolean),materials:[...document.querySelectorAll('#materials input')].map(x=>x.value).filter(Boolean),signature:$('sig').toDataURL()}}
-function save(){localStorage.tagelohn=JSON.stringify(reports);$('count').textContent=reports.length+' Nachweis'+(reports.length==1?'':'e')}
+function save(){
+  localStorage.tagelohn=JSON.stringify(reports);
+  // Die Zählanzeige existiert nicht auf jeder Bildschirmansicht.
+  // Speichern darf deshalb niemals von einem optionalen UI-Element abhängen.
+  const countElement=$('count');
+  if(countElement)countElement.textContent=reports.length+' Nachweis'+(reports.length===1?'':'e');
+}
 
 // Merkt sich den zuletzt geöffneten/geschlossenen Zustand der Auftraggeber- und Baustellenordner.
 const archiveStateKey='tagelohnArchiveState';
@@ -1161,6 +1167,8 @@ function renderTagelohnHome(){
 function render(){
   const l=$('list');
   const title=$('archiveTitle'), hint=$('archiveHint'), back=$('homeBtn');
+  // Archive markup may be absent in a temporarily mounted/alternate view.
+  if(!l)return;
 
   if(title){
     title.textContent = archiveSelectedProject
