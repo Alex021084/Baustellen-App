@@ -1210,7 +1210,7 @@ async function createTagesberichtPdf(data){
     const dateText=`${formatDate(data.date)}`;
     const dateSize=8.5;
     const dateWidth=normal.widthOfTextAtSize(dateText,dateSize);
-    text(dateText,(page.getWidth()-dateWidth)/2,865, dateSize,normal);
+    text(dateText,(page.getWidth()-dateWidth)/2,838, dateSize,normal);
 
     // Temperatur und Regenmenge linksbündig auf derselben Wertposition.
     text(data.temperature,167.3,613.0,9.2,normal,145);
@@ -1242,7 +1242,7 @@ async function createTagesberichtPdf(data){
 
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);
-      page.drawImage(sig,{x:64,y:48,width:180,height:62,opacity:1});
+      page.drawImage(sig,{x:64,y:72,width:180,height:62,opacity:1});
     }
     if(data.signerName) text(data.signerName,250,58,8.5,normal,150);
 
