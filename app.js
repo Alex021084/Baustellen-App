@@ -719,10 +719,7 @@ function renderSummary(){
   const rows=data.employees.filter(e=>e.name||e.service||e.hours||e.start||e.end||e.pause).map(e=>`
     <tr><td>${esc(e.name||'—')}</td><td>${esc(e.service||'—')}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td></tr>`).join('');
   const savedForSummary = Number.isInteger(editingReportIndex) ? reports[editingReportIndex] : null;
-  const summaryIsSigned = !!(
-    tagelohnReadOnly ||
-    (savedForSummary && savedForSummary.signed === true)
-  );
+  const summaryIsSigned = !!tagelohnReadOnly;
   const editPencil = step => summaryIsSigned ? '' :
     `<button type="button" class="summaryEditPencil" data-summary-edit="${step}" aria-label="Diesen Abschnitt bearbeiten" title="Diesen Abschnitt bearbeiten"><span aria-hidden="true">✎</span></button>`;
   $('summaryContent').innerHTML=`
@@ -809,12 +806,42 @@ function fill(r){
   if(r.signature){
     let img=new Image();
     img.onload=()=>{
+      ctx.clearRect(0,0,c.width,c.height);
       ctx.drawImage(img,0,0,c.width,c.height);
+      // Entscheidend sind sichtbare Pixel der geladenen Unterschrift, nicht ein alter signed-Flag.
+      const actualSigned=hasSignature();
+      tagelohnReadOnly=actualSigned;
+      if(Number.isInteger(editingReportIndex) && reports[editingReportIndex]){
+        reports[editingReportIndex].signed=actualSigned;
+        reports[editingReportIndex].signedAt=actualSigned
+          ? (reports[editingReportIndex].signedAt || new Date().toISOString())
+          : null;
+        save();
+        render();
+      }
       updateSignatureStatus();
+      renderSummary();
+      updateTagelohnSummarySignatureStatus();
+    };
+    img.onerror=()=>{
+      tagelohnReadOnly=false;
+      if(Number.isInteger(editingReportIndex) && reports[editingReportIndex]){
+        reports[editingReportIndex].signed=false;
+        reports[editingReportIndex].signedAt=null;
+        save(); render();
+      }
+      updateSignatureStatus();
+      renderSummary();
       updateTagelohnSummarySignatureStatus();
     };
     img.src=r.signature;
   } else {
+    tagelohnReadOnly=false;
+    if(Number.isInteger(editingReportIndex) && reports[editingReportIndex]){
+      reports[editingReportIndex].signed=false;
+      reports[editingReportIndex].signedAt=null;
+      save(); render();
+    }
     updateSignatureStatus();
     updateTagelohnSummarySignatureStatus();
   }
@@ -993,7 +1020,8 @@ function render(){
       row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
-        tagelohnReadOnly=r.signed === true;
+        // Den gespeicherten Alt-Status erst nach Prüfung der tatsächlichen Bilddaten übernehmen.
+        tagelohnReadOnly=false;
         fill(r);
         renderSummary();
         show('summaryScreen');
@@ -1415,8 +1443,7 @@ function updateTagelohnSummarySignatureStatus(){
 
   // Beim Öffnen eines gespeicherten Nachweises zählt dessen gespeicherter
   // Signaturstatus sofort – das Bild der Unterschrift wird separat geladen.
-  const signed = hasSignature()
-    || !!(savedReport && savedReport.signed === true);
+  const signed = hasSignature();
   if(status){
     status.textContent=signed?'✓ Unterschrift vorhanden':'✕ Noch nicht unterschrieben';
     status.classList.toggle('signed',signed);
