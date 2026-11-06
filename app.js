@@ -1192,46 +1192,38 @@ async function createTagesberichtPdf(data){
     };
     const wrap=(value,x,y,w,size=8.1,maxLines=2)=>drawWrapped(page,normal,String(value||''),x,y,w,size,1,maxLines);
 
-    // Tagesbericht-Blankovorlage: nur die vorgesehenen Felder werden ausgefüllt.
-    // Die bestehende Tagelohn-PDF-Erstellung bleibt vollständig unverändert.
-    // Bauvorhaben: Wert rechts neben der bereits gedruckten Beschriftung im grünen Feld.
-    text(data.project,112,578,9.5,bold,405);
-    // Datum zentral unter der Überschrift platzieren – nicht mehr rechts neben dem Bauvorhaben.
-    const dateText=`Datum: ${formatDate(data.date)}`;
-    const dateSize=8.5;
-    const dateWidth=normal.widthOfTextAtSize(dateText,dateSize);
-    text(dateText,(page.getWidth()-dateWidth)/2,820,dateSize,normal);
+    // Koordinaten exakt an der vom Nutzer gelieferten Muster-PDF ausgerichtet.
+    // PDF-Seite: 668.54 × 946.07 pt; PDF-Lib-Koordinaten haben den Ursprung unten links.
+    // Bauvorhaben: rechts neben dem gedruckten Label im vorgesehenen Feld.
+    text(data.project,199.2,654.4,9.5,bold,405);
 
-    // Werte stehen neben den roten Vorlagen-Beschriftungen; nichts überdecken.
-    text(data.temperature,86,553,9.2,bold,175);
-    text(data.wind||'—',338,553,9.2,bold,165);
-    text(data.precipitation,86,528,9.2,bold,175);
-    text(data.cloudiness||'—',338,528,9.2,bold,165);
+    // Wetterwerte an die in der Muster-PDF freien Wertpositionen setzen.
+    text(data.temperature,180,613.0,9.2,normal,145);
+    text(data.wind||'—',427.4,613.0,9.2,normal,145);
+    text(data.precipitation,167.3,585.2,9.2,normal,150);
+    text(data.cloudiness||'—',427.4,585.2,9.2,normal,145);
 
-    // Die Mitarbeiter-Spalte der Blankovorlage wird für den Tagesbericht
-    // in zwei Bereiche aufgeteilt: Mitarbeiter | Funktion.
-    // Die übrigen Spalten der Vorlage (Arbeitsbeginn, Arbeitsende, Pause, Gesamt)
-    // bleiben an ihrer ursprünglichen Position.
-    cover(50,542,188,22);
-    text('Mitarbeiter',64,547,8.1,bold,82);
-    text('Funktion',154,547,8.1,bold,72);
-    page.drawLine({start:{x:145,y:395.5},end:{x:145,y:562.5},color:rgb(0.55,0.55,0.55),thickness:0.6});
-
-    const rowY=527, rowStep=22;
-    data.employees.slice(0,9).forEach((e,i)=>{
+    // Die Vorlage hat eine gemeinsame Mitarbeiter-Spalte für Name und Funktion.
+    // Deshalb weder die vorhandene Kopfzeile überdecken noch eine zusätzliche Trennlinie zeichnen.
+    const rowY=519.5, rowStep=19.7;
+    data.employees.slice(0,7).forEach((e,i)=>{
       const y=rowY-i*rowStep;
-      text(e.name||'',55,y,8.2,normal,86);
-      text(e.role||'',151,y,8.2,normal,82);
-      text(e.start||'',277,y,8.2,normal,70);
-      text(e.end||'',367,y,8.2,normal,70);
-      if(Number(e.pause)) text(`${e.pause} min`,454,y,8.2,normal,55);
-      const hours=(Number(e.hours)||0).toFixed(2).replace('.',',');
-      if(hours!=='0,00') text(hours,520,y,8.2,normal,55);
+      text(e.name||'',63.6,y,8.2,normal,103);
+      text(e.role||'',172.3,y,8.2,normal,87);
+      text(e.start||'',271.4,y,8.2,normal,55);
+      text(e.end||'',361.9,y,8.2,normal,55);
+      if(Number(e.pause)) text(`${e.pause}m`,442.1,y,8.2,normal,45);
+      const hours=(Number(e.hours)||0);
+      if(hours>0){
+        const totalMinutes=Math.round(hours*60);
+        const h=Math.floor(totalMinutes/60), m=totalMinutes%60;
+        text(`${h}h ${m}m`,525.8,y,8.2,normal,65);
+      }
     });
 
-    data.works.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,64,337-i*18,285,8.1,2));
-    // Materialfeld beginnt rechts der senkrechten Trennlinie.
-    data.materials.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,378,337-i*18,155,8.1,2));
+    // Arbeiten links und Material rechts innerhalb der jeweiligen Spalten.
+    data.works.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,55.5,340.0-i*12.8,350,8.1,3));
+    data.materials.slice(0,12).forEach((v,i)=>wrap(`• ${v}`,435.0,340.0-i*12.8,158,8.1,3));
 
     if(data.signature&&data.signature.length>100){
       const sig=await pdf.embedPng(data.signature);

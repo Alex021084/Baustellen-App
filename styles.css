@@ -2565,3 +2565,9 @@ body.tagelohn-clean #appNav button small {
  #reportSignatureModal #reportSig{height:38dvh!important;min-height:260px!important}
  #reportSignatureModal .reportSignatureRow{flex-direction:column;align-items:stretch}
 }
+
+/* Große, gerätebreite Unterschriftenfläche im Tagesbericht */
+#reportSignatureModal{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:99999!important;padding:12px!important;box-sizing:border-box!important}
+#reportSignatureModal.open{display:flex!important;align-items:center!important;justify-content:center!important}
+#reportSignatureModal .reportSignaturePanel{width:min(100%,760px)!important;max-width:760px!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;box-sizing:border-box!important;margin:auto!important}
+#reportSignatureModal #reportSig{width:100%!important;height:42dvh!important;min-height:280px!important;max-height:460px!important;display:block!important;box-sizing:border-box!important;touch-action:none!important}
