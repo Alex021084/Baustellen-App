@@ -718,19 +718,34 @@ function renderSummary(){
   const data=collect();
   const rows=data.employees.filter(e=>e.name||e.service||e.hours||e.start||e.end||e.pause).map(e=>`
     <tr><td>${esc(e.name||'—')}</td><td>${esc(e.service||'—')}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td></tr>`).join('');
+  const summaryIsSigned=!!(tagelohnReadOnly || (Number.isInteger(editingReportIndex) && reports[editingReportIndex] &&
+    (reports[editingReportIndex].signed || (reports[editingReportIndex].signature && reports[editingReportIndex].signature.length>100))));
+  const editPencil=(step)=>summaryIsSigned?'':`<button type="button" class="summaryEditPencil" data-summary-edit="${step}" aria-label="Abschnitt bearbeiten" title="Abschnitt bearbeiten">✎</button>`;
   $('summaryContent').innerHTML=`
-    <div class="summaryBlock"><h3>Tagelohnnachweis</h3><div class="summaryMeta">
+    <div class="summaryBlock"><div class="summaryBlockHead"><h3>Tagelohnnachweis</h3>${editPencil(1)}</div><div class="summaryMeta">
       <div><b>Datum</b>${esc(formatDate(data.date)||'—')}</div>
       <div><b>Auftraggeber</b>${esc(data.contractor||'—')}</div>
       <div><b>Bauvorhaben</b>${esc(data.project||'—')}</div>
       <div><b>Anschrift</b>${esc(data.address||'—').replaceAll('\n','<br>')}</div>
     </div></div>
-    <div class="summaryBlock"><h3>Mitarbeiter und Leistungen</h3>
+    <div class="summaryBlock"><div class="summaryBlockHead"><h3>Mitarbeiter und Leistungen</h3>${editPencil(2)}</div>
       ${rows?`<div style="overflow:auto"><table class="summaryTable"><thead><tr><th>Mitarbeiter</th><th>Leistung</th><th>Stunden</th><th>Anfang</th><th>Ende</th><th>Pause</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">Keine Mitarbeiter eingetragen.</div>'}
     </div>
-    <div class="summaryBlock"><h3>Ausgeführte Arbeiten</h3>${data.works.length?`<ul class="summaryList">${data.works.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>'}</div>
-    <div class="summaryBlock"><h3>Material / sonstige Leistungen</h3>${data.materials.length?`<ul class="summaryList">${data.materials.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>'}</div>
-    <div class="summaryBlock"><h3>Unterschrift Auftraggeber</h3><div class="hint">Mit der Unterschrift bestätigt der Auftraggeber die oben angezeigten Angaben.</div></div>`;
+    <div class="summaryBlock"><div class="summaryBlockHead"><h3>Ausgeführte Arbeiten</h3>${editPencil(3)}</div>${data.works.length?`<ul class="summaryList">${data.works.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>'}</div>
+    <div class="summaryBlock"><div class="summaryBlockHead"><h3>Material / sonstige Leistungen</h3>${editPencil(3)}</div>${data.materials.length?`<ul class="summaryList">${data.materials.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>'}</div>
+    <div class="summaryBlock"><div class="summaryBlockHead"><h3>Unterschrift Auftraggeber</h3></div><div class="hint">Mit der Unterschrift bestätigt der Auftraggeber die oben angezeigten Angaben.</div></div>`;
+  $('summaryContent').querySelectorAll('[data-summary-edit]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      if(summaryIsSigned || tagelohnReadOnly)return;
+      tagelohnWizardStep=Number(button.dataset.summaryEdit)||1;
+      renderTagelohnWizard();
+      show('editor');
+      requestAnimationFrame(()=>{
+        const target=$('tagelohnStep'+tagelohnWizardStep);
+        if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    });
+  });
 }
 
 function clearSignature(){ctx.clearRect(0,0,c.width,c.height); updateSignatureStatus()}
