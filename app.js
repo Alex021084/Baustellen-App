@@ -1078,8 +1078,10 @@ async function createTagesberichtPdf(data){
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
 $('openTagelohn').onclick=()=>show('tagelohnHome');
-$('openCustomersGlobal').onclick=openCustomers;
-$('openEmployeesGlobal').onclick=openEmployees;
+$('openManagementGlobal').onclick=()=>show('managementHome');
+$('manageEmployeesGlobal').onclick=openEmployees;
+$('manageServicesGlobal').onclick=openServices;
+$('backToStartFromManagement').onclick=()=>show('home');
 $('openTagesbericht').onclick=()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=[]};
 $('reportNext')?.addEventListener('click',()=>{initTagesberichtEmployees();show('tagesberichtEmployees')});
 $('reportAddEmployee')?.addEventListener('click',()=>addReportEmployee());
@@ -1106,7 +1108,7 @@ $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMa
 $('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show('home');
 $('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;$('servicesBtn').onclick=openServices;
 $('customersBtn')?.addEventListener('click',openCustomers);
-$('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('tagelohnHome');$('addService').onclick=addService;$('homeFromEmployees').onclick=()=>show('home');$('addEmployee').onclick=addEmployee;
+$('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
 $('date').addEventListener('change',syncDateDisplay);
 syncDateDisplay();
