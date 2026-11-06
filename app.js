@@ -1122,13 +1122,16 @@ function renderTagesberichtSummary(){
     <div class="reportSummarySection"><h3>Ausgeführte Arbeiten</h3>${list(d.works)}</div>
     <div class="reportSummarySection"><h3>Materiallieferung</h3>${list(d.materials)}</div>`;
 }
-function saveTagesberichtAndPdf(){
-  if(!hasReportSignature()){alert('Bitte zuerst unterschreiben.');return;}
+async function saveTagesberichtAndPdf(requireSignature=false){
+  const signed=hasReportSignature();
+  if(requireSignature&&!signed){alert('Bitte unterschreiben oder ohne Unterschrift speichern.');return;}
   const data=collectTagesbericht();
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
   reportsSaved.unshift({...data,signed,signedAt:signed?new Date().toISOString():null});
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
-  createTagesberichtPdf(data).then(ok=>{if(ok)alert('Bericht gespeichert und PDF erstellt.');});
+  const ok=await createTagesberichtPdf(data);
+  if(ok)alert(signed?'Bericht gespeichert und PDF erstellt.':'Bericht ohne Unterschrift gespeichert und PDF erstellt.');
+  renderTagesberichtArchive?.();
 }
 function tagesberichtPdfFilename(data){
   const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
@@ -1315,3 +1318,13 @@ window.addEventListener('DOMContentLoaded',()=>{const nav=document.querySelector
 
 document.getElementById('navStart')?.addEventListener('click',()=>show('home'));
 document.getElementById('navBack')?.addEventListener('click',goBackOneStep);
+
+// Navigation robust verdrahten (auch auf den Tagesbericht-Unterseiten).
+document.addEventListener('click',function(e){
+ const b=e.target.closest('#navStart,#navBack,#backToStartFromReports,#backToStartFromTagesbericht');
+ if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ if(b.id==='navStart'||b.id==='backToStartFromReports'||b.id==='backToStartFromTagesbericht'){
+   selectedReportCustomer=null;selectedReportProject=null;show('home');
+ }else{goBackOneStep();}
+},true);
