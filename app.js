@@ -8,7 +8,9 @@ document.addEventListener('click', function(event){
   const routes={
     openTagelohn:()=>show('tagelohnHome'),
     new2:()=>{editingReportIndex=null;fill({});show('editor')},
-    openTagesbericht:()=>{navigationHistory=[];initTagesbericht();show('tagesbericht');navigationHistory=[]},
+    openTagesbericht:()=>{navigationHistory=[];renderTagesberichtArchive();show('tagesberichtHome');navigationHistory=[]},
+    newTagesbericht:()=>{initTagesbericht();show('tagesbericht');},
+    backToStartFromReports:()=>{selectedReportCustomer=null;selectedReportProject=null;show('home');},
     openManagementGlobal:()=>show('managementHome'),
     manageEmployeesGlobal:()=>openEmployees(),
     manageTagelohnServicesGlobal:()=>openServices(),
@@ -1037,6 +1039,56 @@ function initReportSignature(){
 }
 function clearReportSignature(){if(reportSignatureCtx){reportSignatureCtx.clearRect(0,0,reportSignatureCanvas.width,reportSignatureCanvas.height)}reportSignatureReady=false}
 function hasReportSignature(){if(!reportSignatureCtx)return false;const d=reportSignatureCtx.getImageData(0,0,reportSignatureCanvas.width,reportSignatureCanvas.height).data;for(let i=3;i<d.length;i+=4)if(d[i]>10)return true;return false}
+
+let selectedReportCustomer=null, selectedReportProject=null;
+function getSavedTagesberichte(){return JSON.parse(localStorage.getItem('tagesberichte')||'[]');}
+function renderTagesberichtArchive(){
+ const root=$('tagesberichtArchiveList'); if(!root)return;
+ const saved=getSavedTagesberichte();
+ root.innerHTML='';
+ const groups=new Map();
+ saved.forEach((r,i)=>{
+   const customer=(r.customer||'Unbekannter Kunde').trim()||'Unbekannter Kunde';
+   const project=(r.project||'Ohne Bauvorhaben').trim()||'Ohne Bauvorhaben';
+   if(!groups.has(customer))groups.set(customer,new Map());
+   if(!groups.get(customer).has(project))groups.get(customer).set(project,[]);
+   groups.get(customer).get(project).push({r,i});
+ });
+ const heading=document.createElement('div'); heading.className='archiveHint';
+ heading.textContent=selectedReportProject||selectedReportCustomer||'Kunden und Baustellen';
+ root.append(heading);
+ const back=document.createElement('button'); back.type='button'; back.className='secondary'; back.textContent=selectedReportProject?'‹ Bauvorhaben':selectedReportCustomer?'‹ Kunden':'';
+ if(back.textContent){back.onclick=()=>{if(selectedReportProject)selectedReportProject=null;else selectedReportCustomer=null;renderTagesberichtArchive();};root.append(back);}
+ if(!saved.length){root.insertAdjacentHTML('beforeend','<div class="panel emptyState"><div class="emptyIcon">▤</div><b>Noch keine Tagesberichte</b><small>Gespeicherte Tagesberichte erscheinen hier.</small></div>');return;}
+ if(!selectedReportCustomer){
+   [...groups.keys()].sort((a,b)=>a.localeCompare(b,'de')).forEach(name=>{
+     const b=document.createElement('button');b.type='button';b.className='customerArchiveButton';b.innerHTML=`<span><strong>${esc(name)}</strong></span><b>›</b>`;
+     b.onclick=()=>{selectedReportCustomer=name;selectedReportProject=null;renderTagesberichtArchive();};root.append(b);
+   });return;
+ }
+ const projects=groups.get(selectedReportCustomer);
+ if(!projects){selectedReportCustomer=null;renderTagesberichtArchive();return;}
+ if(!selectedReportProject){
+   [...projects.entries()].sort((a,b)=>a[0].localeCompare(b[0],'de')).forEach(([name,items])=>{
+     const b=document.createElement('button');b.type='button';b.className='projectSelectButton';b.innerHTML=`<span class="projectSelectIcon">▣</span><span><strong>${esc(name)}</strong><small>${items.length} ${items.length===1?'Bericht':'Berichte'}</small></span><b>›</b>`;
+     b.onclick=()=>{selectedReportProject=name;renderTagesberichtArchive();};root.append(b);
+   });return;
+ }
+ const entries=projects.get(selectedReportProject)||[];
+ entries.slice().sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{
+   const row=document.createElement('div');row.className='reportRow';
+   row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus isSigned">Gespeichert</span></div><button type="button" class="openReport">Ansehen</button>`;
+   row.querySelector('button').onclick=()=>showSavedTagesbericht(r);
+   enableSwipeDelete(row,()=>{const list=getSavedTagesberichte();list.splice(i,1);localStorage.setItem('tagesberichte',JSON.stringify(list));renderTagesberichtArchive();});
+   root.append(row);
+ });
+}
+function showSavedTagesbericht(r){
+ const lines=[`Datum: ${formatDate(r.date)||'—'}`,`Kunde: ${r.customer||'—'}`,`Bauvorhaben: ${r.project||'—'}`,
+ `Mitarbeiter: ${(r.employees||[]).map(e=>`${e.name||''} (${e.role||e.service||''})`).join(', ')||'—'}`,
+ `Ausgeführte Arbeiten: ${(r.works||[]).join('; ')||'—'}`,`Materiallieferung: ${(r.materials||[]).join('; ')||'—'}`];
+ alert(lines.join('\\n'));
+}
 function collectTagesbericht(){
   return {
     type:'tagesbericht',
@@ -1074,7 +1126,7 @@ function saveTagesberichtAndPdf(){
   if(!hasReportSignature()){alert('Bitte zuerst unterschreiben.');return;}
   const data=collectTagesbericht();
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
-  reportsSaved.unshift({...data,signed:true,signedAt:new Date().toISOString()});
+  reportsSaved.unshift({...data,signed,signedAt:signed?new Date().toISOString():null});
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
   createTagesberichtPdf(data).then(ok=>{if(ok)alert('Bericht gespeichert und PDF erstellt.');});
 }
@@ -1217,12 +1269,26 @@ function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.wi
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
 $('review').onclick=()=>{renderSummary();show('summaryScreen')};
 $('backToEditorFromSummary').onclick=()=>show('editor');
-$('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()};
+$('signNow').onclick=()=>{show('signatureScreen');updateSignatureStatus()}; $('saveWithoutSignature').onclick=saveTagelohnWithoutSignature;
 $('backToSummary').onclick=()=>{renderSummary();show('summaryScreen')};
 $('cancelSignature').onclick=()=>show('summaryScreen');
 $('saveSignature').onclick=async()=>{
   if(!hasSignature()){alert('Bitte zuerst unterschreiben.');return}
-  const btn=$('saveSignature');
+  
+async function saveTagelohnWithoutSignature(){
+ const btn=$('saveWithoutSignature'); if(btn){btn.disabled=true;btn.textContent='Speichert…';}
+ try{
+   const saved=collect(); saved.signed=false; saved.signedAt=null;
+   if(editingReportIndex!==null&&reports[editingReportIndex])reports[editingReportIndex]=saved;
+   else{reports.unshift(saved);editingReportIndex=0;}
+   save();render();updateSignatureStatus();navigationHistory=[];
+   const pdfSaved=await createPdf({askLocation:true});
+   if(pdfSaved)alert('Nachweis ohne Unterschrift gespeichert und PDF gespeichert.');
+   show('archive');
+ }catch(err){console.error(err);alert('Der Nachweis konnte nicht vollständig gespeichert werden: '+err.message);}
+ finally{if(btn){btn.disabled=false;btn.textContent='Ohne Unterschrift speichern';}}
+}
+const btn=$('saveSignature');
   btn.disabled=true; btn.textContent='✓';
   try{
     const signed=collect();

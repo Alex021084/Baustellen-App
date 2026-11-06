@@ -2527,20 +2527,6 @@ body.tagelohn-clean #appNav button small {
   .servicePickerDialog{padding:26px 18px 20px}
 }
 
-
-/* Feiner abgestimmte Schrift in der Auswahl: Wörter bleiben zusammen */
-#requiredServiceButtons button.serviceChoiceButton{
-  font-size:15px;
-  line-height:1.22;
-  letter-spacing:-.015em;
-  padding:11px 10px;
-  overflow-wrap:break-word;
-  word-break:normal;
-  hyphens:none;
-}
-@media(max-width:420px){
-  #requiredServiceButtons button.serviceChoiceButton{
-    font-size:14px;
-    padding:10px 8px;
-  }
-}
+#tagesberichtArchiveList{display:flex;flex-direction:column;gap:10px;margin:16px 0 30px}
+#tagesberichtHome>.big{width:100%;margin:12px 0 18px}
+#tagesberichtHome .moduleHeader{display:flex;justify-content:space-between;align-items:center}
