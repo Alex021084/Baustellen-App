@@ -585,7 +585,7 @@ function timeOptions(selected=''){
     }
   }
   let html='<option value="">— Uhrzeit —</option>';
-  for(let h=4;h<=21;h++) for(const min of [0,15,30,45]){
+  for(let h=4;h<=21;h++) for(const min of (h===21?[0]:[0,15,30,45])){
     const v=String(h).padStart(2,'0')+':'+String(min).padStart(2,'0');
     html+=`<option value="${v}"${v===value?' selected':''}>${v}</option>`;
   }
