@@ -160,7 +160,7 @@ document.addEventListener('click', function(event){
   const button=event.target.closest('button');
   if(!button) return;
   const routes={
-    openTagelohn:()=>show('tagelohnHome'),
+    openTagelohn:()=>{renderTagelohnHome();show('tagelohnHome')},
     new2:()=>startNewTagelohn(),
     openTagesbericht:()=>{navigationHistory=[];renderTagesberichtArchive();show('tagesberichtHome');navigationHistory=[]},
     newTagesbericht:()=>{initTagesbericht();show('tagesbericht');},
@@ -606,6 +606,10 @@ function show(id, options={}){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const screen=$(id);
   if(screen) screen.classList.add('active');
+  // Beim Öffnen immer die aktuelle Nachweisliste neu aufbauen.
+  if(id==='tagelohnHome' && typeof renderTagelohnHome==='function'){
+    renderTagelohnHome();
+  }
 
   const nav=document.getElementById('appNav');
   if(nav) nav.style.display=(id==='home')?'none':'flex';
