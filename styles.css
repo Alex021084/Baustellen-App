@@ -3196,3 +3196,44 @@ body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn small {
 body.tagelohn-clean #tagelohnHome.active > .cards > #archiveBtn > strong {
   display:none !important;
 }
+
+
+/* v17: Tagelohn-Start zeigt direkt die Kundenliste wie Tagesberichte */
+body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList {
+  display:block !important;
+  width:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList .customerArchiveButton {
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-height:90px !important;
+  margin:10px 0 !important;
+  padding:18px 20px !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+  border:1px solid #dde2e6 !important;
+  border-radius:20px !important;
+  background:#fff !important;
+  color:#17212b !important;
+  text-align:left !important;
+  box-shadow:0 5px 16px rgba(23,35,47,.045) !important;
+}
+body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList .customerArchiveButton strong {
+  display:block !important;
+  font-size:18px !important;
+  line-height:1.25 !important;
+  font-weight:750 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList .customerArchiveButton > b {
+  color:#8d969e !important;
+  font-size:34px !important;
+  font-weight:300 !important;
+}
+body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList .emptyState {
+  margin:0 !important;
+}

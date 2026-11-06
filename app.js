@@ -975,6 +975,34 @@ function removeContractor(contractor){
   reports=reports.filter(r=>(r.contractor||'Unbekannter Auftraggeber').trim()!==contractor);
   save();render();
 }
+function renderTagelohnHome(){
+  const root=$('tagelohnCustomerList');
+  if(!root)return;
+  root.innerHTML='';
+  const groups=new Map();
+  reports.forEach(r=>{
+    const customer=(r.contractor||'Unbekannter Auftraggeber').trim()||'Unbekannter Auftraggeber';
+    groups.set(customer,(groups.get(customer)||0)+1);
+  });
+  if(!groups.size){
+    root.innerHTML='<div class="panel emptyState"><div class="emptyIcon">📋</div><b>Noch keine Nachweise</b><small>Gespeicherte Tagelohnnachweise erscheinen hier.</small></div>';
+    return;
+  }
+  [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'de')).forEach(([customer])=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='customerArchiveButton';
+    btn.innerHTML=`<span><strong>${esc(customer)}</strong></span><b>›</b>`;
+    btn.onclick=()=>{
+      archiveSelectedContractor=customer;
+      archiveSelectedProject=null;
+      render();
+      show('archive');
+    };
+    root.append(btn);
+  });
+}
+
 function render(){
   const l=$('list');
   const title=$('archiveTitle'), hint=$('archiveHint'), back=$('homeBtn');
@@ -1414,7 +1442,7 @@ async function createTagesberichtPdf(data){
 }
 
 $('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});tagelohnWizardStep=1;renderTagelohnWizard();show('editor')};
-$('openTagelohn').onclick=()=>show('tagelohnHome');
+$('openTagelohn').onclick=()=>{renderTagelohnHome();show('tagelohnHome')};
 $('openManagementGlobal').onclick=()=>show('managementHome');
 $('manageEmployeesGlobal').onclick=openEmployees;
 $('manageTagelohnServicesGlobal').onclick=openServices; $('manageReportServicesGlobal').onclick=openReportServices;
@@ -1447,7 +1475,7 @@ $('backToStartFromTagesbericht')?.addEventListener('click',()=>show('home'));
 initTagesbericht();
 initReportSignature();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
-$('archiveBtn').onclick=()=>{archiveSelectedContractor=null;archiveSelectedProject=null;render();show('archive')};$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
+$('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
 $('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
 $('customersBtn')?.addEventListener('click',openCustomers);
 $('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService; $('homeFromReportServices').onclick=()=>show('managementHome'); $('addReportService').onclick=addReportService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
