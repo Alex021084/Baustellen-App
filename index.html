@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v=tagelohn-workflow-49"></head><body>
+<link rel="stylesheet" href="styles.css?v=tagelohn-wizard-50"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -142,17 +142,17 @@
 </section>
 
 <section id="editor" class="screen" autocomplete="off">
-<div class="steps">1 Kopf · 2 Mitarbeiter · 3 Arbeiten · 4 Unterschrift · 5 PDF</div>
-<div class="panel"><h2>Kopfdaten</h2>
+<div class="steps" id="tagelohnStepIndicator">Schritt 1 von 3 · Kunde und Baustelle</div>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep1"><h2>Kunde und Baustelle</h2>
 <label class="dateField">Datum<div class="dateInputWrap"><input id="dateDisplay" type="text" readonly aria-label="Datum"><input id="date" type="date" class="nativeDatePicker" aria-label="Datum auswählen"></div></label>
 <label>Auftraggeber<select id="contractorSelect"></select></label>
 <button id="manageCustomers" class="titleBtn">＋ Kunden verwalten</button>
 <label>Anschrift<textarea id="address"></textarea></label>
 <label>Bauvorhaben<select id="projectSelect" aria-label="Bauvorhaben auswählen"></select><textarea id="project" class="projectManual" placeholder="Bauvorhaben eingeben..."></textarea></label></div>
-<div class="panel"><div class="title"><h2>Mitarbeiter / Funktionen</h2></div><div id="employees"></div><button id="addEmp">＋ Hinzufügen</button></div>
-<div class="panel"><h2>Ausgeführte Arbeiten</h2><div id="works"></div><button id="addWork">＋ Eintrag hinzufügen</button></div>
-<div class="panel"><h2>Material / sonstige Leistungen</h2><div id="materials"></div><button id="addMat">＋ Eintrag hinzufügen</button></div>
-<div class="panel signaturePanel"><h2>Kunde prüfen und unterschreiben</h2>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep2"><div class="title"><h2>Mitarbeiter</h2></div><div id="employees"></div><button id="addEmp">＋ Hinzufügen</button></div>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep3"><h2>Arbeiten</h2><div id="works"></div><button id="addWork">＋ Eintrag hinzufügen</button></div>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep3Material"><h2>Material / sonstige Leistungen</h2><div id="materials"></div><button id="addMat">＋ Eintrag hinzufügen</button></div>
+<div class="panel signaturePanel tagelohnWizardPanel" id="tagelohnStep4"><h2>Kunde prüfen und unterschreiben</h2>
 <div class="workflowItem">
   <div class="workflowHead"><span>1</span><b>Zusammenfassung prüfen</b></div>
   <p>Alle Angaben vor der Unterschrift kontrollieren.</p>
@@ -168,6 +168,10 @@
   <p>Den fertigen Nachweis als PDF erstellen.</p>
   <button id="pdf" class="primary workflowButton">PDF erstellen</button>
 </div>
+</div>
+<div class="tagelohnWizardControls" id="tagelohnWizardControls">
+  <button id="tagelohnStepBack" type="button" class="secondary">‹ Zurück</button>
+  <button id="tagelohnStepNext" type="button" class="primary">Weiter ›</button>
 </div>
 <div class="actions"><button id="save" class="primary">Nachweis speichern</button></div>
 
@@ -229,4 +233,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=tagelohn-workflow-49"></script></body></html>
+<script src="app.js?v=tagelohn-wizard-50"></script></body></html>

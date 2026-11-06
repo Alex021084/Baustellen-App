@@ -25,7 +25,7 @@ document.addEventListener('click', function(event){
   if(!button) return;
   const routes={
     openTagelohn:()=>show('tagelohnHome'),
-    new2:()=>{editingReportIndex=null;fill({});show('editor')},
+    new2:()=>{editingReportIndex=null;fill({});tagelohnWizardStep=1;renderTagelohnWizard();show('editor')},
     openTagesbericht:()=>{navigationHistory=[];renderTagesberichtArchive();show('tagesberichtHome');navigationHistory=[]},
     newTagesbericht:()=>{initTagesbericht();show('tagesbericht');},
     backToStartFromReports:()=>{selectedReportCustomer=null;selectedReportProject=null;show('home');},
@@ -944,7 +944,7 @@ function render(){
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
         fill(r);
-        show('editor');
+        tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
       };
       enableSwipeDelete(row,()=>removeReport(i));
       l.append(row);
@@ -1285,7 +1285,7 @@ async function createTagesberichtPdf(data){
   }
 }
 
-$('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});show('editor')};
+$('new').onclick=$('new2').onclick=()=>{editingReportIndex=null;fill({});tagelohnWizardStep=1;renderTagelohnWizard();show('editor')};
 $('openTagelohn').onclick=()=>show('tagelohnHome');
 $('openManagementGlobal').onclick=()=>show('managementHome');
 $('manageEmployeesGlobal').onclick=openEmployees;
@@ -1332,8 +1332,48 @@ let c=$('sig'),ctx=c.getContext('2d'),down=false;
 c.onpointerdown=e=>{down=true;ctx.beginPath();let p=pos(e);ctx.moveTo(p.x,p.y)};c.onpointermove=e=>{if(!down)return;let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()};window.onpointerup=()=>down=false;
 function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
+
+// Schrittweiser Tagelohn-Ablauf wie beim Tagesbericht.
+let tagelohnWizardStep=1;
+function renderTagelohnWizard(){
+  const editor=$('editor');
+  if(!editor)return;
+  [1,2,3,4].forEach(n=>{
+    const panel=$('tagelohnStep'+n);
+    if(panel)panel.classList.toggle('tagelohnStepHidden',n!==tagelohnWizardStep);
+  });
+  const material=$('tagelohnStep3Material');
+  if(material)material.classList.toggle('tagelohnStepHidden',tagelohnWizardStep!==3);
+  const indicator=$('tagelohnStepIndicator');
+  if(indicator)indicator.textContent=tagelohnWizardStep===1?'Schritt 1 von 3 · Kunde und Baustelle':tagelohnWizardStep===2?'Schritt 2 von 3 · Mitarbeiter':'Schritt 3 von 3 · Arbeiten';
+  const back=$('tagelohnStepBack'),next=$('tagelohnStepNext');
+  if(back)back.style.visibility=tagelohnWizardStep===1?'hidden':'visible';
+  if(next)next.textContent=tagelohnWizardStep===3?'Zusammenfassung anzeigen':'Weiter ›';
+  if(next)next.style.display='inline-flex';
+  const save=$('save');if(save)save.style.display='none';
+}
+$('tagelohnStepNext')?.addEventListener('click',()=>{
+  if(tagelohnWizardStep===1){
+    if(!$('contractorSelect').value){alert('Bitte zuerst einen Kunden auswählen.');return;}
+    if(!$('projectSelect').value&&!$('project').value.trim()){alert('Bitte zuerst eine Baustelle auswählen oder eingeben.');return;}
+    tagelohnWizardStep=2;renderTagelohnWizard();window.scrollTo(0,0);return;
+  }
+  if(tagelohnWizardStep===2){
+    const entries=[...document.querySelectorAll('#employees .employee')];
+    if(!entries.length){alert('Bitte mindestens einen Mitarbeiter hinzufügen.');return;}
+    tagelohnWizardStep=3;renderTagelohnWizard();window.scrollTo(0,0);return;
+  }
+  renderSummary();
+  show('summaryScreen');
+  const status=$('tagelohnSignatureStatus');
+  if(status)status.textContent=hasSignature()?'Unterschrift vorhanden':'Noch nicht unterschrieben';
+});
+$('tagelohnStepBack')?.addEventListener('click',()=>{
+  if(tagelohnWizardStep>1){tagelohnWizardStep--;renderTagelohnWizard();window.scrollTo(0,0);}
+  else goBackOneStep();
+});
 $('review').onclick=()=>{renderSummary();show('summaryScreen');const s=$('tagelohnSignatureStatus');if(s)s.textContent=hasSignature()?'Unterschrift vorhanden':'Noch nicht unterschrieben';};
-$('backToEditorFromSummary').onclick=()=>show('editor');
+$('backToEditorFromSummary').onclick=()=>tagelohnWizardStep=1;renderTagelohnWizard();show('editor');
 
 $('tagelohnReviewDetails')?.addEventListener('click',()=>{$('summaryContent')?.scrollIntoView({behavior:'smooth',block:'start'});});
 $('saveTagelohnFromSummary')?.addEventListener('click',()=>{
