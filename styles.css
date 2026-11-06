@@ -3242,10 +3242,13 @@ body.tagelohn-clean #tagelohnHome.active > #tagelohnCustomerList .emptyState {
 
 
 
-/* v20: gut lesbare, aber nicht übergroße Beschriftung */
-body.tagelohn-clean #tagelohnHome.active > #new2 {
+
+
+
+/* v21: kompakte Beschriftung für den Tagelohn-Startbutton */
+body.tagelohn-clean #tagelohnHome #new2 {
   font-size: 18px !important;
-  line-height: 1.25 !important;
-  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
   letter-spacing: 0 !important;
 }

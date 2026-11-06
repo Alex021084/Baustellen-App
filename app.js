@@ -783,6 +783,8 @@ function item(id,v=''){
   $(id).append(d);
 }
 
+let c=$('sig'),ctx=c.getContext('2d'),down=false;
+
 function hasSignature(){
   // Nur tatsächlich sichtbare Striche zählen. Ein leerer, weißer/undurchsichtiger
   // Canvas-Hintergrund darf nicht als Unterschrift gelten.
@@ -1497,7 +1499,6 @@ $('date').addEventListener('change',syncDateDisplay);
 syncDateDisplay();
 persistCustomers();persistServices();persistEmployees();renderCustomerSelect('');save();
 
-let c=$('sig'),ctx=c.getContext('2d'),down=false;
 c.onpointerdown=e=>{down=true;ctx.beginPath();let p=pos(e);ctx.moveTo(p.x,p.y)};c.onpointermove=e=>{if(!down)return;let p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()};window.onpointerup=()=>down=false;
 function pos(e){let r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
 $('clear').onclick=()=>{clearSignature();updateSignatureStatus()};
