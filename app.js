@@ -1,5 +1,52 @@
 
+
 const $=x=>document.getElementById(x);
+
+// Eigenes Stunden-Zahlenfeld: verhindert zuverlässig die iOS-Safari-Tastatur.
+let activeHoursInput=null;
+function ensureHoursKeypad(){
+  if(document.getElementById('hoursKeypad')) return;
+  const panel=document.createElement('div');
+  panel.id='hoursKeypad';
+  panel.className='hoursKeypad';
+  panel.setAttribute('aria-label','Stunden eingeben');
+  panel.innerHTML=`
+    <div class="hoursKeypadHead"><strong>Stunden eingeben</strong><button type="button" data-hours-key="done">Fertig ✓</button></div>
+    <div class="hoursKeypadGrid">
+      ${['1','2','3','4','5','6','7','8','9',',','0','back'].map(k=>`<button type="button" data-hours-key="${k}">${k==='back'?'⌫':k}</button>`).join('')}
+    </div>`;
+  document.body.append(panel);
+  panel.addEventListener('pointerdown',e=>e.preventDefault());
+  panel.addEventListener('click',e=>{
+    const key=e.target.closest('[data-hours-key]')?.dataset.hoursKey;
+    if(!key||!activeHoursInput)return;
+    let value=activeHoursInput.value||'';
+    if(key==='done'){
+      panel.classList.remove('open');
+      activeHoursInput.blur();
+      activeHoursInput=null;
+      return;
+    }
+    if(key==='back') value=value.slice(0,-1);
+    else if(key===',' ){ if(!value.includes(',')) value=value?value+',':'0,'; }
+    else value+=key;
+    activeHoursInput.value=value;
+    activeHoursInput.dispatchEvent(new Event('input',{bubbles:true}));
+    activeHoursInput.dispatchEvent(new Event('change',{bubbles:true}));
+  });
+}
+document.addEventListener('focusin',e=>{
+  if(!e.target.matches('.hours'))return;
+  ensureHoursKeypad();
+  activeHoursInput=e.target;
+  document.getElementById('hoursKeypad').classList.add('open');
+});
+document.addEventListener('focusout',e=>{
+  if(!e.target.matches('.hours'))return;
+  // A pointer interaction on the keypad is prevented from stealing focus.
+  setTimeout(()=>{if(!activeHoursInput)document.getElementById('hoursKeypad')?.classList.remove('open');},0);
+});
+
 
 // Hauptnavigation sofort registrieren, bevor weitere App-Initialisierung startet.
 document.addEventListener('click', function(event) {
@@ -13,6 +60,7 @@ document.addEventListener('click', function(event) {
     if (typeof window !== 'undefined') window.currentSavedTagesbericht = null;
     if (typeof navigationHistory !== 'undefined') navigationHistory = [];
     show('home', {replaceHistory:true});
+    if (typeof navigationHistory !== 'undefined') navigationHistory = [];
   } else {
     goBackOneStep();
   }
@@ -697,7 +745,7 @@ function addEmp(e={}){
   <label>Name des Mitarbeiters<select class="name" aria-label="Mitarbeiter auswählen">${employeeOptions(e.name||'')}</select></label>
   <input class="service" type="hidden" value="${esc(selectedService)}">
   <div class="selectedServiceLabel">Leistung: <strong>${esc(selectedService||'Noch nicht ausgewählt')}</strong></div>
-  <label>Stunden<input class="hours" type="number" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" step=".25" value="${e.hours??''}"></label>
+  <label>Stunden<input class="hours" type="text" inputmode="none" autocomplete="off" readonly aria-label="Stunden – Zahlenfeld öffnen" value="${String(e.hours??'').replace('.',',')}"></label>
   <div class="grid grid3"><label>Anfang<select class="start timeSelect" aria-label="Anfang auswählen">${timeOptions(e.start||'')}</select></label><label>Ende<select class="end timeSelect" aria-label="Ende auswählen">${timeOptions(e.end||'')}</select></label><label>Pause<select class="pause" aria-label="Pause auswählen">${pauseOptions(e.pause??0)}</select></label></div>`;
   d.querySelector('.del').onclick=()=>d.remove();
   d.querySelector('.name').addEventListener('change',()=>{
@@ -707,7 +755,12 @@ function addEmp(e={}){
   ['start','end','pause'].forEach(c=>d.querySelector('.'+c).oninput=()=>calc(d));
   $('employees').append(d);
 }
-function calc(d){let s=d.querySelector('.start').value,e=d.querySelector('.end').value,p=+(d.querySelector('.pause').value||0);if(s&&e){let a=s.split(':').map(Number),b=e.split(':').map(Number),m=b[0]*60+b[1]-a[0]*60-a[1]-p;if(m>=0)d.querySelector('.hours').value=(m/60).toFixed(2)}}
+function parseHoursValue(value){
+  const normalized=String(value??'').trim().replace(',','.');
+  const number=Number(normalized);
+  return Number.isFinite(number)?number:0;
+}
+function calc(d){let s=d.querySelector('.start').value,e=d.querySelector('.end').value,p=+(d.querySelector('.pause').value||0);if(s&&e){let a=s.split(':').map(Number),b=e.split(':').map(Number),m=b[0]*60+b[1]-a[0]*60-a[1]-p;if(m>=0)d.querySelector('.hours').value=(m/60).toFixed(2).replace('.',',')}}
 function item(id,v=''){
   const d=document.createElement('div');
   d.className='item';
@@ -738,12 +791,12 @@ function updateSignatureStatus(){
   s.classList.toggle('signed',signed);
 }
 function summaryMoneyHours(){
-  return [...document.querySelectorAll('.employee')].reduce((sum,d)=>sum+(Number(d.querySelector('.hours')?.value)||0),0);
+  return [...document.querySelectorAll('.employee')].reduce((sum,d)=>sum+(parseHoursValue(d.querySelector('.hours')?.value)),0);
 }
 function renderSummary(){
   const data=collect();
   const rows=data.employees.filter(e=>e.name||e.service||e.hours||e.start||e.end||e.pause).map(e=>`
-    <tr><td>${esc(e.name||'—')}</td><td>${esc(e.service||'—')}</td><td>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td></tr>`).join('');
+    <tr><td>${esc(e.name||'—')}</td><td>${esc(e.service||'—')}</td><td>${(parseHoursValue(e.hours)).toFixed(2).replace('.',',')} Std.</td><td>${esc(e.start||'—')}</td><td>${esc(e.end||'—')}</td><td>${e.pause?esc(String(e.pause))+' min':'—'}</td></tr>`).join('');
   const savedForSummary = Number.isInteger(editingReportIndex) ? reports[editingReportIndex] : null;
   const summaryIsSigned = hasSignature();
   const editPencil = step => summaryIsSigned ? '' :
@@ -841,7 +894,7 @@ function fill(r){
     updateTagelohnSummarySignatureStatus();
   }
 }
-function collect(){return{date:$('date').value,contractor:contractorName(),address:$('address').value,project:$('project').value,client:$('client').value,employees:[...document.querySelectorAll('.employee')].map(d=>{const service=d.querySelector('.service').value;return {hours:+d.querySelector('.hours').value||0,service,activity:service,name:d.querySelector('.name').value,start:d.querySelector('.start').value,end:d.querySelector('.end').value,pause:+d.querySelector('.pause').value||0}}),works:[...document.querySelectorAll('#works input')].map(x=>x.value).filter(Boolean),materials:[...document.querySelectorAll('#materials input')].map(x=>x.value).filter(Boolean),signature:$('sig').toDataURL()}}
+function collect(){return{date:$('date').value,contractor:contractorName(),address:$('address').value,project:$('project').value,client:$('client').value,employees:[...document.querySelectorAll('.employee')].map(d=>{const service=d.querySelector('.service').value;return {hours:parseHoursValue(d.querySelector('.hours').value),service,activity:service,name:d.querySelector('.name').value,start:d.querySelector('.start').value,end:d.querySelector('.end').value,pause:+d.querySelector('.pause').value||0}}),works:[...document.querySelectorAll('#works input')].map(x=>x.value).filter(Boolean),materials:[...document.querySelectorAll('#materials input')].map(x=>x.value).filter(Boolean),signature:$('sig').toDataURL()}}
 function save(){localStorage.tagelohn=JSON.stringify(reports);$('count').textContent=reports.length+' Nachweis'+(reports.length==1?'':'e')}
 
 // Merkt sich den zuletzt geöffneten/geschlossenen Zustand der Auftraggeber- und Baustellenordner.
@@ -1107,7 +1160,7 @@ async function createPdf(options={}){
     splitLines(data.address).slice(0,2).forEach((ln,i)=>page.drawText(ln,{x:54,y:H-(180+i*20),size:9.5,font:normal}));
     cover(180,241,375,24);drawWrapped(page,normal,data.project||'',198,H-263,350,9.5,1,2);
     const rowTop=H-320,rowStep=20;
-    data.employees.slice(0,12).forEach((e,i)=>{const y=rowTop-i*rowStep,hours=(Number(e.hours)||0).toFixed(2).replace('.',',');if(hours!=='0,00')page.drawText(hours,{x:84,y,size:9.5,font:normal});if(e.service||e.activity)drawWrapped(page,normal,e.service||e.activity,145,y,92,9.2,1,2);if(e.name)page.drawText(e.name,{x:247,y,size:9.5,font:normal});if(e.start)page.drawText(e.start,{x:412,y,size:9.5,font:normal});if(e.end)page.drawText(e.end,{x:466,y,size:9.5,font:normal});if(Number(e.pause))page.drawText(String(e.pause),{x:517,y,size:9.5,font:normal})});
+    data.employees.slice(0,12).forEach((e,i)=>{const y=rowTop-i*rowStep,hours=(parseHoursValue(e.hours)).toFixed(2).replace('.',',');if(hours!=='0,00')page.drawText(hours,{x:84,y,size:9.5,font:normal});if(e.service||e.activity)drawWrapped(page,normal,e.service||e.activity,145,y,92,9.2,1,2);if(e.name)page.drawText(e.name,{x:247,y,size:9.5,font:normal});if(e.start)page.drawText(e.start,{x:412,y,size:9.5,font:normal});if(e.end)page.drawText(e.end,{x:466,y,size:9.5,font:normal});if(Number(e.pause))page.drawText(String(e.pause),{x:517,y,size:9.5,font:normal})});
     const contentTop=H-565;data.works.slice(0,12).forEach((v,i)=>drawWrapped(page,normal,'• '+v,54,contentTop-i*14,285,9.2,1,2));data.materials.slice(0,12).forEach((v,i)=>drawWrapped(page,normal,'• '+v,355,contentTop-i*14,195,9.2,1,2));
     if(data.signature&&data.signature.length>100){const sigPng=await pdf.embedPng(data.signature);page.drawImage(sigPng,{x:54,y:70,width:190,height:70,opacity:1})}
     const out=await pdf.save({useObjectStreams:false});
@@ -1243,7 +1296,7 @@ function collectTagesbericht(){
   };
 }
 function renderTagesberichtSummary(d=collectTagesbericht()){
-  const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>Leistung: ${esc(e.service||'—')} · ${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(Number(e.hours)||0).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
+  const emp=d.employees.map(e=>`<div class="reportSummaryEmployee"><b>${esc(e.name||'—')}</b><span>Leistung: ${esc(e.service||'—')} · ${esc(e.role||'—')} · ${esc(e.start||'—')}–${esc(e.end||'—')} · ${e.pause?esc(String(e.pause))+' min Pause':'keine Pause'} · <strong>${(parseHoursValue(e.hours)).toFixed(2).replace('.',',')} Std.</strong></span></div>`).join('');
   const list=(arr)=>arr.length?`<ul class="reportSummaryList">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="empty">Keine Angaben.</div>';
   $('reportSummaryContent').innerHTML=`
     <div class="reportSummaryGrid">

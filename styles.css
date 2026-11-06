@@ -2864,3 +2864,13 @@ body.tagelohn-clean #appNav button small {
 }
 .summaryEditPencil span{display:block;transform:translateY(-1px)}
 .summaryEditPencil:active{background:#e2edf8;transform:scale(.96)}
+
+
+/* Eigenes kompaktes Zahlenfeld für die Stundeneingabe auf iPhone und iPad */
+.hoursKeypad{display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:99999;background:#f2f3f5;border:1px solid #cfd4da;border-radius:20px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.22)}
+.hoursKeypad.open{display:block}
+.hoursKeypadHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 10px;font-size:16px}
+.hoursKeypadHead button{border:0;border-radius:12px;background:#e7f5eb;color:#267344;font-weight:700;padding:10px 16px}
+.hoursKeypadGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.hoursKeypadGrid button{min-height:52px;border:1px solid #d5d9de;border-radius:12px;background:#fff;color:#202630;font-size:24px;font-weight:650;touch-action:manipulation}
+.hoursKeypadGrid button:active{background:#e9eef4}
