@@ -3395,3 +3395,48 @@ body.home-screen #home.active .startChoices {
     margin-top: 5px !important;
   }
 }
+
+/* v37 – Startseite auf iPad und iPhone einheitlich anpassen */
+#home.startScreen.active .companyLogoWrap {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 270px !important;
+  min-height: 270px !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+}
+#home.startScreen.active .companyLogo {
+  display: block !important;
+  width: min(82vw, 680px) !important;
+  height: 255px !important;
+  max-width: 100% !important;
+  max-height: 255px !important;
+  object-fit: contain !important;
+}
+#home.startScreen.active .welcome {
+  flex: 0 0 auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#home.startScreen.active .welcome h2 {
+  margin-top: 0 !important;
+  margin-bottom: 2px !important;
+}
+#home.startScreen.active .startChoices {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+  justify-content: flex-start !important;
+  margin-top: 6px !important;
+}
+@media (max-height: 700px) {
+  #home.startScreen.active .companyLogoWrap {
+    height: 190px !important;
+    min-height: 190px !important;
+  }
+  #home.startScreen.active .companyLogo {
+    height: 180px !important;
+    max-height: 180px !important;
+  }
+}
