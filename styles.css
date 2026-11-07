@@ -3302,3 +3302,43 @@ body.tagelohn-clean #tagelohnHome #new2 {
 #editor .tagelohnWizardPanel #addMat:active{
   background:#e4f2e8;
 }
+
+
+/* v33: Startseite – Firmenlogo größer, Überschrift näher an den Kacheln */
+#home.active .companyLogoWrap {
+  box-sizing: border-box !important;
+  height: clamp(175px, 24dvh, 220px) !important;
+  min-height: 175px !important;
+  margin: 0 0 12px !important;
+  padding: 0 !important;
+}
+#home.active .companyLogo {
+  width: min(96vw, 680px) !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: clamp(165px, 22.5dvh, 210px) !important;
+  object-fit: contain !important;
+}
+#home.active .welcome {
+  padding-bottom: 0 !important;
+}
+#home.active .welcome h2 {
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+#home.active .startChoices {
+  margin-top: 0 !important;
+}
+@media (max-height: 700px) {
+  #home.active .companyLogoWrap {
+    height: 155px !important;
+    min-height: 155px !important;
+    margin-bottom: 8px !important;
+  }
+  #home.active .companyLogo {
+    max-height: 150px !important;
+  }
+  #home.active .welcome h2 {
+    margin-bottom: 3px !important;
+  }
+}
