@@ -3440,3 +3440,25 @@ body.home-screen #home.active .startChoices {
     max-height: 180px !important;
   }
 }
+
+/* v38 – gezielte größere Darstellung auf dem iPad */
+@media (min-width: 700px) {
+  #home.startScreen.active .companyLogoWrap {
+    height: 340px !important;
+    min-height: 340px !important;
+    margin-bottom: 22px !important;
+  }
+  #home.startScreen.active .companyLogo {
+    width: min(100vw, 900px) !important;
+    height: 325px !important;
+    max-height: 325px !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+  }
+  #home.startScreen.active .welcome h2 {
+    margin-bottom: 18px !important;
+  }
+  #home.startScreen.active .startChoices {
+    margin-top: 22px !important;
+  }
+}
