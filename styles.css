@@ -3343,32 +3343,55 @@ body.tagelohn-clean #tagelohnHome #new2 {
   }
 }
 
-/* Version 35: Startseite – Logo sichtbar vergrößern und Überschrift näher an die Kacheln */
-#home.startScreen .companyLogoWrap {
-  height: 245px !important;
-  min-height: 245px !important;
-  margin: 0 0 8px !important;
+/* v36 – endgültige Startseiten-Korrektur: überschreibt auch die späteren Layout-Regeln */
+body.home-screen #home.active .welcome {
+  flex: 0 0 auto !important;
+  padding-bottom: 0 !important;
+}
+body.home-screen #home.active .companyLogoWrap {
+  box-sizing: border-box !important;
+  height: 225px !important;
+  min-height: 225px !important;
+  margin: 0 0 10px !important;
   padding: 0 !important;
 }
-#home.startScreen .companyLogo {
-  width: min(96vw, 760px) !important;
+body.home-screen #home.active .companyLogo {
+  display: block !important;
+  width: min(96vw, 680px) !important;
+  height: 215px !important;
+  max-height: 215px !important;
   max-width: 100% !important;
-  height: auto !important;
-  max-height: 235px !important;
   object-fit: contain !important;
 }
-#home.startScreen .welcome {
-  padding: 0 !important;
-  margin: 0 !important;
-  flex: 0 0 auto !important;
-}
-#home.startScreen .welcome h2 {
+body.home-screen #home.active .welcome small {
   margin-top: 0 !important;
-  margin-bottom: 0 !important;
+  margin-bottom: 5px !important;
 }
-#home.startScreen .startChoices {
+body.home-screen #home.active .welcome h2 {
+  margin-top: 0 !important;
+  margin-bottom: 2px !important;
+}
+body.home-screen #home.active .welcome p {
+  margin: 0 !important;
+}
+body.home-screen #home.active .startChoices {
   flex: 0 0 auto !important;
-  margin-top: 4px !important;
+  min-height: 0 !important;
   justify-content: flex-start !important;
-  gap: 12px !important;
+  margin-top: 6px !important;
+  padding-bottom: 2px !important;
+}
+@media (max-height: 700px) {
+  body.home-screen #home.active .companyLogoWrap {
+    height: 190px !important;
+    min-height: 190px !important;
+    margin-bottom: 8px !important;
+  }
+  body.home-screen #home.active .companyLogo {
+    height: 180px !important;
+    max-height: 180px !important;
+  }
+  body.home-screen #home.active .startChoices {
+    margin-top: 5px !important;
+  }
 }
