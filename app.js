@@ -1457,7 +1457,11 @@ function renderTagesberichtArchive(){
  const entries=projects.get(selectedReportProject)||[];
  entries.slice().sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{
    const row=document.createElement('div');row.className='reportRow';
-   row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus isSigned">Gespeichert</span></div><button type="button" class="openReport">Ansehen</button>`;
+   const statusBadges=[
+     r.signed?'<span class="reportStatus isSigned">✓ Unterschrieben</span>':'',
+     r.pdfCreated?'<span class="reportStatus isPdfCreated">📄 PDF erstellt</span>':''
+   ].filter(Boolean).join(' ');
+   row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong>${statusBadges}</div><button type="button" class="openReport">Ansehen</button>`;
    row.querySelector('button').onclick=()=>showSavedTagesbericht(r);
    enableSwipeDelete(row,()=>{const list=getSavedTagesberichte();list.splice(i,1);localStorage.setItem('tagesberichte',JSON.stringify(list));renderTagesberichtArchive();});
    root.append(row);
@@ -1510,10 +1514,28 @@ async function saveTagesberichtAndPdf(requireSignature=false){
   if(requireSignature&&!signed){alert('Bitte unterschreiben oder ohne Unterschrift speichern.');return;}
   const data=collectTagesbericht();
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
-  reportsSaved.unshift({...data,signed,signedAt:signed?new Date().toISOString():null});
+  const savedEntry={...data,signed,signedAt:signed?new Date().toISOString():null,pdfCreated:false,pdfCreatedAt:null};
+  reportsSaved.unshift(savedEntry);
   localStorage.setItem('tagesberichte',JSON.stringify(reportsSaved));
   const ok=await createTagesberichtPdf(data);
-  if(ok)alert(signed?'Bericht gespeichert und PDF erstellt.':'Bericht ohne Unterschrift gespeichert und PDF erstellt.');
+  if(ok){
+    // PDF-Status am gerade gespeicherten Bericht dauerhaft hinterlegen.
+    const currentReports=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
+    const match=currentReports.findIndex(r=>r===savedEntry);
+    // JSON-Lesen erzeugt neue Objekte; der neue Eintrag steht an erster Stelle.
+    const targetIndex=match>=0?match:currentReports.findIndex(r=>
+      r.date===savedEntry.date &&
+      r.customer===savedEntry.customer &&
+      r.project===savedEntry.project &&
+      r.pdfCreated!==true
+    );
+    if(targetIndex>=0){
+      currentReports[targetIndex].pdfCreated=true;
+      currentReports[targetIndex].pdfCreatedAt=new Date().toISOString();
+      localStorage.setItem('tagesberichte',JSON.stringify(currentReports));
+    }
+    alert(signed?'Bericht gespeichert und PDF erstellt.':'Bericht ohne Unterschrift gespeichert und PDF erstellt.');
+  }
   renderTagesberichtArchive?.();
 }
 function tagesberichtPdfFilename(data){

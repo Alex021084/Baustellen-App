@@ -3252,3 +3252,17 @@ body.tagelohn-clean #tagelohnHome #new2 {
   font-weight: 700 !important;
   letter-spacing: 0 !important;
 }
+
+/* Statushinweis für erfolgreich erstellte Tagesbericht-PDFs */
+.reportStatus.isPdfCreated{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  margin-left:7px;
+  padding:3px 8px;
+  border-radius:999px;
+  background:#e8f1ff;
+  color:#245da8;
+  font-size:12px;
+  font-weight:650;
+}
