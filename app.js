@@ -899,7 +899,7 @@ function addEmp(e={}){
   const selectedService=e.service||e.activity||'';
   const d=document.createElement('div'); d.className='employee';
   d.innerHTML=`<button type="button" class="del">Löschen</button><b>Mitarbeiter</b>
-  <label>Name des Mitarbeiters<select class="name" aria-label="Mitarbeiter auswählen">${employeeOptions(e.name||'')}</select></label>
+  <label>Name des Mitarbeiters<select class="name" autocomplete="off" aria-label="Mitarbeiter auswählen">${employeeOptions(e.name||'')}</select></label>
   <input class="service" type="hidden" value="${esc(selectedService)}">
   <div class="selectedServiceLabel">Leistung: <strong>${esc(selectedService||'Noch nicht ausgewählt')}</strong></div>
   <label>Stunden<input class="hours" type="text" inputmode="none" autocomplete="off" readonly aria-label="Stunden – Zahlenfeld öffnen" value="${String(e.hours??'').replace('.',',')}"></label>
@@ -921,10 +921,23 @@ function calc(d){let s=d.querySelector('.start').value,e=d.querySelector('.end')
 function item(id,v=''){
   const d=document.createElement('div');
   d.className='item';
-  const fieldName=id==='works'?'tagelohn-work-entry':'tagelohn-material-entry';
-  d.innerHTML=`<input type="text" name="${fieldName}" value="${esc(v)}" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="Eintrag eingeben…"><button type="button" class="del" aria-label="Eintrag entfernen">×</button>`;
-  d.querySelector('button').onclick=()=>d.remove();
+  // Kein wiederverwendeter Feldname: Safari darf keinen alten Eintrag
+  // automatisch in eine neu hinzugefügte Zeile einsetzen.
+  const input=document.createElement('input');
+  input.type='text';
+  input.value=String(v??'');
+  input.autocomplete='off';
+  input.setAttribute('autocapitalize','sentences');
+  input.setAttribute('spellcheck','false');
+  input.setAttribute('data-form-type','other');
+  input.placeholder='Eintrag eingeben…';
+  input.setAttribute('aria-label','Eintrag eingeben');
+  const del=document.createElement('button');
+  del.type='button'; del.className='del'; del.setAttribute('aria-label','Eintrag entfernen'); del.textContent='×';
+  del.onclick=()=>d.remove();
+  d.append(input,del);
   $(id).append(d);
+  if(!v) input.value='';
 }
 
 var c=$('sig'),ctx=c.getContext('2d'),down=false;

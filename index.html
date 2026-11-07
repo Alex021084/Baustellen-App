@@ -149,9 +149,9 @@
 <button id="manageCustomers" class="titleBtn">＋ Kunden verwalten</button>
 <label>Anschrift<textarea id="address"></textarea></label>
 <label>Bauvorhaben<select id="projectSelect" aria-label="Bauvorhaben auswählen"></select><textarea id="project" class="projectManual" placeholder="Bauvorhaben eingeben..."></textarea></label></div>
-<div class="panel tagelohnWizardPanel" id="tagelohnStep2"><div class="title"><h2>Mitarbeiter</h2></div><div id="employees"></div><button id="addEmp">＋ Hinzufügen</button></div>
-<div class="panel tagelohnWizardPanel" id="tagelohnStep3"><h2>Arbeiten</h2><div id="works"></div><button id="addWork">＋ Eintrag hinzufügen</button></div>
-<div class="panel tagelohnWizardPanel" id="tagelohnStep3Material"><h2>Material / sonstige Leistungen</h2><div id="materials"></div><button id="addMat">＋ Eintrag hinzufügen</button></div>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep2"><div class="title"><h2>Mitarbeiter</h2></div><div id="employees"></div><button id="addEmp" type="button" class="reportAddEmployee">＋ Hinzufügen</button></div>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep3"><h2>Arbeiten</h2><div id="works"></div><button id="addWork" type="button" class="reportAddEntry">＋ Eintrag hinzufügen</button></div>
+<div class="panel tagelohnWizardPanel" id="tagelohnStep3Material"><h2>Material / sonstige Leistungen</h2><div id="materials"></div><button id="addMat" type="button" class="reportAddEntry">＋ Eintrag hinzufügen</button></div>
 <div class="panel signaturePanel tagelohnWizardPanel" id="tagelohnStep4"><h2>Kunde prüfen und unterschreiben</h2>
 <div class="workflowItem">
   <div class="workflowHead"><span>1</span><b>Zusammenfassung prüfen</b></div>
@@ -220,4 +220,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=pdf-hinweis-v31-20261107"></script></body></html>
+<script src="app.js?v=tagelohn-add-buttons-v32-20261107"></script></body></html>

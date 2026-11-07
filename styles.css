@@ -3279,3 +3279,26 @@ body.tagelohn-clean #tagelohnHome #new2 {
   font-size:12px;
   font-weight:650;
 }
+
+/* Tagelohn-Wizard: Hinzufügen-Buttons wie im Tagesbericht grün darstellen.
+   Die ID-Regeln der ursprünglichen Buttons werden damit gezielt überstimmt. */
+#editor .tagelohnWizardPanel #addEmp,
+#editor .tagelohnWizardPanel #addWork,
+#editor .tagelohnWizardPanel #addMat{
+  display:block;
+  width:100%;
+  min-height:50px;
+  margin-top:12px;
+  padding:10px 14px;
+  border:1px solid rgba(31,93,61,.25);
+  border-radius:14px;
+  background:#f1f8f3;
+  color:#1f5d3d;
+  font-size:17px;
+  font-weight:800;
+}
+#editor .tagelohnWizardPanel #addEmp:active,
+#editor .tagelohnWizardPanel #addWork:active,
+#editor .tagelohnWizardPanel #addMat:active{
+  background:#e4f2e8;
+}
