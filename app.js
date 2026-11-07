@@ -1260,7 +1260,8 @@ function render(){
       const row=document.createElement('div');
       row.className='reportRow';
       const signed=!!r.signed;
-      row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span></div><button type="button" class="openReport">Öffnen</button>`;
+      const pdfBadge=r.pdfCreated?'<span class="reportStatus isPdfCreated">📄 PDF erstellt</span>':'';
+      row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span>${pdfBadge}</div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
         tagelohnReadOnly=false;
@@ -1315,6 +1316,16 @@ function pdfFilename(data){
 
 async function createPdf(options={}){
   const data=collect();
+  const markCurrentTagelohnPdfCreated=()=>{
+    if(editingReportIndex===null || !reports[editingReportIndex])return;
+    reports[editingReportIndex]={
+      ...reports[editingReportIndex],
+      pdfCreated:true,
+      pdfCreatedAt:new Date().toISOString()
+    };
+    save();
+    render();
+  };
   // Auch beim direkten Erstellen einer PDF wird der aktuelle Nachweis in der
   // App gespeichert. So bleibt er unter "Nachweise" erhalten, unabhängig
   // davon, ob der Benutzer den anschließenden Datei-Speicherdialog abbricht.
@@ -1374,6 +1385,7 @@ async function createPdf(options={}){
         const file=new File([blob],filename,{type:'application/pdf'});
         if(navigator.canShare({files:[file]})){
           await navigator.share({files:[file]});
+          markCurrentTagelohnPdfCreated();
           return true;
         }
       }
@@ -1382,6 +1394,7 @@ async function createPdf(options={}){
       const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
+    markCurrentTagelohnPdfCreated();
     return true;
   }catch(err){
     if(err?.name==='AbortError') return false;

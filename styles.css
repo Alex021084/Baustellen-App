@@ -3266,3 +3266,16 @@ body.tagelohn-clean #tagelohnHome #new2 {
   font-size:12px;
   font-weight:650;
 }
+
+/* PDF-Hinweis in der Tagelohn-Nachweisübersicht */
+.reportStatus.isPdfCreated{
+  display:inline-flex;
+  align-items:center;
+  margin:4px 0 0 7px;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#e8f1ff;
+  color:#245da8;
+  font-size:12px;
+  font-weight:650;
+}
