@@ -276,9 +276,10 @@
       ready = true;
       showStatus('Cloud: synchronisiert');
     } catch (error) {
-      console.error('Baustellen-Cloud:', error);
-      showStatus('Cloud: Fehler – bitte prüfen');
-    } finally {
+
+  console.error('Baustellen-Cloud:', error);
+
+  showStatus('Cloud-Fehler: ' + (error.message || String(error)).slice(0, 90));    } finally {
       running = false;
     }
   }
