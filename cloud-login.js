@@ -2,7 +2,7 @@
   "use strict";
   const URL = "https://vdzepnddsnspnmaintcb.supabase.co";
   const KEY = "sb_publishable_g0H7rda_fWQL_LaDggAHHA_5qpspRoc";
-  const FN = URL + "/functions/v1/username-login";
+  const FN = URL + "/functions/v1/username-auth";
   let supa;
 
   const css = document.createElement("style");
