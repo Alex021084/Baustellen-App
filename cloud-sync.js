@@ -279,7 +279,8 @@
 
   console.error('Baustellen-Cloud:', error);
 
-  showStatus('Cloud-Fehler: ' + (error.message || String(error)).slice(0, 90));    } finally {
+  showStatus('Cloud-Fehler: ' + (error.message || String(error)).slice(0, 90));    
+    } finally {
       running = false;
     }
   }
