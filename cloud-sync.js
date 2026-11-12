@@ -113,7 +113,14 @@
     for (const [category, key] of Object.entries(MASTER)) {
       if (!initial && !changed(key)) continue;
 
-      const local = read(key);
+      const localRaw = read(key);
+
+// Entfernte Testkunden nicht wieder hochladen.
+const local = category === 'customers'
+  ? localRaw.filter(item =>
+      String(item?.name || '').trim().toLowerCase() !== 'cloudtest'
+    )
+  : localRaw;
 
       const { data: rows, error } = await c
         .from('shared_master_data')
