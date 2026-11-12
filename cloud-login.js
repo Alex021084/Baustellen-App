@@ -1,253 +1,223 @@
 
-/* Cloud-Synchronisierung für die Baustellen-App.
-   Benötigt cloud-login.js und die Supabase-Tabellen. */
+/* Baustellen-App – Anmeldung über Supabase
+   Benutzername und Passwort statt sichtbarer E-Mail-Adresse.
+   Stellt window.BaustellenCloud.client für cloud-sync.js bereit.
+*/
 (() => {
   'use strict';
 
-  const MASTER_KEYS = {
-    customers: 'tagelohnCustomers',
-    employees: 'tagelohnEmployees',
-    tagelohnServices: 'tagelohnServices',
-    reportServices: 'tagesberichtServices',
-    reportRoles: 'tagesberichtFunktionen'
-  };
+  const SUPABASE_URL = 'https://vdzepnddsnspnmaintcb.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_g0H7rda_fWQL_LaDggAHHA_5qpspRoc';
+  const AUTH_URL = SUPABASE_URL + '/functions/v1/username-auth';
 
-  const DOC_KEYS = {
-    tagelohn: 'tagelohn',
-    tagesbericht: 'tagesberichte'
-  };
+  let client = null;
 
-  let busy = false;
-  let timer = null;
-  let bootstrapped = false;
+  function loadSupabase() {
+    return new Promise((resolve, reject) => {
+      if (window.supabase?.createClient) {
+        resolve();
+        return;
+      }
 
-  const read = (key, fallback) => {
-    try {
-      const value = JSON.parse(localStorage.getItem(key));
-      return value == null ? fallback : value;
-    } catch {
-      return fallback;
-    }
-  };
-
-  const write = (key, value) =>
-    localStorage.setItem(key, JSON.stringify(value));
-
-  const uuid = () => crypto.randomUUID();
-
-  const client = () => window.BaustellenCloud?.client;
-
-  async function currentUser() {
-    const c = client();
-    if (!c) return null;
-    const { data, error } = await c.auth.getUser();
-    if (error) throw error;
-    return data?.user || null;
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      script.onload = resolve;
+      script.onerror = () => reject(
+        new Error('Supabase-Bibliothek konnte nicht geladen werden.')
+      );
+      document.head.appendChild(script);
+    });
   }
 
-  function mergeMaster(category, local, remote) {
-    const a = Array.isArray(remote) ? remote : [];
-    const b = Array.isArray(local) ? local : [];
+  function createLoginScreen() {
+    if (document.getElementById('baustellen-login')) return;
 
-    if (category === 'customers') {
-      const result = a.map(x => ({
-        ...x,
-        projects: Array.isArray(x.projects) ? x.projects : []
-      }));
+    const style = document.createElement('style');
+    style.textContent = `
+      #baustellen-login {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        background: #f1f4f7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        font-family: system-ui, sans-serif;
+      }
+      #baustellen-login .panel {
+        width: min(100%, 410px);
+        background: white;
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 8px 30px #0002;
+      }
+      #baustellen-login h1 {
+        font-size: 24px;
+        margin: 0 0 8px;
+        color: #172b3a;
+      }
+      #baustellen-login p {
+        color: #64748b;
+        margin-bottom: 22px;
+      }
+      #baustellen-login label {
+        display: block;
+        font-weight: 600;
+        margin: 14px 0 6px;
+      }
+      #baustellen-login input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 17px;
+      }
+      #baustellen-login button {
+        width: 100%;
+        padding: 15px;
+        margin-top: 22px;
+        border: 0;
+        border-radius: 10px;
+        background: #1677d2;
+        color: white;
+        font-size: 17px;
+        font-weight: 700;
+      }
+      #baustellen-login button:disabled {
+        opacity: .6;
+      }
+      #baustellen-login .message {
+        color: #b42318;
+        min-height: 22px;
+        font-size: 14px;
+        margin-top: 12px;
+      }
+    `;
+    document.head.appendChild(style);
 
-      b.forEach(x => {
-        const old = result.find(y =>
-          (y.name || '').trim().toLowerCase() ===
-          (x.name || '').trim().toLowerCase()
-        );
+    const screen = document.createElement('div');
+    screen.id = 'baustellen-login';
+    screen.innerHTML = `
+      <div class="panel">
+        <h1>Baustellen-App</h1>
+        <p>Bitte melde dich mit deinem Benutzernamen an.</p>
 
-        if (old) {
-          old.address = x.address || old.address;
-          old.projects = [
-            ...new Set([...(old.projects || []), ...(x.projects || [])])
-          ];
-        } else {
-          result.push(x);
-        }
+        <form id="baustellen-login-form">
+          <label for="baustellen-username">Benutzername</label>
+          <input id="baustellen-username"
+                 autocomplete="username"
+                 autocapitalize="none"
+                 required>
+
+          <label for="baustellen-password">Passwort</label>
+          <input id="baustellen-password"
+                 type="password"
+                 autocomplete="current-password"
+                 required>
+
+          <button id="baustellen-login-button" type="submit">
+            Anmelden
+          </button>
+          <div class="message" id="baustellen-login-message"
+               role="alert"></div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(screen);
+
+    screen.querySelector('form').addEventListener('submit', signIn);
+  }
+
+  async function signIn(event) {
+    event.preventDefault();
+
+    const username = document
+      .getElementById('baustellen-username').value.trim();
+
+    const password = document
+      .getElementById('baustellen-password').value;
+
+    const button = document.getElementById('baustellen-login-button');
+    const message = document.getElementById('baustellen-login-message');
+
+    button.disabled = true;
+    button.textContent = 'Anmeldung läuft …';
+    message.textContent = '';
+
+    try {
+      const response = await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY
+        },
+        body: JSON.stringify({ username, password })
       });
 
-      return result;
-    }
+      const result = await response.json();
 
-    return [...new Set([
-      ...a,
-      ...b
-    ].filter(x => x != null && String(x).trim() !== ''))];
-  }
-
-  async function syncNow() {
-    const c = client();
-    if (!c || busy) return;
-
-    busy = true;
-
-    try {
-      const user = await currentUser();
-      if (!user) return;
-
-      // Gemeinsame Stammdaten
-      for (const [category, key] of Object.entries(MASTER_KEYS)) {
-        const local = read(key, []);
-
-        const { data: rows, error } = await c
-          .from('shared_master_data')
-          .select('id,data')
-          .eq('category', category);
-
-        if (error) throw error;
-
-        const remote = rows?.[0]?.data;
-        const merged = mergeMaster(category, local, remote);
-
-        if (rows?.length) {
-          const { error: updateError } = await c
-            .from('shared_master_data')
-            .update({
-              data: merged,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', rows[0].id);
-
-          if (updateError) throw updateError;
-        } else {
-          const { error: insertError } = await c
-            .from('shared_master_data')
-            .insert({
-              category,
-              data: merged,
-              created_by: user.id
-            });
-
-          if (insertError) throw insertError;
-        }
-
-        write(key, merged);
-      }
-
-      // Persönliche Dokumente
-      const { data: cloudDocs, error: docError } = await c
-        .from('user_documents')
-        .select('id,document_type,title,document_date,payload')
-        .eq('owner_id', user.id);
-
-      if (docError) throw docError;
-
-      const deleted = read('baustellenCloudDeletedDocs', []);
-
-      if (deleted.length) {
-        const { error } = await c
-          .from('user_documents')
-          .delete()
-          .eq('owner_id', user.id)
-          .in('id', deleted);
-
-        if (error) throw error;
-
-        write('baustellenCloudDeletedDocs', []);
-      }
-
-      for (const [type, key] of Object.entries(DOC_KEYS)) {
-        const local = read(key, []).map(item => ({
-          ...item,
-          _cloudId: item._cloudId || uuid()
-        }));
-
-        const remote = (cloudDocs || [])
-          .filter(doc =>
-            doc.document_type === type &&
-            !deleted.includes(doc.id)
-          )
-          .map(doc => ({
-            ...doc.payload,
-            _cloudId: doc.id
-          }));
-
-        const byId = new Map(
-          remote.map(item => [item._cloudId, item])
+      if (!response.ok) {
+        throw new Error(
+          result.error || result.message || 'Anmeldung fehlgeschlagen.'
         );
-
-        local.forEach(item => byId.set(item._cloudId, item));
-
-        const merged = [...byId.values()];
-        write(key, merged);
-
-        for (const item of local) {
-          const title = type === 'tagelohn'
-            ? `${item.contractor || 'Tagelohn'} – ${item.date || ''}`
-            : `${item.customer || 'Tagesbericht'} – ${item.date || ''}`;
-
-          const { error } = await c
-            .from('user_documents')
-            .upsert({
-              id: item._cloudId,
-              owner_id: user.id,
-              document_type: type,
-              title,
-              document_date: item.date || null,
-              payload: item,
-              updated_at: new Date().toISOString()
-            });
-
-          if (error) throw error;
-        }
       }
 
-      bootstrapped = true;
+      if (!result.access_token || !result.refresh_token) {
+        throw new Error('Die Anmeldung lieferte keine gültige Sitzung.');
+      }
 
-      const badge = document.getElementById('baustellen-cloud-user');
-      if (badge) badge.textContent += ' · synchronisiert';
+      const { error } = await client.auth.setSession({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token
+      });
+
+      if (error) throw error;
+
+      document.getElementById('baustellen-login').remove();
+
+      window.dispatchEvent(new Event('baustellen:login'));
 
     } catch (error) {
-      console.error('Cloud-Synchronisierung:', error);
-
-      const badge = document.getElementById('baustellen-cloud-user');
-      if (badge) badge.textContent = 'Cloud: Synchronisierung prüfen';
-
-    } finally {
-      busy = false;
+      message.textContent = error.message || 'Anmeldung fehlgeschlagen.';
+      button.disabled = false;
+      button.textContent = 'Anmelden';
     }
   }
-
-  function scheduleSync() {
-    if (!bootstrapped) return;
-
-    clearTimeout(timer);
-    timer = setTimeout(syncNow, 900);
-  }
-
-  window.BaustellenCloudSync = {
-    syncNow,
-    scheduleSync
-  };
-
-  window.addEventListener('baustellen:login', async () => {
-    await syncNow();
-    location.reload();
-  });
 
   async function start() {
-    for (let i = 0; i < 40 && !client(); i++) {
-      await new Promise(resolve => setTimeout(resolve, 250));
-    }
+    try {
+      await loadSupabase();
 
-    if (!client()) return;
+      client = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
 
-    const { data } = await client().auth.getSession();
+      window.BaustellenCloud = { client };
 
-    if (data?.session) {
-      await syncNow();
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
 
-      if (!sessionStorage.getItem('baustellenCloudReloaded')) {
-        sessionStorage.setItem('baustellenCloudReloaded', '1');
-        location.reload();
+      if (data.session) {
+        return;
       }
-    } else {
-      sessionStorage.removeItem('baustellenCloudReloaded');
+
+      createLoginScreen();
+
+    } catch (error) {
+      console.error('Baustellen-App Anmeldung:', error);
+      createLoginScreen();
+
+      const message = document.getElementById(
+        'baustellen-login-message'
+      );
+      if (message) {
+        message.textContent =
+          'Verbindung konnte nicht hergestellt werden. Bitte Internet prüfen.';
+      }
     }
   }
 
