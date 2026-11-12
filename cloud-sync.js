@@ -1,10 +1,9 @@
 
-/* Cloud-Synchronisierung für die Baustellen-App.
-   Benötigt cloud-login.js und die Supabase-Tabellen. */
+/* Baustellen-App – Cloud-Synchronisierung */
 (() => {
   'use strict';
 
-  const MASTER_KEYS = {
+  const MASTER = {
     customers: 'tagelohnCustomers',
     employees: 'tagelohnEmployees',
     tagelohnServices: 'tagelohnServices',
@@ -12,242 +11,334 @@
     reportRoles: 'tagesberichtFunktionen'
   };
 
-  const DOC_KEYS = {
+  const DOCUMENTS = {
     tagelohn: 'tagelohn',
     tagesbericht: 'tagesberichte'
   };
 
-  let busy = false;
+  const KEYS = [...Object.values(MASTER), ...Object.values(DOCUMENTS)];
+  const snapshots = new Map();
+
+  let running = false;
+  let ready = false;
   let timer = null;
-  let bootstrapped = false;
 
-  const read = (key, fallback) => {
-    try {
-      const value = JSON.parse(localStorage.getItem(key));
-      return value == null ? fallback : value;
-    } catch {
-      return fallback;
-    }
-  };
-
-  const write = (key, value) =>
-    localStorage.setItem(key, JSON.stringify(value));
-
-  const uuid = () => crypto.randomUUID();
-
-  const client = () => window.BaustellenCloud?.client;
-
-  async function currentUser() {
-    const c = client();
-    if (!c) return null;
-    const { data, error } = await c.auth.getUser();
-    if (error) throw error;
-    return data?.user || null;
+  function client() {
+    return window.BaustellenCloud?.client || null;
   }
 
-  function mergeMaster(category, local, remote) {
+  function read(key) {
+    try {
+      const value = JSON.parse(localStorage.getItem(key));
+      return Array.isArray(value) ? value : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function write(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+    snapshots.set(key, JSON.stringify(value));
+  }
+
+  function remember() {
+    for (const key of KEYS) {
+      snapshots.set(key, JSON.stringify(read(key)));
+    }
+  }
+
+  function changed(key) {
+    return JSON.stringify(read(key)) !== snapshots.get(key);
+  }
+
+  function makeId() {
+    return crypto.randomUUID();
+  }
+
+  function unique(items) {
+    const result = [];
+    const seen = new Set();
+
+    for (const item of items) {
+      const identity =
+        item && typeof item === 'object'
+          ? String(item.id || item.name || JSON.stringify(item)).toLowerCase()
+          : String(item).trim().toLowerCase();
+
+      if (!identity || seen.has(identity)) continue;
+      seen.add(identity);
+      result.push(item);
+    }
+
+    return result;
+  }
+
+  function mergeMaster(category, remote, local) {
     const a = Array.isArray(remote) ? remote : [];
     const b = Array.isArray(local) ? local : [];
 
-    if (category === 'customers') {
-      const result = a.map(x => ({
-        ...x,
-        projects: Array.isArray(x.projects) ? x.projects : []
+    if (category !== 'customers') {
+      return unique([...a, ...b]);
+    }
+
+    const result = a.map(x => ({
+      ...x,
+      projects: Array.isArray(x.projects) ? [...x.projects] : []
+    }));
+
+    for (const customer of b) {
+      const existing = result.find(x =>
+        String(x.id || x.name).toLowerCase() ===
+        String(customer.id || customer.name).toLowerCase()
+      );
+
+      if (!existing) {
+        result.push(customer);
+      } else {
+        existing.projects = unique([
+          ...(existing.projects || []),
+          ...(customer.projects || [])
+        ]);
+
+        if (!existing.address && customer.address) {
+          existing.address = customer.address;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  async function syncMaster(c, user, initial) {
+    for (const [category, key] of Object.entries(MASTER)) {
+      if (!initial && !changed(key)) continue;
+
+      const local = read(key);
+
+      const { data: rows, error } = await c
+        .from('shared_master_data')
+        .select('id,data')
+        .eq('category', category)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const row = rows?.[0];
+      const merged = mergeMaster(category, row?.data, local);
+
+      if (row) {
+        const { error: updateError } = await c
+          .from('shared_master_data')
+          .update({
+            data: merged,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', row.id);
+
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await c
+          .from('shared_master_data')
+          .insert({
+            category,
+            data: merged,
+            created_by: user.id
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      write(key, merged);
+    }
+  }
+
+  function documentTitle(type, item) {
+    if (type === 'tagelohn') {
+      return `${item.contractor || 'Tagelohn'} – ${item.date || ''}`;
+    }
+
+    return `${item.customer || 'Tagesbericht'} – ${item.date || ''}`;
+  }
+
+  async function syncDocuments(c, user, initial) {
+    const { data: cloudDocs, error } = await c
+      .from('user_documents')
+      .select('id,document_type,payload')
+      .eq('owner_id', user.id);
+
+    if (error) throw error;
+
+    for (const [type, key] of Object.entries(DOCUMENTS)) {
+      if (!initial && !changed(key)) continue;
+
+      const local = read(key).map(item => ({
+        ...item,
+        _cloudId: item._cloudId || makeId()
       }));
 
-      b.forEach(x => {
-        const old = result.find(y =>
-          (y.name || '').trim().toLowerCase() ===
-          (x.name || '').trim().toLowerCase()
-        );
-
-        if (old) {
-          old.address = x.address || old.address;
-          old.projects = [
-            ...new Set([...(old.projects || []), ...(x.projects || [])])
-          ];
-        } else {
-          result.push(x);
-        }
-      });
-
-      return result;
-    }
-
-    return [...new Set([
-      ...a,
-      ...b
-    ].filter(x => x != null && String(x).trim() !== ''))];
-  }
-
-  async function syncNow() {
-    const c = client();
-    if (!c || busy) return;
-
-    busy = true;
-
-    try {
-      const user = await currentUser();
-      if (!user) return;
-
-      for (const [category, key] of Object.entries(MASTER_KEYS)) {
-        const local = read(key, []);
-
-        const { data: rows, error } = await c
-          .from('shared_master_data')
-          .select('id,data')
-          .eq('category', category);
-
-        if (error) throw error;
-
-        const remote = rows?.[0]?.data;
-        const merged = mergeMaster(category, local, remote);
-
-        if (rows?.length) {
-          const { error: updateError } = await c
-            .from('shared_master_data')
-            .update({
-              data: merged,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', rows[0].id);
-
-          if (updateError) throw updateError;
-        } else {
-          const { error: insertError } = await c
-            .from('shared_master_data')
-            .insert({
-              category,
-              data: merged,
-              created_by: user.id
-            });
-
-          if (insertError) throw insertError;
-        }
-
-        write(key, merged);
-      }
-
-      const { data: cloudDocs, error: docError } = await c
-        .from('user_documents')
-        .select('id,document_type,title,document_date,payload')
-        .eq('owner_id', user.id);
-
-      if (docError) throw docError;
-
-      const deleted = read('baustellenCloudDeletedDocs', []);
-
-      if (deleted.length) {
-        const { error } = await c
-          .from('user_documents')
-          .delete()
-          .eq('owner_id', user.id)
-          .in('id', deleted);
-
-        if (error) throw error;
-
-        write('baustellenCloudDeletedDocs', []);
-      }
-
-      for (const [type, key] of Object.entries(DOC_KEYS)) {
-        const local = read(key, []).map(item => ({
-          ...item,
-          _cloudId: item._cloudId || uuid()
+      const remote = (cloudDocs || [])
+        .filter(doc => doc.document_type === type)
+        .map(doc => ({
+          ...doc.payload,
+          _cloudId: doc.id
         }));
 
-        const remote = (cloudDocs || [])
-          .filter(doc =>
-            doc.document_type === type &&
-            !deleted.includes(doc.id)
-          )
-          .map(doc => ({
-            ...doc.payload,
-            _cloudId: doc.id
-          }));
+      const remoteIds = new Set(remote.map(x => x._cloudId));
 
-        const byId = new Map(
-          remote.map(item => [item._cloudId, item])
-        );
+      // Bei bereits vorhandenen Cloud-Dokumenten hat
+      // beim ersten Laden die Cloud-Fassung Vorrang.
+      const combined = initial
+        ? new Map(local.map(x => [x._cloudId, x]))
+        : new Map(remote.map(x => [x._cloudId, x]));
 
-        local.forEach(item => byId.set(item._cloudId, item));
-
-        const merged = [...byId.values()];
-        write(key, merged);
-
-        for (const item of local) {
-          const title = type === 'tagelohn'
-            ? `${item.contractor || 'Tagelohn'} – ${item.date || ''}`
-            : `${item.customer || 'Tagesbericht'} – ${item.date || ''}`;
-
-          const { error } = await c
-            .from('user_documents')
-            .upsert({
-              id: item._cloudId,
-              owner_id: user.id,
-              document_type: type,
-              title,
-              document_date: item.date || null,
-              payload: item,
-              updated_at: new Date().toISOString()
-            });
-
-          if (error) throw error;
-        }
+      if (initial) {
+        remote.forEach(x => combined.set(x._cloudId, x));
+      } else {
+        local.forEach(x => combined.set(x._cloudId, x));
       }
 
-      bootstrapped = true;
+      const merged = [...combined.values()];
 
-      const badge = document.getElementById('baustellen-cloud-user');
-      if (badge) badge.textContent += ' · synchronisiert';
+      // Nur neue Dokumente bzw. lokal geänderte
+      // Dokumente an die Cloud senden.
+      const upload = initial
+        ? local.filter(x => !remoteIds.has(x._cloudId))
+        : local;
 
-    } catch (error) {
-      console.error('Cloud-Synchronisierung:', error);
+      for (const item of upload) {
+        const { error: saveError } = await c
+          .from('user_documents')
+          .upsert({
+            id: item._cloudId,
+            owner_id: user.id,
+            document_type: type,
+            title: documentTitle(type, item),
+            document_date: /^\d{4}-\d{2}-\d{2}$/.test(item.date || '')
+              ? item.date
+              : null,
+            payload: item,
+            updated_at: new Date().toISOString()
+          });
 
-      const badge = document.getElementById('baustellen-cloud-user');
-      if (badge) badge.textContent = 'Cloud: Synchronisierung prüfen';
+        if (saveError) throw saveError;
+      }
 
-    } finally {
-      busy = false;
+      write(key, merged);
     }
   }
 
-  function scheduleSync() {
-    if (!bootstrapped) return;
+  function showStatus(message) {
+    let badge = document.getElementById('baustellen-sync-status');
 
-    clearTimeout(timer);
-    timer = setTimeout(syncNow, 900);
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'baustellen-sync-status';
+
+      Object.assign(badge.style, {
+        position: 'fixed',
+        right: '10px',
+        bottom: '10px',
+        zIndex: '9998',
+        padding: '7px 10px',
+        borderRadius: '8px',
+        background: '#173b57',
+        color: 'white',
+        fontSize: '12px',
+        boxShadow: '0 2px 8px #0003'
+      });
+
+      document.body.appendChild(badge);
+    }
+
+    badge.textContent = message;
   }
 
-  window.BaustellenCloudSync = {
-    syncNow,
-    scheduleSync
-  };
+  async function syncNow(initial = false) {
+    if (running) return;
 
-  window.addEventListener('baustellen:login', async () => {
-    await syncNow();
-    location.reload();
-  });
+    const c = client();
+    if (!c) return;
+
+    running = true;
+
+    try {
+      const { data, error } = await c.auth.getUser();
+
+      if (error) throw error;
+      if (!data?.user) return;
+
+      showStatus('Cloud: synchronisiere …');
+
+      await syncMaster(c, data.user, initial);
+      await syncDocuments(c, data.user, initial);
+
+      remember();
+      ready = true;
+      showStatus('Cloud: synchronisiert');
+    } catch (error) {
+      console.error('Baustellen-Cloud:', error);
+      showStatus('Cloud: Fehler – bitte prüfen');
+    } finally {
+      running = false;
+    }
+  }
+
+  function checkChanges() {
+    if (!ready || running) return;
+
+    if (KEYS.some(changed)) {
+      syncNow(false);
+    }
+  }
 
   async function start() {
     for (let i = 0; i < 40 && !client(); i++) {
       await new Promise(resolve => setTimeout(resolve, 250));
     }
 
-    if (!client()) return;
-
-    const { data } = await client().auth.getSession();
-
-    if (data?.session) {
-      await syncNow();
-
-      if (!sessionStorage.getItem('baustellenCloudReloaded')) {
-        sessionStorage.setItem('baustellenCloudReloaded', '1');
-        location.reload();
-      }
-    } else {
-      sessionStorage.removeItem('baustellenCloudReloaded');
+    const c = client();
+    if (!c) {
+      console.error('Supabase-Client nicht gefunden');
+      return;
     }
+
+    const { data } = await c.auth.getSession();
+
+    if (!data?.session) return;
+
+    await syncNow(true);
+
+    if (ready) {
+      const reloadKey = 'baustellenCloudInitialReload';
+
+      if (!sessionStorage.getItem(reloadKey)) {
+        sessionStorage.setItem(reloadKey, '1');
+        location.reload();
+        return;
+      }
+    }
+
+    clearInterval(timer);
+    timer = setInterval(checkChanges, 3000);
   }
+
+  window.BaustellenCloudSync = {
+    syncNow: () => syncNow(false),
+    scheduleSync: checkChanges
+  };
+
+  window.addEventListener('baustellen:login', async () => {
+    sessionStorage.removeItem('baustellenCloudInitialReload');
+    await syncNow(true);
+
+    if (ready) location.reload();
+  });
+
+  window.addEventListener('baustellen:logout', () => {
+    ready = false;
+    clearInterval(timer);
+    sessionStorage.removeItem('baustellenCloudInitialReload');
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });
