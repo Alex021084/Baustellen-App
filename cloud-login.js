@@ -188,6 +188,11 @@
     }
   }
 
+  function displayUsername(value) {
+    const name = String(value || 'Benutzer').trim();
+    return name ? name.charAt(0).toLocaleUpperCase('de-DE') + name.slice(1) : 'Benutzer';
+  }
+
   async function refreshSettingsUser() {
     if (!client) return;
     const label = document.getElementById('settingsCurrentUser');
@@ -206,9 +211,9 @@
       .maybeSingle();
 
     const username = profile?.username || data.user.email?.split('@')[0] || 'Benutzer';
-    label.textContent = username;
+    label.textContent = displayUsername(username);
     const logoutText = document.getElementById('settingsLogoutText');
-    if (logoutText) logoutText.textContent = username + ' abmelden';
+    if (logoutText) logoutText.textContent = displayUsername(username) + ' abmelden';
   }
 
   async function logout() {

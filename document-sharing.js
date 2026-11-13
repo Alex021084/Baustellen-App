@@ -17,6 +17,10 @@
     try { const v = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(v) ? v : []; }
     catch { return []; }
   }
+  function displayUsername(value) {
+    const name = String(value || 'Mitarbeiter').trim();
+    return name ? name.charAt(0).toLocaleUpperCase('de-DE') + name.slice(1) : 'Mitarbeiter';
+  }
   function escapeHtml(v) {
     return String(v ?? '').replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -129,7 +133,7 @@
       <div class="shareSubheading">Mitarbeiter auswählen</div>
       <div class="shareList">${profiles.map(p => `
         <label class="shareChoice"><input type="checkbox" name="shareUser" value="${p.id}">
-          <span><b>${escapeHtml(p.username || 'Mitarbeiter')}</b></span>
+          <span><b>${escapeHtml(displayUsername(p.username))}</b></span>
         </label>`).join('') || '<p>Keine weiteren Benutzer gefunden.</p>'}</div>
       <button type="button" class="primary shareSubmit" ${docs.length && profiles.length ? '' : 'disabled'}>Freigabe erteilen</button>
       <div class="shareFeedback" role="status"></div>
@@ -182,7 +186,7 @@
     }
     const ownerGroups = ownerIds.map(ownerId => ({
       ownerId,
-      username: ownerProfiles.find(p => p.id === ownerId)?.username || 'Mitarbeiter',
+      username: displayUsername(ownerProfiles.find(p => p.id === ownerId)?.username || 'Mitarbeiter'),
       docs: docs.filter(d => d.owner_id === ownerId)
     }));
     makeModal('Dokumente anderer Nutzer', `
@@ -347,7 +351,7 @@
       <div class="shareSubheading">Mitarbeiter auswählen</div>
       <div class="shareList">${profiles.map(p => `
         <label class="shareChoice"><input type="checkbox" name="shareUser" value="${p.id}">
-          <span><b>${escapeHtml(p.username || 'Mitarbeiter')}</b></span>
+          <span><b>${escapeHtml(displayUsername(p.username))}</b></span>
         </label>`).join('') || '<p>Keine weiteren Benutzer gefunden.</p>'}</div>
       <button type="button" class="primary shareSubmit">Freigabe erteilen</button>
       <div class="shareFeedback" role="status"></div>
