@@ -187,7 +187,38 @@
     }
   }
 
-  async function start() {
+  async function showUserBadge() {
+  const { data } = await client.auth.getUser();
+  if (!data.user) return;
+
+  const { data: profile } = await client
+    .from('user_profiles')
+    .select('username')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  const old = document.getElementById('baustellen-user-badge');
+  if (old) old.remove();
+
+  const badge = document.createElement('div');
+  badge.id = 'baustellen-user-badge';
+  badge.textContent = 'Angemeldet: ' + (profile?.username || 'Benutzer');
+
+  Object.assign(badge.style, {
+    position: 'fixed',
+    top: '10px',
+    right: '12px',
+    zIndex: '9997',
+    padding: '8px 12px',
+    borderRadius: '18px',
+    background: '#173b57',
+    color: 'white',
+    font: '600 13px system-ui'
+  });
+
+  document.body.appendChild(badge);
+}   
+   async function start() {
     try {
       await loadSupabase();
 
