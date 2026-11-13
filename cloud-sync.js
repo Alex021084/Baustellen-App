@@ -267,12 +267,13 @@ const local = category === 'customers'
     if (!c) return;
 
     running = true;
+    let succeeded = false;
 
     try {
       const { data, error } = await c.auth.getUser();
 
       if (error) throw error;
-      if (!data?.user) return;
+      if (!data?.user) return false;
 
       showStatus('Cloud: synchronisiere …');
 
@@ -281,6 +282,7 @@ const local = category === 'customers'
 
       remember();
       ready = true;
+      succeeded = true;
       showStatus('Cloud: synchronisiert');
     } catch (error) {
 
@@ -290,6 +292,20 @@ const local = category === 'customers'
     } finally {
       running = false;
     }
+    return succeeded;
+  }
+
+  async function prepareForLogout() {
+    const saved = await syncNow(false);
+    if (!saved) return false;
+
+    // Lokale Kopien entfernen, damit der nächste Benutzer auf diesem Gerät
+    // nicht versehentlich Dokumente des vorherigen Kontos sieht oder übernimmt.
+    for (const key of KEYS) localStorage.removeItem(key);
+    ready = false;
+    clearInterval(timer);
+    sessionStorage.removeItem('baustellenCloudInitialReload');
+    return true;
   }
 
   function checkChanges() {
@@ -333,6 +349,7 @@ const local = category === 'customers'
 
   window.BaustellenCloudSync = {
     syncNow: () => syncNow(false),
+    prepareForLogout,
     scheduleSync: checkChanges
   };
 

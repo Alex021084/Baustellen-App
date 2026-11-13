@@ -3629,3 +3629,105 @@ body.home-screen #home.active .startChoices {
   #home.startScreen.active .startChoices { margin-top: 70px !important; }
   .settingsGroupMain .settingsItem { min-height: 78px; }
 }
+
+
+/* Benutzeranzeige und Abmeldung im Einstellungsbereich v42 */
+.settingsAccount {
+  margin-top: 28px;
+  padding: 20px 18px;
+  border-top: 1px solid #e8edf1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+}
+.settingsAccountLabel {
+  color: #71808c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.settingsAccountName {
+  color: #173b57;
+  font-size: 18px;
+  font-weight: 700;
+}
+.settingsLogoutButton {
+  min-width: 150px;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 10px 22px;
+  border: 1px solid #e4c6c2;
+  border-radius: 12px;
+  background: #fbefed;
+  color: #923c35;
+  font-size: 16px;
+  font-weight: 700;
+}
+.settingsLogoutButton:disabled { opacity: .65; }
+@media (max-width: 600px) {
+  .settingsAccount { margin-top: 20px; padding: 18px 8px; }
+  .settingsLogoutButton { width: 100%; }
+}
+
+
+/* Menü und Startseite – Feinschliff v43 */
+.settingsButton {
+  width: auto !important;
+  min-width: 104px !important;
+  height: 48px !important;
+  padding: 0 15px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border-radius: 24px !important;
+  font-size: 16px !important;
+  font-weight: 750 !important;
+  white-space: nowrap !important;
+}
+.settingsButton span:first-child { font-size: 20px; }
+.settingsButton span:last-child { font-size: 15px; }
+.settingsLogoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.settingsLogoutButton > span:first-child {
+  display: inline-grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+  background: #f2d9d5;
+  font-size: 20px;
+  font-weight: 800;
+}
+/* Die Startseite bleibt vollständig stehen und erhält keinen eigenen Scrollbereich. */
+body.home-screen { overflow: hidden !important; height: 100dvh !important; }
+body.home-screen main { overflow: hidden !important; height: calc(100dvh - 70px) !important; }
+body.home-screen #home.startScreen.active {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+@media (max-height: 760px) {
+  body.home-screen #home.startScreen.active .startChoices { margin-top: 28px !important; }
+  body.home-screen #home.startScreen.active .companyLogo { max-height: 115px !important; }
+}
+@media (max-width: 600px) {
+  .settingsButton { min-width: 96px !important; height: 46px !important; }
+}
+
+
+/* v44: Startseite ohne Scrollen, direkt an den aktiven Bildschirm gebunden. */
+body:has(#home.startScreen.active) { overflow: hidden !important; height: 100dvh !important; }
+body:has(#home.startScreen.active) main { overflow: hidden !important; height: calc(100dvh - env(safe-area-inset-top) - 0px) !important; }
+body:has(#home.startScreen.active) #home.startScreen.active { overflow: hidden !important; height: 100% !important; min-height: 0 !important; max-height: 100% !important; padding-bottom: 18px !important; box-sizing: border-box !important; }
+body:has(#home.startScreen.active) #home.startScreen.active .startChoices { margin-top: clamp(26px, 5vh, 54px) !important; }
+body:has(#home.startScreen.active) #home.startScreen.active .welcome { padding-bottom: 8px !important; }
+body:has(#home.startScreen.active) #home.startScreen.active .companyLogoWrap { max-height: min(180px, 23vh) !important; }
+body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-height: min(150px, 21vh) !important; object-fit: contain !important; }
+.settingsButton { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; font-size: 16px !important; font-weight: 700 !important; }

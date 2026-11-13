@@ -176,6 +176,7 @@
 
       if (error) throw error;
 
+      await refreshSettingsUser();
       document.getElementById('baustellen-login').remove();
 
       window.dispatchEvent(new Event('baustellen:login'));
@@ -187,36 +188,58 @@
     }
   }
 
-  async function showUserBadge() {
-  const { data } = await client.auth.getUser();
-  if (!data.user) return;
+  async function refreshSettingsUser() {
+    if (!client) return;
+    const label = document.getElementById('settingsCurrentUser');
+    if (!label) return;
 
-  const { data: profile } = await client
-    .from('user_profiles')
-    .select('username')
-    .eq('id', data.user.id)
-    .maybeSingle();
+    const { data } = await client.auth.getUser();
+    if (!data?.user) {
+      label.textContent = 'Nicht angemeldet';
+      return;
+    }
 
-  const old = document.getElementById('baustellen-user-badge');
-  if (old) old.remove();
+    const { data: profile } = await client
+      .from('user_profiles')
+      .select('username')
+      .eq('id', data.user.id)
+      .maybeSingle();
 
-  const badge = document.createElement('div');
-  badge.id = 'baustellen-user-badge';
-  badge.textContent = 'Angemeldet: ' + (profile?.username || data.user.email?.split('@')[0] || 'Benutzer').replace(/^./, c => c.toUpperCase());
-  Object.assign(badge.style, {
-    position: 'fixed',
-    top: '10px',
-    left: '12px',
-    zIndex: '9997',
-    padding: '8px 12px',
-    borderRadius: '18px',
-    background: '#173b57',
-    color: 'white',
-    font: '600 13px system-ui'
-  });
+    const username = profile?.username || data.user.email?.split('@')[0] || 'Benutzer';
+    label.textContent = username;
+    const logoutText = document.getElementById('settingsLogoutText');
+    if (logoutText) logoutText.textContent = username + ' abmelden';
+  }
 
-  document.body.appendChild(badge);
-}   
+  async function logout() {
+    const button = document.getElementById('logoutUser');
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Wird abgemeldet …';
+    }
+
+    try {
+      // Erst persönliche Dokumente und Stammdaten sicher in die Cloud schreiben.
+      const prepared = await window.BaustellenCloudSync?.prepareForLogout?.();
+      if (!prepared) {
+        throw new Error('Synchronisierung nicht bestätigt. Bitte Internet prüfen und erneut versuchen.');
+      }
+
+      const { error } = await client.auth.signOut();
+      if (error) throw error;
+
+      window.dispatchEvent(new Event('baustellen:logout'));
+      createLoginScreen();
+    } catch (error) {
+      alert(error.message || 'Abmelden momentan nicht möglich.');
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = '<span aria-hidden="true">↪</span> <span id="settingsLogoutText">Benutzer abmelden</span>';
+        await refreshSettingsUser();
+      }
+    }
+  }
+
    async function start() {
     try {
       await loadSupabase();
@@ -226,13 +249,17 @@
         SUPABASE_KEY
       );
 
-      window.BaustellenCloud = { client };
+      window.BaustellenCloud = {
+        client,
+        refreshSettingsUser,
+        logout
+      };
 
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
 
       if (data.session) {
-        await showUserBadge();         
+        await refreshSettingsUser();
         return;
       }
 
