@@ -168,11 +168,10 @@ const local = category === 'customers'
   }
 
   async function syncDocuments(c, user, initial) {
+    // RLS liefert eigene UND aktiv freigegebene Dokumente.
     const { data: cloudDocs, error } = await c
       .from('user_documents')
-      .select('id,document_type,payload')
-      .eq('owner_id', user.id);
-
+      .select('id,owner_id,document_type,payload');
     if (error) throw error;
 
     for (const [type, key] of Object.entries(DOCUMENTS)) {
@@ -182,55 +181,62 @@ const local = category === 'customers'
         ...item,
         _cloudId: item._cloudId || makeId()
       }));
-
       const remote = (cloudDocs || [])
         .filter(doc => doc.document_type === type)
         .map(doc => ({
           ...doc.payload,
-          _cloudId: doc.id
+          _cloudId: doc.id,
+          _sharedOwnerId: doc.owner_id !== user.id ? doc.owner_id : undefined,
+          _isShared: doc.owner_id !== user.id
         }));
 
-      const remoteIds = new Set(remote.map(x => x._cloudId));
-
-      // Bei bereits vorhandenen Cloud-Dokumenten hat
-      // beim ersten Laden die Cloud-Fassung Vorrang.
-      const combined = initial
-        ? new Map(local.map(x => [x._cloudId, x]))
-        : new Map(remote.map(x => [x._cloudId, x]));
-
-      if (initial) {
-        remote.forEach(x => combined.set(x._cloudId, x));
-      } else {
-        local.forEach(x => combined.set(x._cloudId, x));
+      // Cloud-Inhalt ist beim Initialladen maßgeblich. Danach werden lokale
+      // Änderungen mit UPDATE gespeichert; owner_id bleibt unverändert.
+      const merged = new Map(remote.map(item => [item._cloudId, item]));
+      for (const item of local) {
+        if (!merged.has(item._cloudId) || !initial) merged.set(item._cloudId, item);
       }
 
-      const merged = [...combined.values()];
+      for (const item of local) {
+        const existing = (cloudDocs || []).find(doc => doc.id === item._cloudId);
+        const payload = { ...item };
+        delete payload._cloudId;
+        delete payload._sharedOwnerId;
+        delete payload._isShared;
+        const values = {
+          document_type: type,
+          title: documentTitle(type, item),
+          document_date: /^\d{4}-\d{2}-\d{2}$/.test(item.date || '') ? item.date : null,
+          payload,
+          updated_at: new Date().toISOString()
+        };
 
-      // Nur neue Dokumente bzw. lokal geänderte
-      // Dokumente an die Cloud senden.
-      const upload = initial
-        ? local.filter(x => !remoteIds.has(x._cloudId))
-        : local;
-
-      for (const item of upload) {
-        const { error: saveError } = await c
-          .from('user_documents')
-          .upsert({
-            id: item._cloudId,
-            owner_id: user.id,
-            document_type: type,
-            title: documentTitle(type, item),
-            document_date: /^\d{4}-\d{2}-\d{2}$/.test(item.date || '')
-              ? item.date
-              : null,
-            payload: item,
-            updated_at: new Date().toISOString()
-          });
-
-        if (saveError) throw saveError;
+        if (existing) {
+          const { error: updateError } = await c
+            .from('user_documents')
+            .update(values)
+            .eq('id', item._cloudId);
+          if (updateError) throw updateError;
+          // Audit ist ergänzend; die Dokumentänderung selbst bleibt maßgeblich.
+          try {
+            await c.from('document_audit').insert({
+              document_id: item._cloudId,
+              user_id: user.id,
+              action: 'document_updated',
+              details: { document_type: type }
+            });
+          } catch (auditError) {
+            console.warn('Dokument-Audit konnte nicht gespeichert werden:', auditError);
+          }
+        } else {
+          const { error: insertError } = await c
+            .from('user_documents')
+            .insert({ id: item._cloudId, owner_id: user.id, ...values });
+          if (insertError) throw insertError;
+        }
       }
 
-      write(key, merged);
+      write(key, [...merged.values()]);
     }
   }
 

@@ -3731,3 +3731,30 @@ body:has(#home.startScreen.active) #home.startScreen.active .welcome { padding-b
 body:has(#home.startScreen.active) #home.startScreen.active .companyLogoWrap { max-height: min(180px, 23vh) !important; }
 body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-height: min(150px, 21vh) !important; object-fit: contain !important; }
 .settingsButton { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; font-size: 16px !important; font-weight: 700 !important; }
+
+
+/* Dokumentfreigabe */
+.shareControls{margin:12px 0 18px}
+.shareActionRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shareActionRow button{min-height:48px;font-size:15px}
+.shareHint{display:block;color:#64748b;margin:7px 2px 0;font-size:12px}
+.shareModalBackdrop{position:fixed;inset:0;z-index:2147482500;background:#10182899;display:flex;align-items:center;justify-content:center;padding:14px}
+.shareModal{width:min(100%,560px);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 12px 40px #0004;color:#172b3a}
+.shareModalHeader{display:flex;align-items:center;justify-content:space-between;padding:17px 18px;border-bottom:1px solid #e5e7eb}
+.shareModalHeader h2{font-size:20px;margin:0}
+.shareClose{border:0;background:#eef2f6;border-radius:50%;width:38px;height:38px;font-size:25px}
+.shareModalBody{padding:16px 18px 20px}
+.shareModalBody p{line-height:1.45;color:#475569;margin:0 0 14px}
+.shareSubheading{font-weight:700;margin:18px 0 8px}
+.shareList{display:flex;flex-direction:column;gap:8px;max-height:32vh;overflow:auto}
+.shareChoice,.shareInboxItem{display:flex;align-items:center;gap:12px;padding:11px;border:1px solid #dce3eb;border-radius:12px;background:#fff}
+.shareChoice input{width:20px;height:20px;flex:0 0 auto}
+.shareChoice span,.shareInboxItem{min-width:0}
+.shareChoice b,.shareInboxItem b{display:block;overflow-wrap:anywhere}
+.shareChoice small,.shareInboxItem small{display:block;color:#64748b;font-size:12px;margin-top:3px}
+.shareInboxItem{display:grid;grid-template-columns:1fr auto;gap:5px 12px}
+.shareInboxItem small{grid-column:1}
+.shareInboxItem button{grid-column:2;grid-row:1 / span 2}
+.shareSubmit{width:100%;margin-top:16px;min-height:48px}
+.shareFeedback{min-height:22px;margin-top:10px;color:#176b37;font-weight:600}
+@media(max-width:420px){.shareActionRow{grid-template-columns:1fr}.shareInboxItem{grid-template-columns:1fr}.shareInboxItem button{grid-column:1;grid-row:auto}}
