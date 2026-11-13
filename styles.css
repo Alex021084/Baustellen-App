@@ -3794,3 +3794,66 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
 }
 .otherUsersTile b{font-size:17px !important}
 @media(max-width:520px){.shareDocsTile{min-width:0;width:100% !important}}
+
+/* Feinschliff: kompakte Freigabekachel und Auswahl rechts in jeder Dokumentkarte */
+.shareDocsTile{
+  width:190px !important;
+  min-width:190px !important;
+  min-height:54px !important;
+  padding:7px 12px !important;
+  margin:10px 0 12px auto !important;
+  gap:9px !important;
+  border-radius:13px !important;
+}
+.shareDocsTile>span,.shareTileIcon{
+  width:32px !important;
+  height:32px !important;
+  flex:0 0 32px !important;
+  border-radius:9px !important;
+  font-size:19px !important;
+}
+.shareDocsTile b{font-size:14px !important}
+.shareDocsTile strong{font-size:21px !important}
+@media(max-width:520px){
+  .shareDocsTile{width:190px !important;min-width:190px !important}
+}
+.shareSelectionMode .reportRow{
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  align-items:center !important;
+  gap:9px !important;
+}
+.shareSelectionMode .reportMain{order:1;flex:1 1 auto;min-width:0}
+.shareSelectionMode .reportRow .openReport{order:2;flex:0 0 auto}
+.shareSelectionMode .reportRow .shareDocCheck{
+  order:3;
+  display:flex !important;
+  flex:0 0 36px !important;
+  width:36px !important;
+  min-width:36px !important;
+  margin:0 2px 0 4px !important;
+  padding:0 !important;
+  align-self:center !important;
+  justify-content:center !important;
+}
+.shareSelectionMode .shareDocCheck input{
+  position:absolute;
+  opacity:0;
+  width:1px !important;
+  height:1px !important;
+}
+.shareSelectionMode .shareDocCheck span{
+  display:block;
+  width:23px;
+  height:23px;
+  border:2px solid #9aa4ad;
+  border-radius:7px;
+  background:#fff;
+  box-sizing:border-box;
+}
+.shareSelectionMode .shareDocCheck input:checked+span{
+  background:#27834d;
+  border-color:#27834d;
+  box-shadow:inset 0 0 0 4px #fff;
+}
