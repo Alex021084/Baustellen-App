@@ -11,6 +11,30 @@
   const AUTH_URL = SUPABASE_URL + '/functions/v1/username-auth';
 
   let client = null;
+  let clientInitPromise = null;
+
+  async function ensureClient() {
+    if (client?.auth) return client;
+    if (!clientInitPromise) {
+      clientInitPromise = (async () => {
+        await loadSupabase();
+        if (!window.supabase?.createClient) {
+          throw new Error('Supabase-Bibliothek ist nicht verfügbar. Bitte Seite neu laden.');
+        }
+        client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        if (!client?.auth) {
+          client = null;
+          throw new Error('Supabase-Client konnte nicht initialisiert werden.');
+        }
+        window.BaustellenCloud = { client, refreshSettingsUser, logout };
+        return client;
+      })().catch(error => {
+        clientInitPromise = null;
+        throw error;
+      });
+    }
+    return clientInitPromise;
+  }
 
   function loadSupabase() {
     return new Promise((resolve, reject) => {
@@ -148,6 +172,7 @@
     message.textContent = '';
 
     try {
+      await ensureClient();
       const response = await fetch(AUTH_URL, {
         method: 'POST',
         headers: {
@@ -245,21 +270,9 @@
     }
   }
 
-   async function start() {
+  async function start() {
     try {
-      await loadSupabase();
-
-      client = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
-
-      window.BaustellenCloud = {
-        client,
-        refreshSettingsUser,
-        logout
-      };
-
+      await ensureClient();
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
 
@@ -279,7 +292,7 @@
       );
       if (message) {
         message.textContent =
-          'Verbindung konnte nicht hergestellt werden. Bitte Internet prüfen.';
+          error.message || 'Verbindung konnte nicht hergestellt werden. Bitte Internet prüfen und die Seite neu laden.';
       }
     }
   }
