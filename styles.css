@@ -3462,3 +3462,34 @@ body.home-screen #home.active .startChoices {
     margin-top: 22px !important;
   }
 }
+/* Einstellungsmenü */
+.settingsButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: 0;
+  background: #f0f0f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 22px;
+}
+
+.settingsMenu {
+  display: none;
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  margin: 16px;
+}
+
+.settingsMenu.active {
+  display: block;
+}
+
+.settingsMenu button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin: 8px 0;
+  font-size: 16px;
+}
