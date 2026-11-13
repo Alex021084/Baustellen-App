@@ -1497,7 +1497,7 @@ function renderTagesberichtArchive(){
  const entries=projects.get(selectedReportProject)||[];
  const shareTile=document.createElement('button');
  shareTile.type='button'; shareTile.className='shareDocsTile';
- shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';
+ shareTile.innerHTML='<b>Dokumente teilen</b>';
  shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagesbericht',root);
  root.append(shareTile);
  entries.slice().sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{

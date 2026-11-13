@@ -228,9 +228,17 @@
     });
     document.querySelectorAll('.shareDocsTile').forEach(tile => {
       tile.classList.remove('shareDocsTileActive');
+      // Kachelinhalt vollständig vereinheitlichen: kein Symbol und kein Pfeil.
+      tile.innerHTML = '<b>Dokumente teilen</b>';
       const label = tile.querySelector('b');
-      if (label) label.textContent = 'Dokumente teilen';
-      tile.querySelectorAll('.shareTileIcon, strong').forEach(el => { el.style.display = 'none'; });
+      if (label) {
+        label.style.setProperty('display', 'block', 'important');
+        label.style.setProperty('width', '100%', 'important');
+        label.style.setProperty('text-align', 'center', 'important');
+        label.style.setProperty('font-size', '15px', 'important');
+        label.style.setProperty('line-height', '1.2', 'important');
+        label.style.setProperty('font-weight', '600', 'important');
+      }
     });
   }
 
@@ -292,17 +300,35 @@
 
     const tile = root.querySelector('.shareDocsTile');
     if (tile) {
+      // Die Freigabefunktion selbst setzt den Inhalt – ältere Symbole/Styles
+      // können den Text dadurch nicht wieder vergrößern oder verschieben.
+      tile.innerHTML = '<b>Ausgewählte Dokumente teilen</b>';
+      tile.classList.add('shareDocsTileActive');
+      tile.style.setProperty('width', '300px', 'important');
+      tile.style.setProperty('min-width', '300px', 'important');
+      tile.style.setProperty('max-width', '300px', 'important');
+      tile.style.setProperty('height', '56px', 'important');
+      tile.style.setProperty('min-height', '56px', 'important');
+      tile.style.setProperty('max-height', '56px', 'important');
+      tile.style.setProperty('box-sizing', 'border-box', 'important');
+      tile.style.setProperty('padding', '6px 12px', 'important');
+      tile.style.setProperty('display', 'flex', 'important');
+      tile.style.setProperty('align-items', 'center', 'important');
+      tile.style.setProperty('justify-content', 'center', 'important');
+      tile.style.setProperty('font-size', '15px', 'important');
+      tile.style.setProperty('line-height', '1.2', 'important');
+      tile.style.setProperty('font-weight', '600', 'important');
+      tile.style.setProperty('white-space', 'nowrap', 'important');
       const label = tile.querySelector('b');
-      if (label) label.textContent = 'Ausgewählte Dokumente teilen';
-      tile.querySelectorAll('.shareTileIcon, strong').forEach(el => { el.style.display = 'none'; });
-      // Tile-Abmessungen und Schriftgröße bleiben vollständig unverändert.
-      tile.style.removeProperty('width');
-      tile.style.removeProperty('min-width');
-      tile.style.removeProperty('max-width');
-      tile.style.removeProperty('height');
-      tile.style.removeProperty('min-height');
-      tile.style.removeProperty('font-size');
-      tile.style.removeProperty('font-weight');
+      if (label) {
+        label.style.setProperty('display', 'block', 'important');
+        label.style.setProperty('width', '100%', 'important');
+        label.style.setProperty('margin', '0', 'important');
+        label.style.setProperty('text-align', 'center', 'important');
+        label.style.setProperty('font-size', '15px', 'important');
+        label.style.setProperty('line-height', '1.2', 'important');
+        label.style.setProperty('font-weight', '600', 'important');
+      }
       tile.onclick = () => shareSelected(type);
     }
   }
