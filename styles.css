@@ -4133,3 +4133,43 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   white-space: nowrap !important;
   vertical-align: middle !important;
 }
+
+
+/* v18: höchste Priorität für Zahnrad + Menü rechts neben der Überschrift.
+   Die ältere .welcomeHeadingRow-Regel hatte das Element auf 46px/Grid fixiert. */
+.welcomeHeadingRow > button#openSettings.settingsButton {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  inset: auto !important;
+  transform: none !important;
+  flex: 0 0 104px !important;
+  width: 104px !important;
+  min-width: 104px !important;
+  max-width: 104px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  padding: 0 9px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+.welcomeHeadingRow > button#openSettings.settingsButton .settingsButtonLabel {
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
