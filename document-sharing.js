@@ -213,6 +213,19 @@
       location.reload();
     }));
   }
+  function beginSelection(type, root) {
+    if (!root) return;
+    root.classList.add('shareSelectionMode');
+    const tile = root.querySelector('.shareDocsTile');
+    if (tile) {
+      tile.classList.add('shareDocsTileActive');
+      tile.innerHTML = '<span class="shareTileIcon">✓</span><b>Ausgewählte Dokumente teilen</b><strong>›</strong>';
+      tile.onclick = () => shareSelected(type);
+    }
+    const firstCheck = root.querySelector('.shareDocumentCheck');
+    if (firstCheck) firstCheck.focus?.();
+  }
+
   async function shareSelected(type) {
     currentUser = await signedInUser();
     await loadProfiles();
@@ -279,7 +292,7 @@
       // Die Freigabekachel wird direkt in der jeweiligen Dokumentliste angezeigt.
     });
   }
-  window.BaustellenDocumentSharing = { shareSelected };
+  window.BaustellenDocumentSharing = { shareSelected, beginSelection };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 })();

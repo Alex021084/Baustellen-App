@@ -1271,7 +1271,7 @@ function render(){
   const shareTile=document.createElement('button');
   shareTile.type='button'; shareTile.className='shareDocsTile';
   shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';
-  shareTile.onclick=()=>window.BaustellenDocumentSharing?.shareSelected?.('tagelohn');
+  shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagelohn',l);
   l.append(shareTile);
   items
     .slice()
@@ -1491,7 +1491,7 @@ function renderTagesberichtArchive(){
  const shareTile=document.createElement('button');
  shareTile.type='button'; shareTile.className='shareDocsTile';
  shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';
- shareTile.onclick=()=>window.BaustellenDocumentSharing?.shareSelected?.('tagesbericht');
+ shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagesbericht',root);
  root.append(shareTile);
  entries.slice().sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{
    const row=document.createElement('div');row.className='reportRow';

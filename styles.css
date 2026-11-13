@@ -3768,3 +3768,29 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
 .shareDocCheck{display:flex;align-items:center;justify-content:center;min-width:38px;margin-right:5px}
 .shareDocCheck input{width:23px;height:23px;accent-color:#27834d}
 .reportRow{gap:8px}
+
+/* Freigabe-Auswahl: Kachel rechts, Auswahlfelder erst nach Antippen */
+.shareDocsTile{
+  width:auto !important;
+  min-width:230px;
+  margin:12px 0 14px auto !important;
+  justify-content:flex-end !important;
+  background:#f5faf6 !important;
+  border-color:#cfe5d5 !important;
+}
+.shareDocCheck{display:none !important}
+.shareSelectionMode .shareDocCheck{display:flex !important}
+.shareDocsTileActive{background:#e8f5ec !important;border-color:#9bcdaa !important}
+.shareTileIcon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#d8efdf;color:#20733e;font-size:23px;font-weight:900}
+.otherUsersTile .otherUsersIcon{
+  background:#e9f1fb !important;
+  color:#32699b !important;
+}
+.otherUsersTile .otherUsersIcon svg{width:30px;height:30px;display:block}
+.otherUsersTile{
+  min-height:82px !important;
+  border-radius:19px !important;
+  box-shadow:0 5px 16px rgba(28,55,82,.07) !important;
+}
+.otherUsersTile b{font-size:17px !important}
+@media(max-width:520px){.shareDocsTile{min-width:0;width:100% !important}}
