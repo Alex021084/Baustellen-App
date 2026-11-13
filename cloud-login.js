@@ -202,8 +202,7 @@
 
   const badge = document.createElement('div');
   badge.id = 'baustellen-user-badge';
-  badge.textContent = 'Angemeldet: ' + (profile?.username || 'Benutzer');
-
+  badge.textContent = 'Angemeldet: ' + (profile?.username || data.user.email?.split('@')[0] || 'Benutzer').replace(/^./, c => c.toUpperCase());
   Object.assign(badge.style, {
     position: 'fixed',
     top: '10px',
