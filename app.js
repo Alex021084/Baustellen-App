@@ -1270,16 +1270,16 @@ function render(){
 
   /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
   const items=projects.get(archiveSelectedProject)||[];
+  const shareTile=document.createElement('button');
+  shareTile.type='button'; shareTile.className='shareDocsTile';
+  shareTile.innerHTML='<b>Dokumente teilen</b>';
+  shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagelohn',l);
+  l.append(shareTile);
+
   const projectHeading=document.createElement('h2');
   projectHeading.className='archiveProjectHeading';
   projectHeading.textContent=archiveSelectedProject;
   l.append(projectHeading);
-
-  const shareTile=document.createElement('button');
-  shareTile.type='button'; shareTile.className='shareDocsTile';
-  shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';
-  shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagelohn',l);
-  l.append(shareTile);
   items
     .slice()
     .sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')))
