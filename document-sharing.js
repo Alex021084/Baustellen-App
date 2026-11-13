@@ -215,6 +215,10 @@
   }
   function beginSelection(type, root) {
     if (!root) return;
+    root.querySelectorAll('.shareDocumentCheck').forEach(input => {
+      input.checked = false;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     root.classList.add('shareSelectionMode');
 
     // Layout bewusst direkt an den echten Elementen setzen:
@@ -352,6 +356,18 @@
   }
 
   function installEvents() {
+    // Auswahl ist nur für den aktuellen Freigabevorgang gültig.
+    // Beim Zurückgehen/Verlassen der Liste wird sie vollständig zurückgesetzt.
+    document.addEventListener('click', e => {
+      const leaving = e.target.closest('#navBack, #homeBtn, #backToStartFromReports, #backToStartFromManagement, #backToEditorFromSummary, #reportSummaryBack, [data-back], .backButton');
+      if (!leaving) return;
+      document.querySelectorAll('.shareDocumentCheck').forEach(input => {
+        input.checked = false;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      document.querySelectorAll('.shareSelectionMode').forEach(root => root.classList.remove('shareSelectionMode'));
+      document.querySelectorAll('.shareDocsTile').forEach(tile => tile.classList.remove('shareDocsTileActive'));
+    }, true);
     document.addEventListener('click', async e => {
       const share = e.target.closest('[data-share-type]');
       const inbox = e.target.closest('[data-inbox-type]');

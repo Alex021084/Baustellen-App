@@ -4049,3 +4049,65 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
 @media(max-width:520px){
   .shareDocsTile{width:240px !important;min-width:240px !important;max-width:240px !important}
 }
+
+/* v8: Einstellungs-Zahnrad direkt neben der Startseiten-Überschrift */
+.welcomeHeadingRow{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  width:100% !important;
+}
+.welcomeHeadingRow h2{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  margin:7px 0 8px !important;
+}
+.welcomeHeadingRow .settingsButton{
+  position:static !important;
+  inset:auto !important;
+  transform:none !important;
+  flex:0 0 46px !important;
+  width:46px !important;
+  min-width:46px !important;
+  height:46px !important;
+  min-height:46px !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border:1px solid #d5e4dc !important;
+  border-radius:14px !important;
+  background:#e9f5ed !important;
+  color:#237a49 !important;
+  font-size:24px !important;
+  box-shadow:none !important;
+}
+/* v8: Freigabeaktion breiter, damit der Text Luft hat */
+.shareSelectionMode .shareDocsTile,
+.shareDocsTile.shareDocsTileActive{
+  width:330px !important;
+  min-width:330px !important;
+  max-width:min(330px, 94%) !important;
+  flex:0 1 330px !important;
+  height:58px !important;
+  min-height:58px !important;
+  padding:8px 16px !important;
+  box-sizing:border-box !important;
+}
+.shareSelectionMode .shareDocsTile b,
+.shareDocsTile.shareDocsTileActive b{
+  white-space:nowrap !important;
+  font-size:15px !important;
+  line-height:1.2 !important;
+  overflow:visible !important;
+  flex:1 1 auto !important;
+}
+@media(max-width:420px){
+  .shareSelectionMode .shareDocsTile,
+  .shareDocsTile.shareDocsTileActive{
+    width:94% !important;
+    min-width:0 !important;
+    max-width:94% !important;
+    flex-basis:94% !important;
+  }
+}
