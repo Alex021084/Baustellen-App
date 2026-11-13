@@ -233,6 +233,7 @@
       if (error) throw error;
 
       if (data.session) {
+        await showUserBadge();         
         return;
       }
 
