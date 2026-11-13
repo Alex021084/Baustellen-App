@@ -3615,3 +3615,17 @@ body.home-screen #home.active .startChoices {
   .settingsItem em { max-width: 76px; white-space: normal; text-align: right; }
   .settingsButton { top: 76px !important; right: 12px !important; width: 50px !important; height: 50px !important; }
 }
+
+
+/* Menü-Feinschliff v41 */
+@media (min-width: 0px) {
+  #home.startScreen.active .startChoices { margin-top: 77px !important; }
+}
+.settingsGroupMain { margin-top: 26px; }
+.settingsGroupMain .settingsItem { min-height: 88px; margin: 12px 0; }
+.settingsGroupMain .settingsItem b { font-size: 18px; }
+.settingsGroupMain .settingsItem small { font-size: 13px; }
+@media (max-width: 600px) {
+  #home.startScreen.active .startChoices { margin-top: 70px !important; }
+  .settingsGroupMain .settingsItem { min-height: 78px; }
+}

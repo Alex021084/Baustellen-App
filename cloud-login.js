@@ -206,7 +206,7 @@
   Object.assign(badge.style, {
     position: 'fixed',
     top: '10px',
-    right: '12px',
+    left: '12px',
     zIndex: '9997',
     padding: '8px 12px',
     borderRadius: '18px',
