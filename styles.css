@@ -3758,3 +3758,13 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
 .shareSubmit{width:100%;margin-top:16px;min-height:48px}
 .shareFeedback{min-height:22px;margin-top:10px;color:#176b37;font-weight:600}
 @media(max-width:420px){.shareActionRow{grid-template-columns:1fr}.shareInboxItem{grid-template-columns:1fr}.shareInboxItem button{grid-column:1;grid-row:auto}}
+
+/* Freigabe-Bedienung nach Nutzerwunsch: nur Eingang auf Modulstartseite */
+.otherUsersTile,.shareDocsTile{box-sizing:border-box;width:100%;min-height:72px;margin:14px 0;padding:14px 18px;display:flex;align-items:center;gap:14px;border:1px solid #dce3eb;border-radius:17px;background:#fff;color:#172b3a;text-align:left;box-shadow:0 4px 14px rgba(23,35,47,.045)}
+.otherUsersTile .otherUsersIcon,.shareDocsTile>span{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#eaf4ed;color:#287a48;font-size:24px;font-weight:800}
+.otherUsersTile b,.shareDocsTile b{flex:1;font-size:16px}
+.otherUsersTile strong,.shareDocsTile strong{font-size:25px;color:#8d969e}
+.shareDocsTile{margin:10px 0 14px;background:#f5faf6;border-color:#cfe5d5}
+.shareDocCheck{display:flex;align-items:center;justify-content:center;min-width:38px;margin-right:5px}
+.shareDocCheck input{width:23px;height:23px;accent-color:#27834d}
+.reportRow{gap:8px}

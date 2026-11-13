@@ -1268,6 +1268,11 @@ function render(){
 
   /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
   const items=projects.get(archiveSelectedProject)||[];
+  const shareTile=document.createElement('button');
+  shareTile.type='button'; shareTile.className='shareDocsTile';
+  shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';
+  shareTile.onclick=()=>window.BaustellenDocumentSharing?.shareSelected?.('tagelohn');
+  l.append(shareTile);
   items
     .slice()
     .sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')))
@@ -1276,7 +1281,7 @@ function render(){
       row.className='reportRow';
       const signed=!!r.signed;
       const pdfBadge=r.pdfCreated?'<span class="reportStatus isPdfCreated">📄 PDF erstellt</span>':'';
-      row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span>${pdfBadge}</div><button type="button" class="openReport">Öffnen</button>`;
+      row.innerHTML=`<label class="shareDocCheck"><input type="checkbox" class="shareDocumentCheck" value="${esc(r._cloudId||'')}" data-share-index="${i}" data-share-type="tagelohn"><span></span></label><div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span>${pdfBadge}</div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
         tagelohnReadOnly=false;
@@ -1483,13 +1488,18 @@ function renderTagesberichtArchive(){
    });return;
  }
  const entries=projects.get(selectedReportProject)||[];
+ const shareTile=document.createElement('button');
+ shareTile.type='button'; shareTile.className='shareDocsTile';
+ shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';
+ shareTile.onclick=()=>window.BaustellenDocumentSharing?.shareSelected?.('tagesbericht');
+ root.append(shareTile);
  entries.slice().sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{
    const row=document.createElement('div');row.className='reportRow';
    const statusBadges=[
      r.signed?'<span class="reportStatus isSigned">✓ Unterschrieben</span>':'',
      r.pdfCreated?'<span class="reportStatus isPdfCreated">📄 PDF erstellt</span>':''
    ].filter(Boolean).join(' ');
-   row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong>${statusBadges}</div><button type="button" class="openReport">Ansehen</button>`;
+   row.innerHTML=`<label class="shareDocCheck"><input type="checkbox" class="shareDocumentCheck" value="${esc(r._cloudId||'')}" data-share-index="${i}" data-share-type="tagesbericht"><span></span></label><div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong>${statusBadges}</div><button type="button" class="openReport">Ansehen</button>`;
    row.querySelector('button').onclick=()=>showSavedTagesbericht(r);
    enableSwipeDelete(row,()=>{const list=getSavedTagesberichte();list.splice(i,1);localStorage.setItem('tagesberichte',JSON.stringify(list));renderTagesberichtArchive();});
    root.append(row);

@@ -173,13 +173,29 @@
       if (result.error) throw result.error;
       docs = result.data || [];
     }
-    makeModal('Geteilte Dokumente', `
-      <p>Dokumente, die andere Mitarbeiter mit dir geteilt haben.</p>
-      <div class="shareList">${docs.length ? docs.map(d => `
-        <div class="shareInboxItem"><b>${escapeHtml(d.title || DOCS[type].title)}</b>
-          <small>${dateLabel(d.document_date)}</small>
-          <button type="button" class="secondary" data-open-shared="${d.id}">In App laden</button>
-        </div>`).join('') : '<p>Zurzeit wurden keine Dokumente mit dir geteilt.</p>'}</div>
+    const ownerIds = [...new Set(docs.map(d => d.owner_id))];
+    let ownerProfiles = [];
+    if (ownerIds.length) {
+      const people = await cloud().from('user_profiles').select('id,username').in('id', ownerIds);
+      if (people.error) throw people.error;
+      ownerProfiles = people.data || [];
+    }
+    const ownerGroups = ownerIds.map(ownerId => ({
+      ownerId,
+      username: ownerProfiles.find(p => p.id === ownerId)?.username || 'Mitarbeiter',
+      docs: docs.filter(d => d.owner_id === ownerId)
+    }));
+    makeModal('Dokumente anderer Nutzer', `
+      <p>Wähle zuerst den Mitarbeiter aus. Darunter findest du seine freigegebenen Dokumente.</p>
+      <div class="shareList">${ownerGroups.length ? ownerGroups.map(group => `
+        <section class="shareOwnerGroup">
+          <h3>${escapeHtml(group.username)}</h3>
+          ${group.docs.map(d => `
+            <div class="shareInboxItem"><b>${escapeHtml(d.title || DOCS[type].title)}</b>
+              <small>${dateLabel(d.document_date)}</small>
+              <button type="button" class="secondary" data-open-shared="${d.id}">Öffnen</button>
+            </div>`).join('')}
+        </section>`).join('') : '<p>Zurzeit hat noch niemand Dokumente mit dir geteilt.</p>'}</div>
     `);
     modal.querySelectorAll('[data-open-shared]').forEach(btn => btn.addEventListener('click', () => {
       const row = docs.find(d => d.id === btn.dataset.openShared);
@@ -197,6 +213,40 @@
       location.reload();
     }));
   }
+  async function shareSelected(type) {
+    currentUser = await signedInUser();
+    await loadProfiles();
+    const checked = [...document.querySelectorAll('.shareDocumentCheck:checked')];
+    const ids = checked.map(x => x.value).filter(Boolean);
+    if (!ids.length) {
+      alert('Bitte zuerst die Dokumente mit Häkchen auswählen, die du teilen möchtest.');
+      return;
+    }
+    makeModal('Mit Mitarbeitern teilen', `
+      <p>Die ausgewählten Dokumente erhalten vollständige Bearbeitungsrechte für die ausgewählten Mitarbeiter.</p>
+      <div class="shareSubheading">Mitarbeiter auswählen</div>
+      <div class="shareList">${profiles.map(p => `
+        <label class="shareChoice"><input type="checkbox" name="shareUser" value="${p.id}">
+          <span><b>${escapeHtml(p.username || 'Mitarbeiter')}</b></span>
+        </label>`).join('') || '<p>Keine weiteren Benutzer gefunden.</p>'}</div>
+      <button type="button" class="primary shareSubmit">Freigabe erteilen</button>
+      <div class="shareFeedback" role="status"></div>
+    `);
+    modal.querySelector('.shareSubmit').onclick = async e => {
+      const btn=e.currentTarget;
+      const users=[...modal.querySelectorAll('input[name="shareUser"]:checked')].map(x=>x.value);
+      const feedback=modal.querySelector('.shareFeedback');
+      if(!users.length){feedback.textContent='Bitte mindestens einen Mitarbeiter auswählen.';return;}
+      btn.disabled=true; feedback.textContent='Freigabe wird gespeichert …';
+      try {
+        const {error}=await cloud().rpc('share_documents_with_users',{p_document_ids:ids,p_user_ids:users});
+        if(error) throw error;
+        feedback.textContent='Freigabe erfolgreich erteilt.';
+        setTimeout(closeModal,900);
+      } catch(err){feedback.textContent=err.message||'Freigabe fehlgeschlagen.';btn.disabled=false;}
+    };
+  }
+
   function installEvents() {
     document.addEventListener('click', async e => {
       const share = e.target.closest('[data-share-type]');
@@ -214,11 +264,8 @@
     for (let i = 0; i < 40 && !cloud(); i++) await new Promise(r => setTimeout(r, 250));
     if (!cloud()) return;
     const { data } = await cloud().auth.getSession();
-    if (data?.session) {
-      currentUser = data.session.user;
-      try { await renderControls(); } catch (e) { console.warn('Dokumentfreigabe:', e); }
-    }
-    window.addEventListener('baustellen:login', () => renderControls().catch(console.warn));
+    if (data?.session) currentUser = data.session.user;
+    window.addEventListener('baustellen:login', async () => { currentUser = await signedInUser(); });
     window.addEventListener('baustellen:logout', closeModal);
     const pendingType = sessionStorage.getItem('baustellenOpenSharedType');
     if (pendingType) {
@@ -229,11 +276,10 @@
       }, 900);
     }
     document.addEventListener('click', e => {
-      if (e.target.closest('#openTagelohn,#openTagesbericht')) {
-        setTimeout(() => renderControls().catch(console.warn), 250);
-      }
+      // Die Freigabekachel wird direkt in der jeweiligen Dokumentliste angezeigt.
     });
   }
+  window.BaustellenDocumentSharing = { shareSelected };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 })();
