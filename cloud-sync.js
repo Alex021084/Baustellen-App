@@ -47,6 +47,21 @@
     }
   }
 
+  function previous(key) {
+    try {
+      const value = JSON.parse(snapshots.get(key) || 'null');
+      return Array.isArray(value) ? value : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function identity(item) {
+    return item && typeof item === 'object'
+      ? String(item.id || item.name || JSON.stringify(item)).toLowerCase()
+      : String(item).trim().toLowerCase();
+  }
+
   function changed(key) {
     return JSON.stringify(read(key)) !== snapshots.get(key);
   }
@@ -73,13 +88,35 @@
     return result;
   }
 
-  function mergeMaster(category, remote, local) {
-    const a = Array.isArray(remote) ? remote : [];
+  function mergeMaster(category, remote, local, baseline, detectDeletes) {
+    let a = Array.isArray(remote) ? remote.map(x => ({ ...x })) : [];
     const b = Array.isArray(local) ? local : [];
+    const old = Array.isArray(baseline) ? baseline : [];
 
-    if (category !== 'customers') {
-      return unique([...a, ...b]);
+    // Löschungen werden anhand des letzten erfolgreichen Cloud-Snapshots erkannt.
+    // Nur Einträge, die vorher existierten und jetzt lokal fehlen, werden entfernt.
+    if (detectDeletes) {
+      const currentKeys = new Set(b.map(identity));
+      const removedKeys = new Set(old.map(identity).filter(key => !currentKeys.has(key)));
+      a = a.filter(item => !removedKeys.has(identity(item)));
+
+      if (category === 'customers') {
+        const oldByCustomer = new Map(old.map(item => [identity(item), item]));
+        const currentByCustomer = new Map(b.map(item => [identity(item), item]));
+        for (const cloudCustomer of a) {
+          const oldCustomer = oldByCustomer.get(identity(cloudCustomer));
+          const currentCustomer = currentByCustomer.get(identity(cloudCustomer));
+          if (!oldCustomer || !currentCustomer) continue;
+          const currentProjectKeys = new Set((currentCustomer.projects || []).map(identity));
+          const removedProjectKeys = new Set((oldCustomer.projects || []).map(identity)
+            .filter(key => !currentProjectKeys.has(key)));
+          cloudCustomer.projects = (cloudCustomer.projects || [])
+            .filter(project => !removedProjectKeys.has(identity(project)));
+        }
+      }
     }
+
+    if (category !== 'customers') return unique([...a, ...b]);
 
     const result = a.map(x => ({
       ...x,
@@ -87,22 +124,12 @@
     }));
 
     for (const customer of b) {
-      const existing = result.find(x =>
-        String(x.id || x.name).toLowerCase() ===
-        String(customer.id || customer.name).toLowerCase()
-      );
-
+      const existing = result.find(x => identity(x) === identity(customer));
       if (!existing) {
         result.push(customer);
       } else {
-        existing.projects = unique([
-          ...(existing.projects || []),
-          ...(customer.projects || [])
-        ]);
-
-        if (!existing.address && customer.address) {
-          existing.address = customer.address;
-        }
+        existing.projects = unique([...(existing.projects || []), ...(customer.projects || [])]);
+        if (!existing.address && customer.address) existing.address = customer.address;
       }
     }
 
@@ -131,7 +158,7 @@ const local = category === 'customers'
       if (error) throw error;
 
       const row = rows?.[0];
-      const merged = mergeMaster(category, row?.data, local);
+      const merged = mergeMaster(category, row?.data, local, previous(key), !initial && changed(key));
 
       if (row) {
         const { error: updateError } = await c
@@ -189,6 +216,24 @@ const local = category === 'customers'
           _sharedOwnerId: doc.owner_id !== user.id ? doc.owner_id : undefined,
           _isShared: doc.owner_id !== user.id
         }));
+
+      // Gelöschte eigene Dokumente auch in Supabase entfernen. Freigegebene
+      // Dokumente anderer Eigentümer werden hier bewusst nicht global gelöscht.
+      if (!initial && changed(key)) {
+        const oldIds = new Set(previous(key).map(item => item?._cloudId).filter(Boolean));
+        const currentIds = new Set(local.map(item => item?._cloudId).filter(Boolean));
+        const removedIds = [...oldIds].filter(id => !currentIds.has(id));
+        for (const id of removedIds) {
+          const cloudDoc = (cloudDocs || []).find(doc => doc.id === id);
+          if (!cloudDoc || cloudDoc.owner_id !== user.id) continue;
+          const { error: deleteError } = await c
+            .from('user_documents')
+            .delete()
+            .eq('id', id)
+            .eq('owner_id', user.id);
+          if (deleteError) throw deleteError;
+        }
+      }
 
       // Cloud-Inhalt ist beim Initialladen maßgeblich. Danach werden lokale
       // Änderungen mit UPDATE gespeichert; owner_id bleibt unverändert.
