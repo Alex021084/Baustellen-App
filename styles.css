@@ -4106,3 +4106,30 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   font-weight: 600 !important;
   line-height: 1 !important;
 }
+
+
+/* v17: Zahnrad und Menü-Beschriftung nebeneinander, rechts bündig */
+.settingsButton {
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  width: auto !important;
+  min-width: 94px !important;
+  height: 42px !important;
+  padding: 8px 12px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  z-index: 5 !important;
+}
+.settingsButton .settingsButtonLabel {
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
