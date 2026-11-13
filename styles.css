@@ -3493,3 +3493,51 @@ body.home-screen #home.active .startChoices {
   margin: 8px 0;
   font-size: 16px;
 }
+
+
+/* Menü v1 – Startseite und Einstellungen */
+#home.startScreen { position: relative; }
+#home .settingsButton {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 5;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: #173b57;
+  color: #fff;
+  font-size: 22px;
+  padding: 8px 12px;
+}
+#settingsHome .settingsMenu {
+  display: block;
+  max-width: 680px;
+  margin: 18px auto;
+  padding: 16px;
+  background: #fff;
+  border-radius: 16px;
+}
+#settingsHome .settingsMenu button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border: 1px solid #d5d5da;
+  border-radius: 10px;
+  background: #fff;
+  color: #172b3a;
+  text-align: left;
+  font-size: 16px;
+}
+#settingsHome .settingsMenu button:disabled {
+  opacity: .55;
+}
+#settingsHome .settingsMenu .hint {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 14px 2px 2px;
+}
