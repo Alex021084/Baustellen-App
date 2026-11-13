@@ -4124,3 +4124,40 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   min-width:270px !important;
   max-width:270px !important;
 }
+
+/* v10: Auswahlmodus verändert niemals die Größe der Dokumentkarten */
+.shareSelectionMode .reportRow{
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+.shareSelectionMode .reportRow .shareDocCheck{
+  position:absolute !important;
+  right:16px !important;
+  left:auto !important;
+  top:50% !important;
+  bottom:auto !important;
+  transform:translateY(-50%) !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+/* Freigabe-Aktion ohne Symbol, Text immer mittig */
+.shareDocsTile,
+.shareDocsTile.shareDocsTileActive{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+}
+.shareDocsTile::before,
+.shareDocsTile::after,
+.shareDocsTile .shareTileIcon,
+.shareDocsTile strong{
+  display:none !important;
+  content:none !important;
+}
+.shareDocsTile b{
+  display:block !important;
+  width:100% !important;
+  text-align:center !important;
+  margin:0 auto !important;
+}

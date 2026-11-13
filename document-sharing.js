@@ -213,68 +213,110 @@
       location.reload();
     }));
   }
-  function beginSelection(type, root) {
-    if (!root) return;
-    root.querySelectorAll('.shareDocumentCheck').forEach(input => {
+  function resetSelection() {
+    document.querySelectorAll('.shareDocumentCheck').forEach(input => {
       input.checked = false;
       input.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    root.classList.add('shareSelectionMode');
+    document.querySelectorAll('.shareSelectionMode').forEach(root => {
+      root.classList.remove('shareSelectionMode');
+      root.querySelectorAll('.reportRow').forEach(row => {
+        const saved = row.__shareOriginalStyle;
+        if (saved) {
+          row.removeAttribute('style');
+          if (saved) row.setAttribute('style', saved);
+          delete row.__shareOriginalStyle;
+        }
+      });
+    });
+    document.querySelectorAll('.shareDocsTile').forEach(tile => {
+      tile.classList.remove('shareDocsTileActive');
+      tile.textContent = 'Dokumente teilen';
+      tile.style.removeProperty('display');
+      tile.style.removeProperty('width');
+      tile.style.removeProperty('min-width');
+      tile.style.removeProperty('max-width');
+      tile.style.removeProperty('height');
+      tile.style.removeProperty('min-height');
+      tile.style.removeProperty('margin');
+      tile.style.removeProperty('padding');
+      tile.style.removeProperty('flex-direction');
+      tile.style.removeProperty('align-items');
+      tile.style.removeProperty('justify-content');
+    });
+  }
 
-    // Die Dokumentenkacheln behalten exakt ihre bisherige Größe und Anordnung.
-    // Nur das Auswahlfeld wird rechts mittig über der Kachel positioniert.
+  function beginSelection(type, root) {
+    if (!root) return;
+    resetSelection();
+
+    // Originalgröße jeder Karte vor dem Einblenden der Checkbox exakt sichern.
     root.querySelectorAll('.reportRow').forEach(row => {
+      row.__shareOriginalStyle = row.getAttribute('style') || '';
+      const rect = row.getBoundingClientRect();
+      row.style.setProperty('box-sizing', 'border-box', 'important');
+      row.style.setProperty('width', rect.width + 'px', 'important');
+      row.style.setProperty('min-width', rect.width + 'px', 'important');
+      row.style.setProperty('max-width', rect.width + 'px', 'important');
+      row.style.setProperty('height', rect.height + 'px', 'important');
+      row.style.setProperty('min-height', rect.height + 'px', 'important');
+      row.style.setProperty('max-height', rect.height + 'px', 'important');
+      row.style.setProperty('flex', '0 0 ' + rect.width + 'px', 'important');
       row.style.setProperty('position', 'relative', 'important');
+      row.style.setProperty('overflow', 'hidden', 'important');
+    });
 
+    root.classList.add('shareSelectionMode');
+    root.querySelectorAll('.reportRow').forEach(row => {
       const label = row.querySelector('.shareDocCheck');
       const input = label?.querySelector('input');
       const mark = label?.querySelector('span');
-      if (label && input && mark) {
-        label.style.setProperty('position', 'absolute', 'important');
-        label.style.setProperty('right', '16px', 'important');
-        label.style.setProperty('top', '50%', 'important');
-        label.style.setProperty('left', 'auto', 'important');
-        label.style.setProperty('bottom', 'auto', 'important');
-        label.style.setProperty('transform', 'translateY(-50%)', 'important');
-        label.style.setProperty('display', 'flex', 'important');
-        label.style.setProperty('width', '36px', 'important');
-        label.style.setProperty('height', '48px', 'important');
-        label.style.setProperty('margin', '0', 'important');
-        label.style.setProperty('padding', '0', 'important');
-        label.style.setProperty('align-items', 'center', 'important');
-        label.style.setProperty('justify-content', 'center', 'important');
-        label.style.setProperty('z-index', '5', 'important');
+      if (!label || !input || !mark) return;
 
-        input.style.setProperty('position', 'absolute', 'important');
-        input.style.setProperty('opacity', '0', 'important');
-        input.style.setProperty('width', '1px', 'important');
-        input.style.setProperty('height', '1px', 'important');
+      label.style.setProperty('position', 'absolute', 'important');
+      label.style.setProperty('right', '16px', 'important');
+      label.style.setProperty('top', '50%', 'important');
+      label.style.setProperty('left', 'auto', 'important');
+      label.style.setProperty('bottom', 'auto', 'important');
+      label.style.setProperty('transform', 'translateY(-50%)', 'important');
+      label.style.setProperty('display', 'flex', 'important');
+      label.style.setProperty('width', '36px', 'important');
+      label.style.setProperty('height', '48px', 'important');
+      label.style.setProperty('margin', '0', 'important');
+      label.style.setProperty('padding', '0', 'important');
+      label.style.setProperty('align-items', 'center', 'important');
+      label.style.setProperty('justify-content', 'center', 'important');
+      label.style.setProperty('z-index', '5', 'important');
 
-        const paint = () => {
-          mark.textContent = input.checked ? '✓' : '';
-          mark.style.setProperty('display', 'flex', 'important');
-          mark.style.setProperty('width', '27px', 'important');
-          mark.style.setProperty('height', '27px', 'important');
-          mark.style.setProperty('box-sizing', 'border-box', 'important');
-          mark.style.setProperty('align-items', 'center', 'important');
-          mark.style.setProperty('justify-content', 'center', 'important');
-          mark.style.setProperty('border', input.checked ? '2px solid #27834d' : '2px solid #9aa5ae', 'important');
-          mark.style.setProperty('border-radius', '8px', 'important');
-          mark.style.setProperty('background', input.checked ? '#27834d' : '#fff', 'important');
-          mark.style.setProperty('color', input.checked ? '#fff' : '#9aa5ae', 'important');
-          mark.style.setProperty('font-size', '21px', 'important');
-          mark.style.setProperty('font-weight', '900', 'important');
-          mark.style.setProperty('line-height', '1', 'important');
-        };
-        input.addEventListener('change', paint);
-        paint();
-      }
+      input.style.setProperty('position', 'absolute', 'important');
+      input.style.setProperty('opacity', '0', 'important');
+      input.style.setProperty('width', '1px', 'important');
+      input.style.setProperty('height', '1px', 'important');
+
+      const paint = () => {
+        mark.textContent = input.checked ? '✓' : '';
+        mark.style.setProperty('display', 'flex', 'important');
+        mark.style.setProperty('width', '27px', 'important');
+        mark.style.setProperty('height', '27px', 'important');
+        mark.style.setProperty('box-sizing', 'border-box', 'important');
+        mark.style.setProperty('align-items', 'center', 'important');
+        mark.style.setProperty('justify-content', 'center', 'important');
+        mark.style.setProperty('border', input.checked ? '2px solid #27834d' : '2px solid #9aa5ae', 'important');
+        mark.style.setProperty('border-radius', '8px', 'important');
+        mark.style.setProperty('background', input.checked ? '#27834d' : '#fff', 'important');
+        mark.style.setProperty('color', input.checked ? '#fff' : '#9aa5ae', 'important');
+        mark.style.setProperty('font-size', '21px', 'important');
+        mark.style.setProperty('font-weight', '900', 'important');
+        mark.style.setProperty('line-height', '1', 'important');
+      };
+      input.addEventListener('change', paint);
+      paint();
     });
 
     const tile = root.querySelector('.shareDocsTile');
     if (tile) {
       tile.classList.add('shareDocsTileActive');
-      tile.innerHTML = '<span class="shareTileIcon">✓</span><b>Ausgewählte Dokumente teilen</b>';
+      tile.textContent = 'Ausgewählte Dokumente teilen';
       tile.style.setProperty('display', 'flex', 'important');
       tile.style.setProperty('width', '270px', 'important');
       tile.style.setProperty('min-width', '270px', 'important');
@@ -283,19 +325,13 @@
       tile.style.setProperty('min-height', '54px', 'important');
       tile.style.setProperty('margin', '8px 0 12px auto', 'important');
       tile.style.setProperty('padding', '6px 12px', 'important');
-      tile.style.setProperty('flex-direction', 'row', 'important');
       tile.style.setProperty('align-items', 'center', 'important');
-      tile.style.setProperty('justify-content', 'space-between', 'important');
-      const label = tile.querySelector('b');
-      if (label) {
-        label.style.setProperty('white-space', 'nowrap', 'important');
-        label.style.setProperty('font-size', '14px', 'important');
-        label.style.setProperty('flex', '1 1 auto', 'important');
-      }
+      tile.style.setProperty('justify-content', 'center', 'important');
+      tile.style.setProperty('text-align', 'center', 'important');
+      tile.style.setProperty('white-space', 'normal', 'important');
+      tile.style.setProperty('font-weight', '700', 'important');
       tile.onclick = () => shareSelected(type);
     }
-    const firstCheck = root.querySelector('.shareDocumentCheck');
-    if (firstCheck) firstCheck.focus?.();
   }
 
   async function shareSelected(type) {
@@ -336,15 +372,15 @@
     // Auswahl ist nur für den aktuellen Freigabevorgang gültig.
     // Beim Zurückgehen/Verlassen der Liste wird sie vollständig zurückgesetzt.
     document.addEventListener('click', e => {
-      const leaving = e.target.closest('#navBack, #homeBtn, #backToStartFromReports, #backToStartFromManagement, #backToEditorFromSummary, #reportSummaryBack, [data-back], .backButton');
-      if (!leaving) return;
-      document.querySelectorAll('.shareDocumentCheck').forEach(input => {
-        input.checked = false;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-      document.querySelectorAll('.shareSelectionMode').forEach(root => root.classList.remove('shareSelectionMode'));
-      document.querySelectorAll('.shareDocsTile').forEach(tile => tile.classList.remove('shareDocsTileActive'));
+      const leaving = e.target.closest('#navBack, #homeBtn, #backToStartFromReports, #backToStartFromManagement, #backToEditorFromSummary, #reportSummaryBack, [data-back], .backButton, #backButton, .backBtn, [onclick*="back"], [onclick*="Back"]');
+      if (leaving) resetSelection();
     }, true);
+    // Auch bei Navigation über andere App-Schaltflächen/Ansichten Auswahl entfernen.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') resetSelection();
+    });
+    window.addEventListener('pagehide', resetSelection);
+    window.addEventListener('popstate', resetSelection);
     document.addEventListener('click', async e => {
       const share = e.target.closest('[data-share-type]');
       const inbox = e.target.closest('[data-inbox-type]');
