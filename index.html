@@ -6,7 +6,7 @@
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
-<div class="welcome">
+<button class="settingsButton" id="openSettings">⚙️</button>div class="welcome">
   <div class="companyLogoWrap">
     <img class="companyLogo" src="dahlmann-erdbau-logo.jpg" alt="Dählmann Erdbau GmbH">
   </div>
@@ -26,8 +26,14 @@
 </button>
 </div>
 </section>
-
-<section id="tagelohnHome" class="screen">
+<section id="settingsHome" class="screen">
+<h2>Einstellungen &amp; Verwaltung</h2>
+<button id="openManagementFromSettings">Stammdaten</button>
+<button id="userAccounts">Benutzerkonten verwalten</button>
+<button id="addUser">Neues Konto hinzufügen</button>
+<button id="switchUser">Benutzer wechseln</button>
+<button id="logoutUser">Abmelden</button>
+</section><section id="tagelohnHome" class="screen">
 <div class="moduleHeader"><div><h2>Tagelohnnachweis</h2></div></div>
 <button id="new2" class="primary big">＋ Neuer Tagelohn</button>
 <div class="archiveHint">Kunden und Baustellen</div>
