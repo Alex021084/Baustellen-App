@@ -4111,3 +4111,16 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
     flex-basis:94% !important;
   }
 }
+
+/* v9: Auswahlfelder rechts, ohne die Dokumentenkacheln zu vergroessern */
+.shareSelectionMode .reportRow{
+  min-height: unset !important;
+  height: auto !important;
+  padding-right: inherit !important;
+}
+.shareSelectionMode .shareDocsTile strong{display:none !important;}
+.shareSelectionMode .shareDocsTile{
+  width:270px !important;
+  min-width:270px !important;
+  max-width:270px !important;
+}

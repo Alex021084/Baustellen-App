@@ -221,33 +221,10 @@
     });
     root.classList.add('shareSelectionMode');
 
-    // Layout bewusst direkt an den echten Elementen setzen:
-    // so können ältere, widersprüchliche CSS-Regeln die Position nicht mehr verschieben.
+    // Die Dokumentenkacheln behalten exakt ihre bisherige Größe und Anordnung.
+    // Nur das Auswahlfeld wird rechts mittig über der Kachel positioniert.
     root.querySelectorAll('.reportRow').forEach(row => {
       row.style.setProperty('position', 'relative', 'important');
-      row.style.setProperty('display', 'block', 'important');
-      row.style.setProperty('box-sizing', 'border-box', 'important');
-      row.style.setProperty('min-height', '104px', 'important');
-      row.style.setProperty('padding', '12px 68px 12px 16px', 'important');
-
-      const main = row.querySelector('.reportMain');
-      if (main) {
-        main.style.setProperty('display', 'flex', 'important');
-        main.style.setProperty('flex-direction', 'row', 'important');
-        main.style.setProperty('flex-wrap', 'wrap', 'important');
-        main.style.setProperty('align-items', 'center', 'important');
-        main.style.setProperty('justify-content', 'flex-start', 'important');
-        main.style.setProperty('gap', '6px 8px', 'important');
-        main.style.setProperty('width', '100%', 'important');
-        main.style.setProperty('margin', '0 0 8px 0', 'important');
-      }
-
-      const open = row.querySelector('.openReport');
-      if (open) {
-        open.style.setProperty('display', 'inline-flex', 'important');
-        open.style.setProperty('position', 'static', 'important');
-        open.style.setProperty('margin', '0', 'important');
-      }
 
       const label = row.querySelector('.shareDocCheck');
       const input = label?.querySelector('input');
@@ -284,7 +261,7 @@
           mark.style.setProperty('border', input.checked ? '2px solid #27834d' : '2px solid #9aa5ae', 'important');
           mark.style.setProperty('border-radius', '8px', 'important');
           mark.style.setProperty('background', input.checked ? '#27834d' : '#fff', 'important');
-          mark.style.setProperty('color', '#fff', 'important');
+          mark.style.setProperty('color', input.checked ? '#fff' : '#9aa5ae', 'important');
           mark.style.setProperty('font-size', '21px', 'important');
           mark.style.setProperty('font-weight', '900', 'important');
           mark.style.setProperty('line-height', '1', 'important');
@@ -297,7 +274,7 @@
     const tile = root.querySelector('.shareDocsTile');
     if (tile) {
       tile.classList.add('shareDocsTileActive');
-      tile.innerHTML = '<span class="shareTileIcon">✓</span><b>Ausgewählte Dokumente teilen</b><strong>›</strong>';
+      tile.innerHTML = '<span class="shareTileIcon">✓</span><b>Ausgewählte Dokumente teilen</b>';
       tile.style.setProperty('display', 'flex', 'important');
       tile.style.setProperty('width', '270px', 'important');
       tile.style.setProperty('min-width', '270px', 'important');
