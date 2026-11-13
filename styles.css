@@ -4161,3 +4161,68 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   text-align:center !important;
   margin:0 auto !important;
 }
+
+/* v11: Auswahl darf das bestehende Kartenlayout nicht verändern */
+.shareSelectionMode .reportRow{
+  display:block !important;
+  box-sizing:border-box !important;
+  min-height:104px !important;
+  height:auto !important;
+  padding:12px 68px 12px 16px !important;
+  overflow:hidden !important;
+}
+.shareSelectionMode .reportRow .reportMain{
+  display:flex !important;
+  width:100% !important;
+  min-width:0 !important;
+  flex-direction:row !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:6px 8px !important;
+  margin:0 0 8px 0 !important;
+}
+.shareSelectionMode .reportRow .openReport{
+  display:inline-flex !important;
+  position:static !important;
+  width:auto !important;
+  margin:0 !important;
+  transform:none !important;
+}
+.shareSelectionMode .reportRow .shareDocCheck{
+  position:absolute !important;
+  right:16px !important;
+  left:auto !important;
+  top:50% !important;
+  bottom:auto !important;
+  transform:translateY(-50%) !important;
+  display:flex !important;
+  width:36px !important;
+  min-width:36px !important;
+  height:48px !important;
+  min-height:48px !important;
+  margin:0 !important;
+  padding:0 !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+/* Freigabekachel: gleiche Maße und gleiche Schriftgröße im Auswahlmodus */
+.shareDocsTile,
+.shareDocsTile.shareDocsTileActive{
+  box-sizing:border-box !important;
+  font-size:inherit !important;
+  font-weight:inherit !important;
+  text-align:center !important;
+}
+.shareDocsTile .shareTileIcon,
+.shareDocsTile strong{
+  display:none !important;
+}
+.shareDocsTile b{
+  display:block !important;
+  width:100% !important;
+  margin:0 auto !important;
+  text-align:center !important;
+  font-size:inherit !important;
+  font-weight:inherit !important;
+}

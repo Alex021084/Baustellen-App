@@ -218,31 +218,19 @@
       input.checked = false;
       input.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    document.querySelectorAll('.shareSelectionMode').forEach(root => {
-      root.classList.remove('shareSelectionMode');
-      root.querySelectorAll('.reportRow').forEach(row => {
-        const saved = row.__shareOriginalStyle;
-        if (saved) {
-          row.removeAttribute('style');
-          if (saved) row.setAttribute('style', saved);
-          delete row.__shareOriginalStyle;
-        }
-      });
+    document.querySelectorAll('.shareSelectionMode').forEach(root => root.classList.remove('shareSelectionMode'));
+    document.querySelectorAll('.reportRow').forEach(row => {
+      if (row.__shareOriginalStyle !== undefined) {
+        if (row.__shareOriginalStyle) row.setAttribute('style', row.__shareOriginalStyle);
+        else row.removeAttribute('style');
+        delete row.__shareOriginalStyle;
+      }
     });
     document.querySelectorAll('.shareDocsTile').forEach(tile => {
       tile.classList.remove('shareDocsTileActive');
-      tile.textContent = 'Dokumente teilen';
-      tile.style.removeProperty('display');
-      tile.style.removeProperty('width');
-      tile.style.removeProperty('min-width');
-      tile.style.removeProperty('max-width');
-      tile.style.removeProperty('height');
-      tile.style.removeProperty('min-height');
-      tile.style.removeProperty('margin');
-      tile.style.removeProperty('padding');
-      tile.style.removeProperty('flex-direction');
-      tile.style.removeProperty('align-items');
-      tile.style.removeProperty('justify-content');
+      const label = tile.querySelector('b');
+      if (label) label.textContent = 'Dokumente teilen';
+      tile.querySelectorAll('.shareTileIcon, strong').forEach(el => { el.style.display = 'none'; });
     });
   }
 
@@ -250,20 +238,10 @@
     if (!root) return;
     resetSelection();
 
-    // Originalgröße jeder Karte vor dem Einblenden der Checkbox exakt sichern.
+    // Keine Größen-, Abstands- oder Schriftänderungen an den Dokumentkarten.
     root.querySelectorAll('.reportRow').forEach(row => {
       row.__shareOriginalStyle = row.getAttribute('style') || '';
-      const rect = row.getBoundingClientRect();
-      row.style.setProperty('box-sizing', 'border-box', 'important');
-      row.style.setProperty('width', rect.width + 'px', 'important');
-      row.style.setProperty('min-width', rect.width + 'px', 'important');
-      row.style.setProperty('max-width', rect.width + 'px', 'important');
-      row.style.setProperty('height', rect.height + 'px', 'important');
-      row.style.setProperty('min-height', rect.height + 'px', 'important');
-      row.style.setProperty('max-height', rect.height + 'px', 'important');
-      row.style.setProperty('flex', '0 0 ' + rect.width + 'px', 'important');
       row.style.setProperty('position', 'relative', 'important');
-      row.style.setProperty('overflow', 'hidden', 'important');
     });
 
     root.classList.add('shareSelectionMode');
@@ -316,20 +294,17 @@
     const tile = root.querySelector('.shareDocsTile');
     if (tile) {
       tile.classList.add('shareDocsTileActive');
-      tile.textContent = 'Ausgewählte Dokumente teilen';
-      tile.style.setProperty('display', 'flex', 'important');
-      tile.style.setProperty('width', '270px', 'important');
-      tile.style.setProperty('min-width', '270px', 'important');
-      tile.style.setProperty('max-width', '270px', 'important');
-      tile.style.setProperty('height', '54px', 'important');
-      tile.style.setProperty('min-height', '54px', 'important');
-      tile.style.setProperty('margin', '8px 0 12px auto', 'important');
-      tile.style.setProperty('padding', '6px 12px', 'important');
-      tile.style.setProperty('align-items', 'center', 'important');
-      tile.style.setProperty('justify-content', 'center', 'important');
-      tile.style.setProperty('text-align', 'center', 'important');
-      tile.style.setProperty('white-space', 'normal', 'important');
-      tile.style.setProperty('font-weight', '700', 'important');
+      const label = tile.querySelector('b');
+      if (label) label.textContent = 'Ausgewählte Dokumente teilen';
+      tile.querySelectorAll('.shareTileIcon, strong').forEach(el => { el.style.display = 'none'; });
+      // Tile-Abmessungen und Schriftgröße bleiben vollständig unverändert.
+      tile.style.removeProperty('width');
+      tile.style.removeProperty('min-width');
+      tile.style.removeProperty('max-width');
+      tile.style.removeProperty('height');
+      tile.style.removeProperty('min-height');
+      tile.style.removeProperty('font-size');
+      tile.style.removeProperty('font-weight');
       tile.onclick = () => shareSelected(type);
     }
   }
