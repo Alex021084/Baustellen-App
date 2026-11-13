@@ -4090,3 +4090,19 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   font-size: 19px !important;
   line-height: 1.3 !important;
 }
+
+
+/* v16: Beschriftung am vorhandenen Zahnrad-Menü */
+.settingsButton {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  white-space: nowrap !important;
+}
+.settingsButton .settingsButtonLabel {
+  display: inline !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
