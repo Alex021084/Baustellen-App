@@ -2,7 +2,7 @@
 <html lang="de"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.json"><title>Baustellen-App</title>
-<link rel="stylesheet" href="styles.css?v38"></head><body>
+<link rel="stylesheet" href="styles.css?v40"></head><body>
 <header><div><small>Baustelle</small><h1>Tagelohnnachweis</h1></div><button id="new">＋</button></header>
 <main>
 <section id="home" class="screen active startScreen">
@@ -24,15 +24,48 @@
 </div>
 </section>
 <section id="settingsHome" class="screen settingsScreen">
-<div class="title"><h2>Einstellungen &amp; Verwaltung</h2><button id="settingsHomeBack" type="button">Startseite</button></div>
-<div class="settingsMenu active">
-<button id="openManagementFromSettings" type="button">Stammdaten</button>
-<button type="button" disabled aria-disabled="true">Benutzerkonten verwalten (folgt)</button>
-<button type="button" disabled aria-disabled="true">Neues Konto hinzufügen (folgt)</button>
-<button type="button" disabled aria-disabled="true">Benutzer wechseln (folgt)</button>
-<button type="button" disabled aria-disabled="true">Abmelden (folgt)</button>
-<p class="hint">Benutzerwechsel und Abmeldung werden ergänzt, sobald die persönlichen Dokumente sicher getrennt sind.</p>
-</div>
+  <div class="settingsHeading">
+    <div class="settingsHeadingIcon" aria-hidden="true">⚙️</div>
+    <div>
+      <small>BAUSTELLEN-APP</small>
+      <h2>Einstellungen &amp; Verwaltung</h2>
+      <p>Verwalte Stammdaten und dein Benutzerkonto.</p>
+    </div>
+  </div>
+  <div class="settingsGroup">
+    <h3>App-Verwaltung</h3>
+    <button class="settingsItem" id="openManagementFromSettings" type="button">
+      <span class="settingsItemIcon">📋</span>
+      <span><b>Stammdaten</b><small>Kunden, Mitarbeiter und Leistungen verwalten</small></span>
+      <strong>›</strong>
+    </button>
+  </div>
+  <div class="settingsGroup">
+    <h3>Benutzerkonten</h3>
+    <button class="settingsItem" id="userAccounts" type="button" disabled>
+      <span class="settingsItemIcon">👥</span>
+      <span><b>Benutzerkonten verwalten</b><small>Benutzer und Berechtigungen</small></span>
+      <em>In Vorbereitung</em>
+    </button>
+    <button class="settingsItem" id="addUser" type="button" disabled>
+      <span class="settingsItemIcon">＋</span>
+      <span><b>Neues Konto hinzufügen</b><small>Mitarbeiter-Zugang anlegen</small></span>
+      <em>In Vorbereitung</em>
+    </button>
+  </div>
+  <div class="settingsGroup">
+    <h3>Anmeldung</h3>
+    <button class="settingsItem" id="switchUser" type="button" disabled>
+      <span class="settingsItemIcon">⇄</span>
+      <span><b>Benutzer wechseln</b><small>Mit einem anderen Konto anmelden</small></span>
+      <em>In Vorbereitung</em>
+    </button>
+    <button class="settingsItem settingsItemLogout" id="logoutUser" type="button" disabled>
+      <span class="settingsItemIcon">↪</span>
+      <span><b>Abmelden</b><small>Aktuelle Sitzung beenden</small></span>
+      <em>In Vorbereitung</em>
+    </button>
+  </div>
 </section><section id="tagelohnHome" class="screen">
 <div class="moduleHeader"><div><h2>Tagelohnnachweis</h2></div></div>
 <button id="new2" class="primary big">＋ Neuer Tagelohn</button>
@@ -226,4 +259,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=menue-v1-20261113"></script><script src="cloud-login.js?v=2"></script><script src="cloud-sync.js?v=2"></script></body></html>
+<script src="app.js?v=tagelohn-add-buttons-v32-20261107"></script><script src="cloud-login.js?v=2"></script><script src="cloud-sync.js?v=2"></script></body></html>

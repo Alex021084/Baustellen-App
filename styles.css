@@ -3495,49 +3495,123 @@ body.home-screen #home.active .startChoices {
 }
 
 
-/* Menü v1 – Startseite und Einstellungen */
-#home.startScreen { position: relative; }
-#home .settingsButton {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  z-index: 5;
-  min-width: 44px;
-  min-height: 44px;
-  border: 0;
-  border-radius: 12px;
-  background: #173b57;
-  color: #fff;
-  font-size: 22px;
-  padding: 8px 12px;
+/* Menü-Überarbeitung v40 */
+#home.startScreen.active { position: relative !important; }
+.settingsButton {
+  position: fixed !important;
+  top: 76px !important;
+  right: 18px !important;
+  z-index: 10020 !important;
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  background: #173b57 !important;
+  color: #ffffff !important;
+  font-size: 27px !important;
+  line-height: 1 !important;
+  box-shadow: 0 5px 18px rgba(16,38,56,.25) !important;
+  cursor: pointer !important;
 }
-#settingsHome .settingsMenu {
-  display: block;
-  max-width: 680px;
-  margin: 18px auto;
-  padding: 16px;
-  background: #fff;
-  border-radius: 16px;
+.settingsButton:focus-visible { outline: 3px solid #79b7e5 !important; outline-offset: 3px !important; }
+.settingsScreen {
+  box-sizing: border-box;
+  width: min(100% - 32px, 900px);
+  margin: 22px auto 40px;
+  padding: 26px;
+  border: 1px solid #e2e8ee;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 12px 34px rgba(24,45,62,.08);
 }
-#settingsHome .settingsMenu button {
+.settingsHeading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 4px 2px 24px;
+  border-bottom: 1px solid #e8edf1;
+}
+.settingsHeadingIcon {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #e8f1f7;
+  font-size: 30px;
+}
+.settingsHeading small {
   display: block;
+  margin-bottom: 5px;
+  color: #647789;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.settingsHeading h2 {
+  margin: 0 0 5px;
+  color: #172b3a;
+  font-size: clamp(21px, 3vw, 28px);
+}
+.settingsHeading p { margin: 0; color: #687987; font-size: 14px; }
+.settingsGroup { margin-top: 24px; }
+.settingsGroup h3 {
+  margin: 0 0 10px 3px;
+  color: #5c6d7b;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.settingsItem {
+  box-sizing: border-box;
   width: 100%;
-  min-height: 48px;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin: 8px 0;
-  padding: 12px 14px;
-  border: 1px solid #d5d5da;
-  border-radius: 10px;
-  background: #fff;
+  padding: 13px 16px;
+  border: 1px solid #e1e8ed;
+  border-radius: 16px;
+  background: #f8fafb;
   color: #172b3a;
   text-align: left;
-  font-size: 16px;
 }
-#settingsHome .settingsMenu button:disabled {
-  opacity: .55;
+.settingsItem:not(:disabled) { cursor: pointer; }
+.settingsItem:not(:disabled):hover { background: #eef5f9; border-color: #b9d0df; }
+.settingsItemIcon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #e8eef2;
+  font-size: 22px;
 }
-#settingsHome .settingsMenu .hint {
-  color: #666;
-  font-size: 13px;
-  line-height: 1.4;
-  margin: 14px 2px 2px;
+.settingsItem > span:nth-child(2) { flex: 1; min-width: 0; }
+.settingsItem b { display: block; margin-bottom: 4px; font-size: 16px; }
+.settingsItem small { display: block; color: #71808c; font-size: 12px; line-height: 1.35; }
+.settingsItem > strong { color: #8293a0; font-size: 27px; }
+.settingsItem em {
+  color: #7b8790;
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+}
+.settingsItem:disabled { opacity: .62; cursor: not-allowed; }
+.settingsItemLogout .settingsItemIcon { background: #f8e9e7; color: #9e3b32; }
+@media (max-width: 600px) {
+  .settingsScreen { width: calc(100% - 20px); margin: 12px auto 28px; padding: 18px 14px; border-radius: 19px; }
+  .settingsHeading { gap: 12px; padding-bottom: 18px; }
+  .settingsHeadingIcon { width: 50px; height: 50px; flex-basis: 50px; font-size: 25px; }
+  .settingsItem { min-height: 70px; padding: 11px; gap: 10px; }
+  .settingsItem em { max-width: 76px; white-space: normal; text-align: right; }
+  .settingsButton { top: 76px !important; right: 12px !important; width: 50px !important; height: 50px !important; }
 }

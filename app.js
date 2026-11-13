@@ -167,7 +167,6 @@ document.addEventListener('click', function(event){
     backToStartFromReports:()=>{selectedReportCustomer=null;selectedReportProject=null;show('home');},
    openManagementGlobal:()=>show('managementHome'),
 openSettings:()=>show('settingsHome'),
-    settingsHomeBack:()=>show('home'),
 openManagementFromSettings:()=>show('managementHome'),    manageEmployeesGlobal:()=>openEmployees(),
     manageTagelohnServicesGlobal:()=>openServices(),
     manageReportServicesGlobal:()=>openReportServices(),
