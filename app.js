@@ -597,6 +597,7 @@ function show(id, options={}){
     reportModal.style.display='none';
   }
   const current=document.querySelector('.screen.active')?.id;
+  if(current && current!==id) window.BaustellenDocumentSharing?.resetSelection?.();
   if(current && current!==id){
     if(options.replaceHistory){
       navigationHistory=navigationHistory.slice(0,-1);

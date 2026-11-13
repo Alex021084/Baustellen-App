@@ -244,7 +244,6 @@
       row.style.setProperty('position', 'relative', 'important');
     });
 
-    root.classList.add('shareSelectionMode');
     root.querySelectorAll('.reportRow').forEach(row => {
       const label = row.querySelector('.shareDocCheck');
       const input = label?.querySelector('input');
@@ -293,7 +292,6 @@
 
     const tile = root.querySelector('.shareDocsTile');
     if (tile) {
-      tile.classList.add('shareDocsTileActive');
       const label = tile.querySelector('b');
       if (label) label.textContent = 'Ausgewählte Dokumente teilen';
       tile.querySelectorAll('.shareTileIcon, strong').forEach(el => { el.style.display = 'none'; });
@@ -387,7 +385,7 @@
       // Die Freigabekachel wird direkt in der jeweiligen Dokumentliste angezeigt.
     });
   }
-  window.BaustellenDocumentSharing = { shareSelected, beginSelection };
+  window.BaustellenDocumentSharing = { shareSelected, beginSelection, resetSelection };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 })();
