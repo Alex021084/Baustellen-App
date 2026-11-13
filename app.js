@@ -167,6 +167,8 @@ document.addEventListener('click', function(event){
     backToStartFromReports:()=>{selectedReportCustomer=null;selectedReportProject=null;show('home');},
    openManagementGlobal:()=>show('managementHome'),
 openSettings:()=>show('settingsHome'),
+    userAccounts:()=>{show('userAccountsScreen');window.BaustellenUserManagement?.open?.();},
+    backFromUserAccounts:()=>show('settingsHome'),
 openManagementFromSettings:()=>show('managementHome'),
     logoutUser:()=>window.BaustellenCloud?.logout?.(),    manageEmployeesGlobal:()=>openEmployees(),
     manageTagelohnServicesGlobal:()=>openServices(),

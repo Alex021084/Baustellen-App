@@ -38,10 +38,10 @@
       <span><b>Stammdaten</b><small>Kunden, Mitarbeiter und Leistungen verwalten</small></span>
       <strong>›</strong>
     </button>
-    <button class="settingsItem" id="userAccounts" type="button" disabled>
+    <button class="settingsItem" id="userAccounts" type="button">
       <span class="settingsItemIcon">👥</span>
-      <span><b>Benutzer verwalten</b><small>Mitarbeiterkonten und Zugänge verwalten</small></span>
-      <em>In Vorbereitung</em>
+      <span><b>Benutzer verwalten</b><small>Benutzerkonten und Rollen ansehen</small></span>
+      <strong>›</strong>
     </button>
   </div>
   <div class="settingsAccount" aria-live="polite">
@@ -49,7 +49,12 @@
     <div class="settingsAccountName" id="settingsCurrentUser">Wird geladen …</div>
     <button class="settingsLogoutButton" id="logoutUser" type="button"><span aria-hidden="true">↪</span> <span id="settingsLogoutText">Benutzer abmelden</span></button>
   </div>
-</section><section id="tagelohnHome" class="screen">
+</section><section id="userAccountsScreen" class="screen">
+  <div class="title"><div><small>ADMINISTRATION</small><h2>Benutzer verwalten</h2></div><button id="backFromUserAccounts" type="button">Zurück</button></div>
+  <div class="panel"><p class="hint">Aktuelle Benutzerkonten und ihre Rollen. Die Anmeldung und Passwörter werden weiterhin sicher über Supabase verwaltet.</p><div id="userAccountsStatus" class="hint">Benutzer werden geladen …</div><div id="userAccountsList"></div></div>
+</section>
+
+<section id="tagelohnHome" class="screen">
 <div class="moduleHeader"><div><h2>Tagelohnnachweis</h2></div></div>
 <button id="new2" class="primary big">＋ Neuer Tagelohn</button>
 <button type="button" class="otherUsersTile" data-inbox-type="tagelohn"><span class="otherUsersIcon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M8 13.5A3.5 3.5 0 0 1 11.5 10H27l5 5v3" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/><path d="M11.5 16H29a3.5 3.5 0 0 1 3.5 3.5v16a3.5 3.5 0 0 1-3.5 3.5h-17a3.5 3.5 0 0 1-3.5-3.5v-16a3.5 3.5 0 0 1 3.5-3.5Z" stroke="currentColor" stroke-width="2.8"/><path d="M19 24h8M19 30h8M35 23h5m-2.5-2.5L40 23l-2.5 2.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>Dokumente anderer Nutzer</b><strong>›</strong></button>
@@ -244,5 +249,5 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=share13"></script><script src="cloud-login.js?v=19"></script><script src="cloud-sync.js?v=sharing-v1"></script><script src="document-sharing.js?v=19"></script>
+<script src="app.js?v=share13"></script><script src="cloud-login.js?v=20"></script><script src="user-management.js?v=1"></script><script src="cloud-sync.js?v=sharing-v1"></script><script src="document-sharing.js?v=19"></script>
 </body></html>
