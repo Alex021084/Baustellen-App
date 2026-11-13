@@ -1192,8 +1192,9 @@ function render(){
 
   if(title){
     title.textContent = archiveSelectedProject
-      ? archiveSelectedProject
+      ? ''
       : (archiveSelectedContractor ? archiveSelectedContractor : 'Kunden');
+    title.style.display = archiveSelectedProject ? 'none' : '';
   }
 
   if(hint){ hint.textContent = ''; }
@@ -1269,6 +1270,11 @@ function render(){
 
   /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
   const items=projects.get(archiveSelectedProject)||[];
+  const projectHeading=document.createElement('h2');
+  projectHeading.className='archiveProjectHeading';
+  projectHeading.textContent=archiveSelectedProject;
+  l.append(projectHeading);
+
   const shareTile=document.createElement('button');
   shareTile.type='button'; shareTile.className='shareDocsTile';
   shareTile.innerHTML='<span>⇧</span><b>Dokumente teilen</b><strong>›</strong>';

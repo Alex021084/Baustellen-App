@@ -4025,3 +4025,25 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   font-weight:inherit !important;
   box-sizing:border-box !important;
 }
+
+/* v13: Freigabekachel kompakte, feste Typografie; Bauvorhaben direkt über der Dokumentliste */
+#archive .shareDocsTile,
+#archive .shareDocsTile.shareDocsTileActive{
+  font-size:16px !important;
+  line-height:1.25 !important;
+  font-weight:600 !important;
+}
+#archive .shareDocsTile b{
+  font-size:16px !important;
+  line-height:1.25 !important;
+  font-weight:600 !important;
+}
+.archiveProjectHeading{
+  display:block;
+  margin:4px 0 10px;
+  padding:0 2px;
+  font-size:19px;
+  line-height:1.3;
+  font-weight:700;
+  color:#202a35;
+}
