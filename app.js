@@ -257,7 +257,16 @@ let archiveSelectedProject=null;
 const defaultCustomers=[{id:'dreyer',name:'Dreyer Hochbau GmbH & Co. KG',address:'Mühlenberg 12\n27404 Elsdorf'}];
 let customers=JSON.parse(localStorage.tagelohnCustomers||'null')||defaultCustomers;
 if(!Array.isArray(customers)) customers=[...defaultCustomers];
-customers=customers.map(c=>({...c,projects:Array.isArray(c.projects)?c.projects:[]}));
+customers=customers
+  .filter(c=>c && typeof c==='object')
+  .map((c,i)=>({
+    ...c,
+    id:String(c.id||c.customer_id||`customer_${i+1}`),
+    name:String(c.name||c.customerName||c.title||c.label||'').trim(),
+    address:String(c.address||c.streetAddress||'').trim(),
+    projects:Array.isArray(c.projects)?c.projects.map(p=>typeof p==='string'?p:String(p?.name||p?.title||p?.value||'').trim()).filter(Boolean):[]
+  }))
+  .filter(c=>c.name);
 // Bereits verwendete Bauvorhaben aus vorhandenen Nachweisen übernehmen.
 reports.forEach(r=>{const c=customers.find(x=>x.name===r.contractor);const project=String(r.project||'').trim();if(c&&project&&!c.projects.some(p=>p.toLowerCase()===project.toLowerCase()))c.projects.push(project);});
 let services=JSON.parse(localStorage.tagelohnServices||'null');
@@ -805,14 +814,19 @@ function renderCustomers(){
 function addCustomer(){
   const name=$('customerName').value.trim(),address=$('customerAddress').value.trim();
   if(!name||!address){alert('Bitte Kundenname und Anschrift eingeben.');return}
-  const existing=customers.find(c=>c.name.toLowerCase()===name.toLowerCase());
-  if(existing){existing.address=address}else customers.push({id:'c_'+Date.now(),name,address,projects:[]});
-  persistCustomers();
-  $('customerName').value='';$('customerAddress').value='';
-  renderCustomers();renderCustomerSelect(name);renderProjectCustomerSelect(existing?.id||customers.find(c=>c.name===name)?.id||'');
-  $('contractorSelect').dataset.manualName=name;
-  $('address').value=address;
-  alert('Kunde gespeichert.');
+  try {
+    const existing=customers.find(c=>String(c?.name||'').toLowerCase()===name.toLowerCase());
+    if(existing){existing.address=address}else customers.push({id:'c_'+Date.now(),name,address,projects:[]});
+    persistCustomers();
+    $('customerName').value='';$('customerAddress').value='';
+    renderCustomers();renderCustomerSelect(name);renderProjectCustomerSelect(existing?.id||customers.find(c=>c.name===name)?.id||'');
+    $('contractorSelect').dataset.manualName=name;
+    $('address').value=address;
+    alert('Kunde gespeichert.');
+  } catch(error) {
+    console.error('Kunde konnte nicht gespeichert werden:', error);
+    alert('Kunde konnte nicht gespeichert werden: '+(error?.message||error));
+  }
 }
 
 

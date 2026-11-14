@@ -94,6 +94,35 @@
     return crypto.randomUUID();
   }
 
+  // Alte/abweichende Cloud-Datensätze vereinheitlichen. Die App erwartet
+  // Mitarbeiter, Funktionen und Leistungen als Text, nicht als Objekte.
+  function normalizeMaster(category, value) {
+    if (!Array.isArray(value)) return [];
+    if (category === 'customers') {
+      return value
+        .filter(item => item && typeof item === 'object')
+        .map(item => ({
+          ...item,
+          id: String(item.id || item.customer_id || `customer_${String(item.name || item.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '_')}`),
+          name: String(item.name || item.customerName || item.title || item.label || '').trim(),
+          address: String(item.address || item.streetAddress || '').trim(),
+          projects: Array.isArray(item.projects) ? item.projects.map(project =>
+            typeof project === 'string' ? project : String(project?.name || project?.title || project?.value || '').trim()
+          ).filter(Boolean) : []
+        }))
+        .filter(item => item.name);
+    }
+    return value.map(item => {
+      if (typeof item === 'string' || typeof item === 'number') return String(item).trim();
+      if (!item || typeof item !== 'object') return '';
+      return String(
+        item.name ?? item.employeeName ?? item.serviceName ??
+        item.functionName ?? item.title ?? item.label ?? item.value ??
+        item.description ?? ''
+      ).trim();
+    }).filter(Boolean);
+  }
+
   function unique(items) {
     const result = [];
     const seen = new Set();
@@ -166,14 +195,17 @@
       const localChanged = hasBaseline && changed(key);
       if (!initial && !localChanged) continue;
 
-      const localRaw = read(key);
+      const localRaw = normalizeMaster(category, read(key));
+      // Vereinheitlichte Daten auch lokal ablegen, damit die App sie direkt
+      // nach einem Neuladen in ihrem erwarteten Format vorfindet.
+      write(key, localRaw);
 
-// Entfernte Testkunden nicht wieder hochladen.
-const local = category === 'customers'
-  ? localRaw.filter(item =>
-      String(item?.name || '').trim().toLowerCase() !== 'cloudtest'
-    )
-  : localRaw;
+      // Entfernte Testkunden nicht wieder hochladen.
+      const local = category === 'customers'
+        ? localRaw.filter(item =>
+            String(item?.name || '').trim().toLowerCase() !== 'cloudtest'
+          )
+        : localRaw;
 
       const { data: rows, error } = await c
         .from('shared_master_data')
@@ -184,7 +216,9 @@ const local = category === 'customers'
       if (error) throw error;
 
       const row = rows?.[0];
-      const merged = mergeMaster(category, row?.data, local, previous(key), localChanged);
+      const remote = normalizeMaster(category, row?.data);
+      const baseline = normalizeMaster(category, previous(key));
+      const merged = mergeMaster(category, remote, local, baseline, localChanged);
 
       if (row) {
         const { error: updateError } = await c
