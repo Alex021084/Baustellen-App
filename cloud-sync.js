@@ -18,6 +18,8 @@
 
   const KEYS = [...Object.values(MASTER), ...Object.values(DOCUMENTS)];
   const snapshots = new Map();
+  let snapshotStorageKey = null;
+  let syncPromise = null;
 
   let running = false;
   let ready = false;
@@ -38,12 +40,34 @@
 
   function write(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
-    snapshots.set(key, JSON.stringify(value));
+  }
+
+  function loadSnapshots(userId) {
+    snapshotStorageKey = `baustellenCloudSnapshots:${userId}`;
+    snapshots.clear();
+    try {
+      const saved = JSON.parse(localStorage.getItem(snapshotStorageKey) || '{}');
+      for (const key of KEYS) {
+        if (Array.isArray(saved[key])) snapshots.set(key, JSON.stringify(saved[key]));
+      }
+    } catch {
+      snapshots.clear();
+    }
   }
 
   function remember() {
+    const saved = {};
     for (const key of KEYS) {
-      snapshots.set(key, JSON.stringify(read(key)));
+      const value = JSON.stringify(read(key));
+      snapshots.set(key, value);
+      saved[key] = JSON.parse(value);
+    }
+    if (snapshotStorageKey) {
+      try {
+        localStorage.setItem(snapshotStorageKey, JSON.stringify(saved));
+      } catch (error) {
+        console.warn('Cloud-Snapshot konnte nicht gespeichert werden:', error);
+      }
     }
   }
 
@@ -138,7 +162,9 @@
 
   async function syncMaster(c, user, initial) {
     for (const [category, key] of Object.entries(MASTER)) {
-      if (!initial && !changed(key)) continue;
+      const hasBaseline = snapshots.has(key);
+      const localChanged = hasBaseline && changed(key);
+      if (!initial && !localChanged) continue;
 
       const localRaw = read(key);
 
@@ -158,7 +184,7 @@ const local = category === 'customers'
       if (error) throw error;
 
       const row = rows?.[0];
-      const merged = mergeMaster(category, row?.data, local, previous(key), !initial && changed(key));
+      const merged = mergeMaster(category, row?.data, local, previous(key), localChanged);
 
       if (row) {
         const { error: updateError } = await c
@@ -202,7 +228,9 @@ const local = category === 'customers'
     if (error) throw error;
 
     for (const [type, key] of Object.entries(DOCUMENTS)) {
-      if (!initial && !changed(key)) continue;
+      const hasBaseline = snapshots.has(key);
+      const localChanged = hasBaseline && changed(key);
+      if (!initial && !localChanged) continue;
 
       const local = read(key).map(item => ({
         ...item,
@@ -219,10 +247,11 @@ const local = category === 'customers'
 
       // Gelöschte eigene Dokumente auch in Supabase entfernen. Freigegebene
       // Dokumente anderer Eigentümer werden hier bewusst nicht global gelöscht.
-      if (!initial && changed(key)) {
+      const removedIds = [];
+      if (localChanged) {
         const oldIds = new Set(previous(key).map(item => item?._cloudId).filter(Boolean));
         const currentIds = new Set(local.map(item => item?._cloudId).filter(Boolean));
-        const removedIds = [...oldIds].filter(id => !currentIds.has(id));
+        removedIds.push(...[...oldIds].filter(id => !currentIds.has(id)));
         for (const id of removedIds) {
           const cloudDoc = (cloudDocs || []).find(doc => doc.id === id);
           if (!cloudDoc || cloudDoc.owner_id !== user.id) continue;
@@ -237,7 +266,12 @@ const local = category === 'customers'
 
       // Cloud-Inhalt ist beim Initialladen maßgeblich. Danach werden lokale
       // Änderungen mit UPDATE gespeichert; owner_id bleibt unverändert.
-      const merged = new Map(remote.map(item => [item._cloudId, item]));
+      const deletedOwnIds = new Set(removedIds);
+      const merged = new Map(
+        remote
+          .filter(item => !deletedOwnIds.has(item._cloudId))
+          .map(item => [item._cloudId, item])
+      );
       for (const item of local) {
         if (!merged.has(item._cloudId) || !initial) merged.set(item._cloudId, item);
       }
@@ -312,7 +346,17 @@ const local = category === 'customers'
   }
 
   async function syncNow(initial = false) {
-    if (running) return;
+    if (syncPromise) return syncPromise;
+    syncPromise = performSync(initial);
+    try {
+      return await syncPromise;
+    } finally {
+      syncPromise = null;
+    }
+  }
+
+  async function performSync(initial = false) {
+    if (running) return false;
 
     const c = client();
     if (!c) return;
@@ -325,6 +369,10 @@ const local = category === 'customers'
 
       if (error) throw error;
       if (!data?.user) return false;
+
+      if (snapshotStorageKey !== `baustellenCloudSnapshots:${data.user.id}`) {
+        loadSnapshots(data.user.id);
+      }
 
       showStatus('Cloud: synchronisiere …');
 
@@ -384,16 +432,6 @@ const local = category === 'customers'
 
     await syncNow(true);
 
-    if (ready) {
-      const reloadKey = 'baustellenCloudInitialReload';
-
-      if (!sessionStorage.getItem(reloadKey)) {
-        sessionStorage.setItem(reloadKey, '1');
-        location.reload();
-        return;
-      }
-    }
-
     clearInterval(timer);
     timer = setInterval(checkChanges, 3000);
   }
@@ -405,16 +443,17 @@ const local = category === 'customers'
   };
 
   window.addEventListener('baustellen:login', async () => {
-    sessionStorage.removeItem('baustellenCloudInitialReload');
-    await syncNow(true);
-
-    if (ready) location.reload();
+    if (!ready) await syncNow(true);
+    clearInterval(timer);
+    if (ready) timer = setInterval(checkChanges, 3000);
   });
 
   window.addEventListener('baustellen:logout', () => {
     ready = false;
     clearInterval(timer);
     sessionStorage.removeItem('baustellenCloudInitialReload');
+    snapshotStorageKey = null;
+    snapshots.clear();
   });
 
   if (document.readyState === 'loading') {
