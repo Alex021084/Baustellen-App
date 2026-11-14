@@ -401,6 +401,17 @@ const local = category === 'customers'
     // Lokale Kopien entfernen, damit der nächste Benutzer auf diesem Gerät
     // nicht versehentlich Dokumente des vorherigen Kontos sieht oder übernimmt.
     for (const key of KEYS) localStorage.removeItem(key);
+
+    // Die lokalen App-Daten werden beim Abmelden bewusst entfernt, damit
+    // auf gemeinsam genutzten Geräten keine Daten des vorherigen Kontos
+    // angezeigt werden. Deshalb darf der Snapshot dieses Kontos beim
+    // nächsten Login NICHT als Löschvergleich verwendet werden.
+    if (snapshotStorageKey) {
+      localStorage.removeItem(snapshotStorageKey);
+    }
+    snapshotStorageKey = null;
+    snapshots.clear();
+
     ready = false;
     clearInterval(timer);
     sessionStorage.removeItem('baustellenCloudInitialReload');
@@ -452,6 +463,10 @@ const local = category === 'customers'
     ready = false;
     clearInterval(timer);
     sessionStorage.removeItem('baustellenCloudInitialReload');
+    // Auch bei einem Logout außerhalb des regulären Buttons den alten
+    // Snapshot verwerfen: leere lokale Listen sind nach dem Logout kein
+    // Löschauftrag.
+    if (snapshotStorageKey) localStorage.removeItem(snapshotStorageKey);
     snapshotStorageKey = null;
     snapshots.clear();
   });
