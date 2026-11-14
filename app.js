@@ -878,6 +878,28 @@ function addCustomer(){
 }
 
 
+// Früher delegierter Capture-Handler: funktioniert auch dann, wenn ein späterer
+// Initialisierungsschritt der App vor dem bisherigen Button-Binding abbricht.
+document.addEventListener('click', function(event){
+  const button = event.target && event.target.closest ? event.target.closest('#addCustomer') : null;
+  if(!button) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  try {
+    addCustomer();
+  } catch(error) {
+    console.error('Kunden-Speichern fehlgeschlagen:', error);
+    const status = $('customerSaveStatus');
+    if(status) {
+      status.textContent = 'Speichern fehlgeschlagen: ' + (error?.message || String(error));
+      status.style.color = '#b42318';
+      status.style.display = 'block';
+    } else {
+      alert('Kunden-Speichern fehlgeschlagen: ' + (error?.message || String(error)));
+    }
+  }
+}, true);
+
 function openEmployees(){renderEmployees();show('employeeManager')}
 function renderEmployees(){
   const l=$('employeeList'); l.innerHTML='';
@@ -1780,15 +1802,6 @@ initReportSignature();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
 $('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
 $('manageCustomers').onclick=openCustomers;
-const addCustomerButton=$('addCustomer');
-if(addCustomerButton){
-  addCustomerButton.type='button';
-  addCustomerButton.addEventListener('click',event=>{
-    event.preventDefault();
-    event.stopPropagation();
-    addCustomer();
-  });
-}
 $('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
 $('customersBtn')?.addEventListener('click',openCustomers);
 $('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService; $('homeFromReportServices').onclick=()=>show('managementHome'); $('addReportService').onclick=addReportService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
