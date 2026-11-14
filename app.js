@@ -531,7 +531,12 @@ function collectReportEmployees(){
   })).filter(e=>e.name||e.role||e.start||e.end);
 }
 
-function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
+function persistCustomers(){
+  localStorage.tagelohnCustomers=JSON.stringify(customers);
+  // Änderungen an Kunden/Bauvorhaben sofort an die Cloud-Synchronisierung melden,
+  // statt ausschließlich auf den periodischen Hintergrund-Check zu warten.
+  window.BaustellenCloudSync?.scheduleSync?.();
+}
 function persistServices(){localStorage.tagelohnServices=JSON.stringify(services)}
 let reportServices=JSON.parse(localStorage.tagesberichtServices||'null');
 if(!Array.isArray(reportServices)) reportServices=[];
