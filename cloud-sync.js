@@ -215,21 +215,30 @@
 
       if (error) throw error;
 
+      // Es können ältere doppelte Zeilen derselben Kategorie existieren.
+      // Alle sichtbaren Cloud-Zeilen einlesen, nicht nur die älteste.
+      const remote = unique((rows || []).flatMap(row =>
+        normalizeMaster(category, row?.data)
+      ));
       const row = rows?.[0];
-      const remote = normalizeMaster(category, row?.data);
       const baseline = normalizeMaster(category, previous(key));
       const merged = mergeMaster(category, remote, local, baseline, localChanged);
+      const remoteSerialized = JSON.stringify(remote);
+      const mergedSerialized = JSON.stringify(merged);
 
       if (row) {
-        const { error: updateError } = await c
-          .from('shared_master_data')
-          .update({
-            data: merged,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', row.id);
+        // Nur schreiben, wenn sich der zusammengeführte Bestand wirklich ändert.
+        if (mergedSerialized !== remoteSerialized || (rows || []).length > 1) {
+          const { error: updateError } = await c
+            .from('shared_master_data')
+            .update({
+              data: merged,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', row.id);
 
-        if (updateError) throw updateError;
+          if (updateError) throw updateError;
+        }
       } else {
         const { error: insertError } = await c
           .from('shared_master_data')
@@ -455,9 +464,10 @@
   function checkChanges() {
     if (!ready || running) return;
 
-    if (KEYS.some(changed)) {
-      syncNow(false);
-    }
+    // Auch Änderungen von anderen Geräten regelmäßig einlesen.
+    // syncMaster vergleicht lokal/Cloud und schreibt nur bei tatsächlichen
+    // Abweichungen; dadurch werden neue Kunden geräteübergreifend sichtbar.
+    syncNow(false);
   }
 
   async function start() {
