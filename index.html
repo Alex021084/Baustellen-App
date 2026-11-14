@@ -233,7 +233,7 @@
 <div class="panel"><h2>Neuen Kunden anlegen</h2>
 <label>Kundenname<input id="customerName" placeholder="z. B. Muster GmbH"></label>
 <label>Anschrift<textarea id="customerAddress" placeholder="Straße Hausnummer&#10;PLZ Ort"></textarea></label>
-<button id="addCustomer" class="primary">Kunden speichern</button></div>
+<button id="addCustomer" class="primary" type="button">Kunden speichern</button><p id="customerSaveStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-weight:600"></p></div>
 <div class="panel"><h2>Bauvorhaben zuordnen</h2><p class="hint">Wähle einen Auftraggeber und füge ihm mehrere Bauvorhaben hinzu. Diese stehen beim neuen Tagelohn anschließend zur Auswahl.</p><label>Auftraggeber<select id="projectCustomerSelect"></select></label><div class="addBar"><input id="projectName" placeholder="Neues Bauvorhaben..." aria-label="Neues Bauvorhaben"><button id="addProject" class="primary saveManage">Speichern</button></div><div id="projectList"></div></div>
 <div id="customerList"></div>
 </section>
@@ -249,5 +249,5 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=26"></script><script src="cloud-login.js?v=21"></script><script src="user-management.js?v=1"></script><script src="cloud-sync.js?v=26"></script><script src="document-sharing.js?v=19"></script>
+<script src="app.js?v=27"></script><script src="cloud-login.js?v=21"></script><script src="user-management.js?v=1"></script><script src="cloud-sync.js?v=27"></script><script src="document-sharing.js?v=19"></script>
 </body></html>

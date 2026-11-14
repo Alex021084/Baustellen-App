@@ -812,20 +812,68 @@ function renderCustomers(){
   });
 }
 function addCustomer(){
-  const name=$('customerName').value.trim(),address=$('customerAddress').value.trim();
-  if(!name||!address){alert('Bitte Kundenname und Anschrift eingeben.');return}
+  const nameInput=$('customerName');
+  const addressInput=$('customerAddress');
+  const name=String(nameInput?.value||'').trim();
+  const address=String(addressInput?.value||'').trim();
+  const status=$('customerSaveStatus');
+
+  const showStatus=(message,isError=false)=>{
+    if(status){
+      status.textContent=message;
+      status.style.color=isError?'#b42318':'#18794e';
+      status.style.display='block';
+    } else {
+      alert(message);
+    }
+  };
+
+  if(!name||!address){
+    showStatus('Bitte Kundenname und Anschrift eingeben.',true);
+    return false;
+  }
+
   try {
-    const existing=customers.find(c=>String(c?.name||'').toLowerCase()===name.toLowerCase());
-    if(existing){existing.address=address}else customers.push({id:'c_'+Date.now(),name,address,projects:[]});
-    persistCustomers();
-    $('customerName').value='';$('customerAddress').value='';
-    renderCustomers();renderCustomerSelect(name);renderProjectCustomerSelect(existing?.id||customers.find(c=>c.name===name)?.id||'');
-    $('contractorSelect').dataset.manualName=name;
-    $('address').value=address;
-    alert('Kunde gespeichert.');
+    const existing=customers.find(c=>String(c?.name||'').trim().toLowerCase()===name.toLowerCase());
+    if(existing){
+      existing.address=address;
+      if(!Array.isArray(existing.projects)) existing.projects=[];
+    } else {
+      customers.push({id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),name,address,projects:[]});
+    }
+
+    // Erst lokal dauerhaft speichern und direkt zurücklesen.
+    const serialized=JSON.stringify(customers);
+    localStorage.setItem('tagelohnCustomers',serialized);
+    const check=JSON.parse(localStorage.getItem('tagelohnCustomers')||'[]');
+    if(!Array.isArray(check)||!check.some(c=>String(c?.name||'').trim().toLowerCase()===name.toLowerCase())){
+      throw new Error('Der Kunde konnte nicht im Gerätespeicher bestätigt werden.');
+    }
+
+    if(nameInput) nameInput.value='';
+    if(addressInput) addressInput.value='';
+    renderCustomers();
+    renderCustomerSelect(name);
+    const savedCustomer=customers.find(c=>String(c.name||'').trim().toLowerCase()===name.toLowerCase());
+    renderProjectCustomerSelect(savedCustomer?.id||'');
+    const contractor=$('contractorSelect');
+    if(contractor) contractor.dataset.manualName=name;
+    const addressField=$('address');
+    if(addressField) addressField.value=address;
+
+    showStatus('Kunde wurde auf diesem Gerät gespeichert. Cloud-Synchronisierung wird angestoßen.');
+    try {
+      const sync=window.BaustellenCloudSync;
+      if(sync?.scheduleSync) sync.scheduleSync();
+    } catch(syncError) {
+      console.error('Cloud-Synchronisierung der Kunden fehlgeschlagen:',syncError);
+      showStatus('Kunde lokal gespeichert, aber Cloud-Synchronisierung konnte nicht gestartet werden: '+(syncError?.message||syncError),true);
+    }
+    return true;
   } catch(error) {
-    console.error('Kunde konnte nicht gespeichert werden:', error);
-    alert('Kunde konnte nicht gespeichert werden: '+(error?.message||error));
+    console.error('Kunde konnte nicht gespeichert werden:',error);
+    showStatus('Kunde konnte nicht gespeichert werden: '+(error?.message||String(error)),true);
+    return false;
   }
 }
 
@@ -1731,7 +1779,17 @@ initTagesbericht();
 initReportSignature();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
 $('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
-$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
+$('manageCustomers').onclick=openCustomers;
+const addCustomerButton=$('addCustomer');
+if(addCustomerButton){
+  addCustomerButton.type='button';
+  addCustomerButton.addEventListener('click',event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    addCustomer();
+  });
+}
+$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
 $('customersBtn')?.addEventListener('click',openCustomers);
 $('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService; $('homeFromReportServices').onclick=()=>show('managementHome'); $('addReportService').onclick=addReportService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
