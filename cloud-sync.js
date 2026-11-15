@@ -263,6 +263,19 @@
     return `${item.customer || 'Tagesbericht'} – ${item.date || ''}`;
   }
 
+  function preferDocument(existing, candidate) {
+    if (!existing) return candidate;
+    // Wenn der Inhalt identisch ist, die PDF-erstellte Fassung behalten.
+    if (candidate?.pdfCreated === true && existing?.pdfCreated !== true) {
+      return { ...existing, ...candidate, pdfCreated: true,
+        pdfCreatedAt: candidate.pdfCreatedAt || existing.pdfCreatedAt };
+    }
+    if (existing?.pdfCreated === true && candidate?.pdfCreated !== true) {
+      return existing;
+    }
+    return existing;
+  }
+
   function documentFingerprint(item) {
     // Nur vollständig inhaltsgleiche Nachweise gelten als Duplikat.
     // Datum/Kunde allein reichen ausdrücklich nicht: An einem Tag können
@@ -272,7 +285,7 @@
       if (!value || typeof value !== 'object') return value;
       const result = {};
       for (const key of Object.keys(value).sort()) {
-        if (['_cloudId', '_sharedOwnerId', '_isShared'].includes(key)) continue;
+        if (['_cloudId', '_sharedOwnerId', '_isShared', 'pdfCreated', 'pdfCreatedAt'].includes(key)) continue;
         result[key] = clean(value[key]);
       }
       return result;
@@ -299,8 +312,23 @@
           seenCloud.set(fingerprint, doc);
           continue;
         }
+        const keepDoc = preferDocument(existing.payload, doc.payload);
+        const keepId = keepDoc === doc.payload ? doc.id : existing.id;
+        const dropId = keepId === doc.id ? existing.id : doc.id;
+        if (keepId === doc.id) {
+          const keepPayload = { ...doc.payload };
+          const { error: keepError } = await c.from('user_documents')
+            .update({
+              payload: keepPayload,
+              title: documentTitle(type, keepPayload),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', doc.id).eq('owner_id', user.id);
+          if (keepError) throw keepError;
+          seenCloud.set(fingerprint, doc);
+        }
         const { error: deleteError } = await c.from('user_documents')
-          .delete().eq('id', doc.id).eq('owner_id', user.id);
+          .delete().eq('id', dropId).eq('owner_id', user.id);
         if (deleteError) throw deleteError;
         const index = cloudDocs.findIndex(item => item.id === doc.id);
         if (index >= 0) cloudDocs.splice(index, 1);
@@ -314,8 +342,9 @@
       for (const item of rawLocal) {
         const fingerprint = documentFingerprint(item);
         const existing = localSeen.get(fingerprint);
-        if (!existing || (!existing._cloudId && item._cloudId)) {
-          localSeen.set(fingerprint, item);
+        const preferred = preferDocument(existing, item);
+        if (!existing || preferred !== existing || (!existing._cloudId && item._cloudId)) {
+          localSeen.set(fingerprint, preferred);
         }
       }
       const existingByFingerprint = new Map(
