@@ -263,21 +263,68 @@
     return `${item.customer || 'Tagesbericht'} – ${item.date || ''}`;
   }
 
+  function documentFingerprint(item) {
+    // Nur vollständig inhaltsgleiche Nachweise gelten als Duplikat.
+    // Datum/Kunde allein reichen ausdrücklich nicht: An einem Tag können
+    // mehrere unterschiedliche Nachweise existieren.
+    const clean = value => {
+      if (Array.isArray(value)) return value.map(clean);
+      if (!value || typeof value !== 'object') return value;
+      const result = {};
+      for (const key of Object.keys(value).sort()) {
+        if (['_cloudId', '_sharedOwnerId', '_isShared'].includes(key)) continue;
+        result[key] = clean(value[key]);
+      }
+      return result;
+    };
+    return JSON.stringify(clean(item || {}));
+  }
+
   async function syncDocuments(c, user, initial) {
     // RLS liefert eigene UND aktiv freigegebene Dokumente.
-    const { data: cloudDocs, error } = await c
+    const { data, error } = await c
       .from('user_documents')
       .select('id,owner_id,document_type,payload');
     if (error) throw error;
+    const cloudDocs = [...(data || [])];
 
     for (const [type, key] of Object.entries(DOCUMENTS)) {
+      // Exakt gleiche eigene Cloud-Datensätze zusammenfassen. Unterschrift,
+      // Mitarbeiter, Arbeiten und Materialien sind Teil des Vergleichs.
+      const seenCloud = new Map();
+      for (const doc of [...cloudDocs].filter(d => d.document_type === type && d.owner_id === user.id)) {
+        const fingerprint = documentFingerprint(doc.payload);
+        const existing = seenCloud.get(fingerprint);
+        if (!existing) {
+          seenCloud.set(fingerprint, doc);
+          continue;
+        }
+        const { error: deleteError } = await c.from('user_documents')
+          .delete().eq('id', doc.id).eq('owner_id', user.id);
+        if (deleteError) throw deleteError;
+        const index = cloudDocs.findIndex(item => item.id === doc.id);
+        if (index >= 0) cloudDocs.splice(index, 1);
+      }
       const hasBaseline = snapshots.has(key);
       const localChanged = hasBaseline && changed(key);
       if (!initial && !localChanged) continue;
 
-      const local = read(key).map(item => ({
+      const rawLocal = read(key);
+      const localSeen = new Map();
+      for (const item of rawLocal) {
+        const fingerprint = documentFingerprint(item);
+        const existing = localSeen.get(fingerprint);
+        if (!existing || (!existing._cloudId && item._cloudId)) {
+          localSeen.set(fingerprint, item);
+        }
+      }
+      const existingByFingerprint = new Map(
+        (cloudDocs || []).filter(doc => doc.document_type === type && doc.owner_id === user.id)
+          .map(doc => [documentFingerprint(doc.payload), doc.id])
+      );
+      const local = [...localSeen.values()].map(item => ({
         ...item,
-        _cloudId: item._cloudId || makeId()
+        _cloudId: item._cloudId || existingByFingerprint.get(documentFingerprint(item)) || makeId()
       }));
       const remote = (cloudDocs || [])
         .filter(doc => doc.document_type === type)
