@@ -165,12 +165,8 @@ document.addEventListener('click', function(event){
     openTagesbericht:()=>{navigationHistory=[];renderTagesberichtArchive();show('tagesberichtHome');navigationHistory=[]},
     newTagesbericht:()=>{initTagesbericht();show('tagesbericht');},
     backToStartFromReports:()=>{selectedReportCustomer=null;selectedReportProject=null;show('home');},
-   openManagementGlobal:()=>show('managementHome'),
-openSettings:()=>show('settingsHome'),
-    userAccounts:()=>{show('userAccountsScreen');window.BaustellenUserManagement?.open?.();},
-    backFromUserAccounts:()=>show('settingsHome'),
-openManagementFromSettings:()=>show('managementHome'),
-    logoutUser:()=>window.BaustellenCloud?.logout?.(),    manageEmployeesGlobal:()=>openEmployees(),
+    openManagementGlobal:()=>show('managementHome'),
+    manageEmployeesGlobal:()=>openEmployees(),
     manageTagelohnServicesGlobal:()=>openServices(),
     manageReportServicesGlobal:()=>openReportServices(),
     manageCustomersGlobal:()=>openCustomers(),
@@ -257,16 +253,7 @@ let archiveSelectedProject=null;
 const defaultCustomers=[{id:'dreyer',name:'Dreyer Hochbau GmbH & Co. KG',address:'Mühlenberg 12\n27404 Elsdorf'}];
 let customers=JSON.parse(localStorage.tagelohnCustomers||'null')||defaultCustomers;
 if(!Array.isArray(customers)) customers=[...defaultCustomers];
-customers=customers
-  .filter(c=>c && typeof c==='object')
-  .map((c,i)=>({
-    ...c,
-    id:String(c.id||c.customer_id||`customer_${i+1}`),
-    name:String(c.name||c.customerName||c.title||c.label||'').trim(),
-    address:String(c.address||c.streetAddress||'').trim(),
-    projects:Array.isArray(c.projects)?c.projects.map(p=>typeof p==='string'?p:String(p?.name||p?.title||p?.value||'').trim()).filter(Boolean):[]
-  }))
-  .filter(c=>c.name);
+customers=customers.map(c=>({...c,projects:Array.isArray(c.projects)?c.projects:[]}));
 // Bereits verwendete Bauvorhaben aus vorhandenen Nachweisen übernehmen.
 reports.forEach(r=>{const c=customers.find(x=>x.name===r.contractor);const project=String(r.project||'').trim();if(c&&project&&!c.projects.some(p=>p.toLowerCase()===project.toLowerCase()))c.projects.push(project);});
 let services=JSON.parse(localStorage.tagelohnServices||'null');
@@ -540,12 +527,7 @@ function collectReportEmployees(){
   })).filter(e=>e.name||e.role||e.start||e.end);
 }
 
-function persistCustomers(){
-  localStorage.tagelohnCustomers=JSON.stringify(customers);
-  // Änderungen an Kunden/Bauvorhaben sofort an die Cloud-Synchronisierung melden,
-  // statt ausschließlich auf den periodischen Hintergrund-Check zu warten.
-  window.BaustellenCloudSync?.scheduleSync?.();
-}
+function persistCustomers(){localStorage.tagelohnCustomers=JSON.stringify(customers)}
 function persistServices(){localStorage.tagelohnServices=JSON.stringify(services)}
 let reportServices=JSON.parse(localStorage.tagesberichtServices||'null');
 if(!Array.isArray(reportServices)) reportServices=[];
@@ -613,7 +595,6 @@ function show(id, options={}){
     reportModal.style.display='none';
   }
   const current=document.querySelector('.screen.active')?.id;
-  if(current && current!==id) window.BaustellenDocumentSharing?.resetSelection?.();
   if(current && current!==id){
     if(options.replaceHistory){
       navigationHistory=navigationHistory.slice(0,-1);
@@ -812,93 +793,18 @@ function renderCustomers(){
   });
 }
 function addCustomer(){
-  const nameInput=$('customerName');
-  const addressInput=$('customerAddress');
-  const name=String(nameInput?.value||'').trim();
-  const address=String(addressInput?.value||'').trim();
-  const status=$('customerSaveStatus');
-
-  const showStatus=(message,isError=false)=>{
-    if(status){
-      status.textContent=message;
-      status.style.color=isError?'#b42318':'#18794e';
-      status.style.display='block';
-    } else {
-      alert(message);
-    }
-  };
-
-  if(!name||!address){
-    showStatus('Bitte Kundenname und Anschrift eingeben.',true);
-    return false;
-  }
-
-  try {
-    const existing=customers.find(c=>String(c?.name||'').trim().toLowerCase()===name.toLowerCase());
-    if(existing){
-      existing.address=address;
-      if(!Array.isArray(existing.projects)) existing.projects=[];
-    } else {
-      customers.push({id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),name,address,projects:[]});
-    }
-
-    // Erst lokal dauerhaft speichern und direkt zurücklesen.
-    const serialized=JSON.stringify(customers);
-    localStorage.setItem('tagelohnCustomers',serialized);
-    const check=JSON.parse(localStorage.getItem('tagelohnCustomers')||'[]');
-    if(!Array.isArray(check)||!check.some(c=>String(c?.name||'').trim().toLowerCase()===name.toLowerCase())){
-      throw new Error('Der Kunde konnte nicht im Gerätespeicher bestätigt werden.');
-    }
-
-    if(nameInput) nameInput.value='';
-    if(addressInput) addressInput.value='';
-    renderCustomers();
-    renderCustomerSelect(name);
-    const savedCustomer=customers.find(c=>String(c.name||'').trim().toLowerCase()===name.toLowerCase());
-    renderProjectCustomerSelect(savedCustomer?.id||'');
-    const contractor=$('contractorSelect');
-    if(contractor) contractor.dataset.manualName=name;
-    const addressField=$('address');
-    if(addressField) addressField.value=address;
-
-    showStatus('Kunde wurde auf diesem Gerät gespeichert. Cloud-Synchronisierung wird angestoßen.');
-    try {
-      const sync=window.BaustellenCloudSync;
-      if(sync?.scheduleSync) sync.scheduleSync();
-    } catch(syncError) {
-      console.error('Cloud-Synchronisierung der Kunden fehlgeschlagen:',syncError);
-      showStatus('Kunde lokal gespeichert, aber Cloud-Synchronisierung konnte nicht gestartet werden: '+(syncError?.message||syncError),true);
-    }
-    return true;
-  } catch(error) {
-    console.error('Kunde konnte nicht gespeichert werden:',error);
-    showStatus('Kunde konnte nicht gespeichert werden: '+(error?.message||String(error)),true);
-    return false;
-  }
+  const name=$('customerName').value.trim(),address=$('customerAddress').value.trim();
+  if(!name||!address){alert('Bitte Kundenname und Anschrift eingeben.');return}
+  const existing=customers.find(c=>c.name.toLowerCase()===name.toLowerCase());
+  if(existing){existing.address=address}else customers.push({id:'c_'+Date.now(),name,address,projects:[]});
+  persistCustomers();
+  $('customerName').value='';$('customerAddress').value='';
+  renderCustomers();renderCustomerSelect(name);renderProjectCustomerSelect(existing?.id||customers.find(c=>c.name===name)?.id||'');
+  $('contractorSelect').dataset.manualName=name;
+  $('address').value=address;
+  alert('Kunde gespeichert.');
 }
 
-
-// Früher delegierter Capture-Handler: funktioniert auch dann, wenn ein späterer
-// Initialisierungsschritt der App vor dem bisherigen Button-Binding abbricht.
-document.addEventListener('click', function(event){
-  const button = event.target && event.target.closest ? event.target.closest('#addCustomer') : null;
-  if(!button) return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  try {
-    addCustomer();
-  } catch(error) {
-    console.error('Kunden-Speichern fehlgeschlagen:', error);
-    const status = $('customerSaveStatus');
-    if(status) {
-      status.textContent = 'Speichern fehlgeschlagen: ' + (error?.message || String(error));
-      status.style.color = '#b42318';
-      status.style.display = 'block';
-    } else {
-      alert('Kunden-Speichern fehlgeschlagen: ' + (error?.message || String(error)));
-    }
-  }
-}, true);
 
 function openEmployees(){renderEmployees();show('employeeManager')}
 function renderEmployees(){
@@ -1283,9 +1189,8 @@ function render(){
 
   if(title){
     title.textContent = archiveSelectedProject
-      ? ''
+      ? archiveSelectedProject
       : (archiveSelectedContractor ? archiveSelectedContractor : 'Kunden');
-    title.style.display = archiveSelectedProject ? 'none' : '';
   }
 
   if(hint){ hint.textContent = ''; }
@@ -1361,16 +1266,6 @@ function render(){
 
   /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
   const items=projects.get(archiveSelectedProject)||[];
-  const shareTile=document.createElement('button');
-  shareTile.type='button'; shareTile.className='shareDocsTile';
-  shareTile.innerHTML='<b>Dokumente teilen</b>';
-  shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagelohn',l);
-  l.append(shareTile);
-
-  const projectHeading=document.createElement('h2');
-  projectHeading.className='archiveProjectHeading';
-  projectHeading.textContent=archiveSelectedProject;
-  l.append(projectHeading);
   items
     .slice()
     .sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')))
@@ -1379,7 +1274,7 @@ function render(){
       row.className='reportRow';
       const signed=!!r.signed;
       const pdfBadge=r.pdfCreated?'<span class="reportStatus isPdfCreated">📄 PDF erstellt</span>':'';
-      row.innerHTML=`<label class="shareDocCheck"><input type="checkbox" class="shareDocumentCheck" value="${esc(r._cloudId||'')}" data-share-index="${i}" data-share-type="tagelohn"><span></span></label><div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span>${pdfBadge}</div><button type="button" class="openReport">Öffnen</button>`;
+      row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><span class="reportStatus ${signed?'isSigned':'isDraft'}">${signed?'✓ Unterschrieben':'Nicht unterschrieben'}</span>${pdfBadge}</div><button type="button" class="openReport">Öffnen</button>`;
       row.querySelector('.openReport').onclick=()=>{
         editingReportIndex=i;
         tagelohnReadOnly=false;
@@ -1586,18 +1481,13 @@ function renderTagesberichtArchive(){
    });return;
  }
  const entries=projects.get(selectedReportProject)||[];
- const shareTile=document.createElement('button');
- shareTile.type='button'; shareTile.className='shareDocsTile';
- shareTile.innerHTML='<b>Dokumente teilen</b>';
- shareTile.onclick=()=>window.BaustellenDocumentSharing?.beginSelection?.('tagesbericht',root);
- root.append(shareTile);
  entries.slice().sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||''))).forEach(({r,i})=>{
    const row=document.createElement('div');row.className='reportRow';
    const statusBadges=[
      r.signed?'<span class="reportStatus isSigned">✓ Unterschrieben</span>':'',
      r.pdfCreated?'<span class="reportStatus isPdfCreated">📄 PDF erstellt</span>':''
    ].filter(Boolean).join(' ');
-   row.innerHTML=`<label class="shareDocCheck"><input type="checkbox" class="shareDocumentCheck" value="${esc(r._cloudId||'')}" data-share-index="${i}" data-share-type="tagesbericht"><span></span></label><div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong>${statusBadges}</div><button type="button" class="openReport">Ansehen</button>`;
+   row.innerHTML=`<div class="reportMain"><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong>${statusBadges}</div><button type="button" class="openReport">Ansehen</button>`;
    row.querySelector('button').onclick=()=>showSavedTagesbericht(r);
    enableSwipeDelete(row,()=>{const list=getSavedTagesberichte();list.splice(i,1);localStorage.setItem('tagesberichte',JSON.stringify(list));renderTagesberichtArchive();});
    root.append(row);
@@ -1801,8 +1691,7 @@ initTagesbericht();
 initReportSignature();
 $('addEmp').onclick=()=>addEmp();$('addWork').onclick=()=>item('works');$('addMat').onclick=()=>item('materials');
 $('homeBtn').onclick=()=>{if(archiveSelectedProject){archiveSelectedProject=null;render();return;}if(archiveSelectedContractor){archiveSelectedContractor=null;render();return;}show('tagelohnHome')};$('homeFromCustomers').onclick=()=>show(customersReturnScreen);
-$('manageCustomers').onclick=openCustomers;
-$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
+$('manageCustomers').onclick=openCustomers;$('addCustomer').onclick=addCustomer;$('contractorSelect').onchange=customerChanged;$('projectSelect').onchange=projectChanged;$('projectCustomerSelect').onchange=renderProjectList;$('addProject').onclick=addProject;
 $('customersBtn')?.addEventListener('click',openCustomers);
 $('employeesBtn')?.addEventListener('click',openEmployees);$('homeFromServices').onclick=()=>show('managementHome');$('addService').onclick=addService; $('homeFromReportServices').onclick=()=>show('managementHome'); $('addReportService').onclick=addReportService;$('homeFromEmployees').onclick=()=>show('managementHome');$('addEmployee').onclick=addEmployee;
 $('save').onclick=()=>{reports.unshift(collect());save();render();show('archive')};$('pdf').onclick=()=>createPdf({askLocation:true,saveReport:true});
