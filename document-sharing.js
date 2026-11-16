@@ -233,7 +233,7 @@
     document.querySelectorAll('.shareDocsTile').forEach(tile => {
       tile.classList.remove('shareDocsTileActive');
       // Kachelinhalt vollständig vereinheitlichen: kein Symbol und kein Pfeil.
-      tile.innerHTML = '<b>Dokumente teilen</b>';
+      tile.innerHTML = '<b>Ausgewählte Dateien exportieren</b>';
       const label = tile.querySelector('b');
       if (label) {
         label.style.setProperty('display', 'block', 'important');
@@ -306,7 +306,7 @@
     if (tile) {
       // Die Freigabefunktion selbst setzt den Inhalt – ältere Symbole/Styles
       // können den Text dadurch nicht wieder vergrößern oder verschieben.
-      tile.innerHTML = '<b>Ausgewählte Dokumente teilen</b>';
+      tile.innerHTML = '<b>Ausgewählte Dateien exportieren</b>';
       tile.classList.add('shareDocsTileActive');
       tile.style.setProperty('width', '300px', 'important');
       tile.style.setProperty('min-width', '300px', 'important');
@@ -333,7 +333,7 @@
         label.style.setProperty('line-height', '1.2', 'important');
         label.style.setProperty('font-weight', '600', 'important');
       }
-      tile.onclick = () => shareSelected(type);
+      tile.onclick = () => window.BaustellenDocumentFiles?.exportSelected?.(type);
     }
   }
 

@@ -4173,3 +4173,6 @@ body:has(#home.startScreen.active) #home.startScreen.active .companyLogo { max-h
   line-height: 1 !important;
   white-space: nowrap !important;
 }
+
+.fileTransferBar{display:flex;justify-content:flex-end;margin:8px 0 12px}
+.fileShareFallback{display:block;width:100%;margin:8px 0}
