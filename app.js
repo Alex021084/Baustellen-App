@@ -1097,9 +1097,9 @@ function exportSelectedTagelohns(indexes){
   });
   save();
   const payload={format:'baustellen-app-tagelohn-transfer',version:1,exportedAt:new Date().toISOString(),documents};
-  const blob=new Blob([JSON.stringify(payload)],{type:'application/vnd.baustellen-app+json'});
-  const filename=`Tagelohn-Uebergabe-${new Date().toISOString().slice(0,10)}.baustelle`;
-  const file=new File([blob],filename,{type:'application/vnd.baustellen-app+json'});
+  const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+  const filename=`Tagelohn-Uebergabe-${new Date().toISOString().slice(0,10)}.json`;
+  const file=new File([blob],filename,{type:'application/json'});
   if(navigator.canShare?.({files:[file]}) && navigator.share){
     navigator.share({files:[file],title:'Tagelohnnachweise'})
       .catch(err=>{if(err?.name!=='AbortError')downloadTransferFile(blob,filename);});
