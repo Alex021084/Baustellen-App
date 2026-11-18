@@ -30,6 +30,11 @@
 <section id="tagelohnHome" class="screen">
 <div class="moduleHeader"><div><h2>Tagelohnnachweis</h2></div></div>
 <button id="new2" class="primary big">＋ Neuer Tagelohn</button>
+<div class="documentTransferHome">
+  <button id="startDocumentSend" type="button" class="secondary">Dateien senden</button>
+  <button id="importTagelohnFile" type="button" class="secondary">Datei importieren</button>
+</div>
+<input id="tagelohnTransferFile" type="file" accept=".baustelle,.json,application/json" hidden>
 <div class="archiveHint">Kunden und Baustellen</div>
 <div id="tagelohnCustomerList"></div>
 </section>
@@ -185,7 +190,6 @@
   <button id="signNow" class="secondary workflowButton" type="button">✍️ Unterschreiben</button>
   <button id="saveWithoutSignature" class="primary workflowButton" type="button">PDF erstellen</button>
   <button id="saveTagelohnFromSummary" class="secondary workflowButton saveDocumentButton" type="button">Dokument speichern</button>
-  <button id="exportTagelohnFile" class="secondary workflowButton" type="button">Datei an Kollegen senden</button>
 </div>
 </section>
 
@@ -213,10 +217,6 @@
 <section id="archive" class="screen">
 <div class="title"><h2 id="archiveTitle">Kunden</h2><button id="homeBtn" class="archiveTopBack">Tagelohn</button></div>
 <div id="archiveHint" class="archiveHint">Kunden mit vorhandenen Tagelohnnachweisen</div>
-<div class="documentTransferActions">
-  <button id="importTagelohnFile" type="button" class="secondary">Datei importieren</button>
-</div>
-<input id="tagelohnTransferFile" type="file" accept=".baustelle,.json,application/json" hidden>
 <div id="list"></div>
 </section>
 </main>
@@ -225,4 +225,4 @@
   <button id="navBack" type="button">‹<small>Zurück</small></button>
 </nav>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="app.js?v=tagelohn-transfer-v39-20261118"></script></body></html>
+<script src="app.js?v=tagelohn-transfer-v40-20261118"></script></body></html>

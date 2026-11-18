@@ -3465,3 +3465,9 @@ body.home-screen #home.active .startChoices {
 
 .documentTransferActions{display:flex;justify-content:flex-end;gap:8px;margin:10px 0 14px}
 #exportTagelohnFile{width:100%;margin-top:6px}
+
+.documentTransferHome{display:flex;gap:10px;margin:12px 0 18px}
+.documentTransferHome button{flex:1;min-height:48px}
+.transferSelectionBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;margin:8px 0 14px;background:#fff;border:1px solid #d8dde3;border-radius:14px}
+.transferSelectionBar button{white-space:nowrap}
+.tagelohnTransferCheck{width:24px;height:24px;flex:0 0 24px;align-self:center;margin:0 12px 0 2px;accent-color:#287a46}

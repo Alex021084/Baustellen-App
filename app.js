@@ -250,6 +250,7 @@ let tagelohnReadOnly=false;
 let navigationHistory=[];
 let archiveSelectedContractor=null;
 let archiveSelectedProject=null;
+let documentSendMode=false;
 const defaultCustomers=[{id:'dreyer',name:'Dreyer Hochbau GmbH & Co. KG',address:'Mühlenberg 12\n27404 Elsdorf'}];
 let customers=JSON.parse(localStorage.tagelohnCustomers||'null')||defaultCustomers;
 if(!Array.isArray(customers)) customers=[...defaultCustomers];
@@ -651,6 +652,7 @@ function goBackOneStep(){
       render();
       return;
     }
+    documentSendMode=false;
     show('tagelohnHome');
     return;
   }
@@ -1084,77 +1086,95 @@ function ensureTransferId(item){
   }
   return item._transferId;
 }
-function exportCurrentTagelohn(){
-  let item;
-  if(editingReportIndex!==null && reports[editingReportIndex]){
-    item={...reports[editingReportIndex],...collect()};
-    item._transferId=ensureTransferId(reports[editingReportIndex]);
-    reports[editingReportIndex]={...reports[editingReportIndex],...item};
-  }else{
-    item={...collect()};
-    item._transferId=ensureTransferId(item);
-  }
-  // Unterschrift und weitere Bilddaten liegen als Data-URLs im Datensatz und
-  // werden vollständig mit exportiert.
+
+function exportSelectedTagelohns(){
+  const checks=[...document.querySelectorAll('.tagelohnTransferCheck:checked')];
+  const indexes=[...new Set(checks.map(x=>Number(x.dataset.reportIndex)).filter(Number.isInteger))];
+  if(!indexes.length){alert('Bitte mindestens einen Tagelohnnachweis auswählen.');return;}
+  const documents=indexes.map(i=>{
+    const original=reports[i];
+    if(!original)return null;
+    const item={...original};
+    item._transferId=ensureTransferId(original);
+    reports[i]._transferId=item._transferId;
+    return item;
+  }).filter(Boolean);
   save();
-  const payload={
-    format:'baustellen-app-tagelohn-transfer',
-    version:1,
-    exportedAt:new Date().toISOString(),
-    document:item
-  };
+  const payload={format:'baustellen-app-tagelohn-transfer',version:1,exportedAt:new Date().toISOString(),documents};
   const blob=new Blob([JSON.stringify(payload)],{type:'application/vnd.baustellen-app+json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const date=String(item.date||new Date().toISOString().slice(0,10));
-  const safeDate=date.replace(/[^0-9-]/g,'-');
-  a.href=url;
-  a.download=`Tagelohn-${safeDate}-${String(item.contractor||'Nachweis').replace(/[\\/:*?"<>|]/g,'-').slice(0,45)}.baustelle`;
-  document.body.appendChild(a);a.click();a.remove();
+  const file=new File([blob],`Tagelohn-Uebergabe-${new Date().toISOString().slice(0,10)}.baustelle`,{type:'application/vnd.baustellen-app+json'});
+  if(navigator.canShare?.({files:[file]}) && navigator.share){
+    navigator.share({files:[file],title:'Tagelohnnachweise',text:'Tagelohnnachweise zur Bearbeitung und Unterschrift.'})
+      .catch(err=>{if(err?.name!=='AbortError')downloadTransferFile(blob,file.name);});
+  }else{
+    downloadTransferFile(blob,file.name);
+    alert('Die Übergabedatei wurde gespeichert. Bitte anschließend in Mail oder WhatsApp als Anhang auswählen.');
+  }
+}
+function downloadTransferFile(blob,name){
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
-  alert('Die Übergabedatei wurde erstellt. Du kannst sie jetzt per E-Mail oder Messenger an deinen Kollegen schicken.');
+}
+function renderTransferSelection(){
+  const l=$('list');
+  if(!l)return;
+  const items=[...l.querySelectorAll('.reportRow')];
+  items.forEach(row=>{
+    const button=row.querySelector('button');
+    if(!button)return;
+    const match=button.getAttribute('onclick')||'';
+    const indexMatch=match.match(/openReport\((\d+)\)/);
+    if(!indexMatch)return;
+    const i=Number(indexMatch[1]);
+    const check=document.createElement('input');
+    check.type='checkbox';check.className='tagelohnTransferCheck';check.dataset.reportIndex=String(i);
+    check.setAttribute('aria-label','Nachweis auswählen');
+    row.prepend(check);
+  });
+  const bar=document.createElement('div');bar.className='transferSelectionBar';
+  bar.innerHTML='<span>Nachweise auswählen</span><button type="button" id="sendSelectedTagelohns" class="primary">Auswahl per E-Mail senden</button>';
+  l.prepend(bar);
 }
 function importTagelohnTransfer(file){
   return file.text().then(text=>{
     const payload=JSON.parse(text);
+    const incomingDocs=payload?.documents || (payload?.document?[payload.document]:null);
     if(payload?.format!=='baustellen-app-tagelohn-transfer'||payload?.version!==1||
-       !payload.document||typeof payload.document!=='object'||Array.isArray(payload.document)){
+       !Array.isArray(incomingDocs)||!incomingDocs.length){
       throw new Error('Diese Datei ist keine gültige Tagelohn-Übergabedatei.');
     }
-    const incoming={...payload.document};
-    const transferId=ensureTransferId(incoming);
-    const found=reports.findIndex(r=>r?._transferId===transferId);
-    if(found>=0){
-      const current=reports[found];
-      // Eine bereits vorhandene Unterschrift nicht durch eine leere Signatur ersetzen.
-      const merged={...current,...incoming};
-      if(current.signed && !incoming.signed){
-        merged.signature=current.signature;
-        merged.signed=true;
-        merged.signedAt=current.signedAt;
-      }
-      reports[found]=merged;
-      save();
-      alert('Der übermittelte Nachweis wurde aktualisiert. Er ist weiterhin unter seinem bisherigen Eintrag gespeichert.');
-    }else{
-      reports.unshift(incoming);
-      save();
-      alert('Der Tagelohnnachweis wurde importiert und ist jetzt in der Dokumentenliste verfügbar.');
-    }
-    archiveSelectedContractor=null;
-    archiveSelectedProject=null;
-    render();
-    show('archive');
+    let added=0,updated=0,skipped=0;
+    incomingDocs.forEach(raw=>{
+      if(!raw||typeof raw!=='object'||Array.isArray(raw))return;
+      const incoming={...raw};const transferId=ensureTransferId(incoming);
+      const found=reports.findIndex(r=>r?._transferId===transferId);
+      if(found>=0){
+        const current=reports[found],merged={...current,...incoming};
+        if(current.signed && !incoming.signed){
+          merged.signature=current.signature;merged.signed=true;merged.signedAt=current.signedAt;
+        }
+        reports[found]=merged;updated++;
+      }else{reports.unshift(incoming);added++;}
+    });
+    if(!added&&!updated){alert('Keine gültigen Nachweise in der Datei gefunden.');return;}
+    save();
+    alert(`${added} neue Nachweise importiert, ${updated} vorhandene Nachweise aktualisiert.${skipped?' '+skipped+' übersprungen.':''}`);
+    archiveSelectedContractor=null;archiveSelectedProject=null;documentSendMode=false;
+    render();show('archive');
   });
 }
 document.addEventListener('click',function(event){
-  if(event.target.closest('#exportTagelohnFile')){
-    event.preventDefault();
-    try{exportCurrentTagelohn();}catch(err){console.error(err);alert('Export fehlgeschlagen: '+(err?.message||err));}
+  if(event.target.closest('#startDocumentSend')){
+    documentSendMode=true;archiveSelectedContractor=null;archiveSelectedProject=null;
+    render();show('archive');
+    alert('Bitte zuerst Kunde und Bauvorhaben auswählen. Danach kannst du einzelne Nachweise markieren.');
   }
   if(event.target.closest('#importTagelohnFile')){
-    event.preventDefault();
-    $('tagelohnTransferFile')?.click();
+    event.preventDefault();$('tagelohnTransferFile')?.click();
+  }
+  if(event.target.closest('#sendSelectedTagelohns')){
+    event.preventDefault();exportSelectedTagelohns();
   }
 });
 document.addEventListener('change',function(event){
@@ -1359,6 +1379,11 @@ function render(){
 
   /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
   const items=projects.get(archiveSelectedProject)||[];
+  if(documentSendMode){
+    const bar=document.createElement('div');bar.className='transferSelectionBar';
+    bar.innerHTML='<span>Ein oder mehrere Nachweise auswählen</span><button type="button" id="sendSelectedTagelohns" class="primary">Auswahl per E-Mail senden</button>';
+    l.append(bar);
+  }
   items
     .slice()
     .sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')))
@@ -1377,6 +1402,12 @@ function render(){
         updateTagelohnSummarySignatureStatus();
       };
       enableSwipeDelete(row,()=>removeReport(i));
+      if(documentSendMode){
+        const check=document.createElement('input');
+        check.type='checkbox';check.className='tagelohnTransferCheck';
+        check.dataset.reportIndex=String(i);check.setAttribute('aria-label','Nachweis auswählen');
+        row.prepend(check);
+      }
       l.append(row);
     });
 
