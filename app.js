@@ -1101,7 +1101,7 @@ function exportSelectedTagelohns(indexes){
   const filename=`Tagelohn-Uebergabe-${new Date().toISOString().slice(0,10)}.baustelle`;
   const file=new File([blob],filename,{type:'application/vnd.baustellen-app+json'});
   if(navigator.canShare?.({files:[file]}) && navigator.share){
-    navigator.share({files:[file],title:'Tagelohnnachweise',text:'Tagelohnnachweise zur Bearbeitung und Unterschrift.'})
+    navigator.share({files:[file],title:'Tagelohnnachweise'})
       .catch(err=>{if(err?.name!=='AbortError')downloadTransferFile(blob,filename);});
   }else{
     downloadTransferFile(blob,filename);
