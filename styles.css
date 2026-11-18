@@ -3471,3 +3471,25 @@ body.home-screen #home.active .startChoices {
 .transferSelectionBar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;margin:8px 0 14px;background:#fff;border:1px solid #d8dde3;border-radius:14px}
 .transferSelectionBar button{white-space:nowrap}
 .tagelohnTransferCheck{width:24px;height:24px;flex:0 0 24px;align-self:center;margin:0 12px 0 2px;accent-color:#287a46}
+
+/* Farbige, gut erkennbare Datei-Aktionen */
+.documentTransferHome{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 24px}
+.documentTransferHome button{min-height:58px;border:1px solid transparent;border-radius:16px;font-weight:750;font-size:16px;box-shadow:0 3px 10px rgba(20,35,50,.08)}
+#startDocumentSend{background:#e5f0ff!important;color:#1557a6!important;border-color:#9fc5ff!important}
+#importTagelohnFile{background:#e5f6eb!important;color:#18723b!important;border-color:#9ed8b1!important}
+.transferModalOverlay{position:fixed;inset:0;z-index:10000;background:rgba(12,20,30,.48);display:flex;align-items:center;justify-content:center;padding:18px}
+.transferModalOverlay[hidden]{display:none}
+.transferModal{position:relative;width:min(100%,520px);max-height:82vh;overflow:auto;background:#fff;border-radius:22px;padding:24px 18px 18px;box-shadow:0 18px 60px rgba(0,0,0,.25)}
+.transferModalStep{font-size:12px;letter-spacing:.1em;font-weight:800;color:#2874c8;margin-bottom:8px}
+.transferModal h2{font-size:24px;margin:0 38px 18px 0;color:#182330}
+.transferModalClose{position:absolute;right:14px;top:12px;border:0;background:#eef2f6;border-radius:50%;width:38px;height:38px;font-size:26px;color:#425466}
+.transferChoice{display:flex;width:100%;justify-content:space-between;align-items:center;text-align:left;padding:16px;margin:8px 0;border:1px solid #d7e0e8;border-radius:14px;background:#f8fafc;color:#1c2935;font-size:17px;font-weight:650}
+.transferChoice.selected{border:2px solid #3983d8;background:#eaf3ff}
+.transferChoice span{font-size:24px;color:#6d8296}
+.transferDocumentChoice{display:flex;align-items:center;gap:12px;padding:14px 10px;border-bottom:1px solid #e4e9ee;color:#1c2935}
+.transferDocumentChoice input{width:23px;height:23px;accent-color:#2874c8;flex:0 0 auto}
+.transferDocumentChoice span{display:flex;flex-direction:column;gap:4px}
+.transferDocumentChoice small{color:#647586}
+.transferModalActions{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
+.transferModalActions button{flex:1;min-height:48px}
+#transferModalNext{background:#216bc0;color:white}

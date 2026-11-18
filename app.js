@@ -1087,29 +1087,67 @@ function ensureTransferId(item){
   return item._transferId;
 }
 
-function exportSelectedTagelohns(){
-  const checks=[...document.querySelectorAll('.tagelohnTransferCheck:checked')];
-  const indexes=[...new Set(checks.map(x=>Number(x.dataset.reportIndex)).filter(Number.isInteger))];
+
+function exportSelectedTagelohns(indexes){
+  indexes=[...new Set((indexes||[]).map(Number).filter(i=>Number.isInteger(i)&&reports[i]))];
   if(!indexes.length){alert('Bitte mindestens einen Tagelohnnachweis auswählen.');return;}
   const documents=indexes.map(i=>{
-    const original=reports[i];
-    if(!original)return null;
-    const item={...original};
-    item._transferId=ensureTransferId(original);
-    reports[i]._transferId=item._transferId;
-    return item;
-  }).filter(Boolean);
+    const original=reports[i],item={...original};
+    item._transferId=ensureTransferId(original);reports[i]._transferId=item._transferId;return item;
+  });
   save();
   const payload={format:'baustellen-app-tagelohn-transfer',version:1,exportedAt:new Date().toISOString(),documents};
   const blob=new Blob([JSON.stringify(payload)],{type:'application/vnd.baustellen-app+json'});
-  const file=new File([blob],`Tagelohn-Uebergabe-${new Date().toISOString().slice(0,10)}.baustelle`,{type:'application/vnd.baustellen-app+json'});
+  const filename=`Tagelohn-Uebergabe-${new Date().toISOString().slice(0,10)}.baustelle`;
+  const file=new File([blob],filename,{type:'application/vnd.baustellen-app+json'});
   if(navigator.canShare?.({files:[file]}) && navigator.share){
     navigator.share({files:[file],title:'Tagelohnnachweise',text:'Tagelohnnachweise zur Bearbeitung und Unterschrift.'})
-      .catch(err=>{if(err?.name!=='AbortError')downloadTransferFile(blob,file.name);});
+      .catch(err=>{if(err?.name!=='AbortError')downloadTransferFile(blob,filename);});
   }else{
-    downloadTransferFile(blob,file.name);
+    downloadTransferFile(blob,filename);
     alert('Die Übergabedatei wurde gespeichert. Bitte anschließend in Mail oder WhatsApp als Anhang auswählen.');
   }
+}
+function openSendWizard(){
+  let overlay=document.getElementById('tagelohnSendWizard');
+  if(!overlay){
+    overlay=document.createElement('div');overlay.id='tagelohnSendWizard';overlay.className='transferModalOverlay';
+    overlay.innerHTML='<section class="transferModal" role="dialog" aria-modal="true" aria-labelledby="transferModalTitle"><button type="button" class="transferModalClose" aria-label="Schließen">×</button><div class="transferModalStep" id="transferModalStep"></div><h2 id="transferModalTitle"></h2><div id="transferModalBody"></div><div class="transferModalActions"><button type="button" class="secondary" id="transferModalBack">Zurück</button><button type="button" class="primary" id="transferModalNext">Weiter</button></div></section>';
+    document.body.append(overlay);
+    overlay.querySelector('.transferModalClose').onclick=()=>overlay.remove();
+    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+  }
+  const state={customer:null,project:null,step:1,selected:[]};
+  const title=overlay.querySelector('#transferModalTitle'),step=overlay.querySelector('#transferModalStep'),body=overlay.querySelector('#transferModalBody'),back=overlay.querySelector('#transferModalBack'),next=overlay.querySelector('#transferModalNext');
+  const customersWithDocs=customers.filter(c=>reports.some(r=>String(r.contractor||'').trim()===String(c.name||'').trim()));
+  function draw(){
+    step.textContent=`SCHRITT ${state.step} VON 3`;
+    back.style.visibility=state.step===1?'hidden':'visible';
+    if(state.step===1){
+      title.textContent='Kunde auswählen';
+      body.innerHTML=customersWithDocs.length?customersWithDocs.map((c,i)=>`<button type="button" class="transferChoice ${state.customer?.id===c.id?'selected':''}" data-customer-index="${i}">${esc(cleanCustomerDisplayName(c.name))}<span>›</span></button>`).join(''):'<p>Es gibt noch keine Kunden mit Tagelohnnachweisen.</p>';
+      next.textContent='Weiter';next.disabled=!state.customer;
+      body.querySelectorAll('[data-customer-index]').forEach(b=>b.onclick=()=>{state.customer=customersWithDocs[Number(b.dataset.customerIndex)];state.project=null;state.selected=[];draw();});
+    }else if(state.step===2){
+      title.textContent='Bauvorhaben auswählen';
+      const projects=[...new Set(reports.filter(r=>String(r.contractor||'').trim()===String(state.customer?.name||'').trim()).map(r=>String(r.project||'Ohne Bauvorhaben').trim()||'Ohne Bauvorhaben'))].sort((a,b)=>a.localeCompare(b,'de'));
+      body.innerHTML=projects.map((p,i)=>`<button type="button" class="transferChoice ${state.project===p?'selected':''}" data-project-index="${i}">${esc(p)}<span>›</span></button>`).join('')||'<p>Keine Bauvorhaben vorhanden.</p>';
+      next.textContent='Weiter';next.disabled=!state.project;
+      body.querySelectorAll('[data-project-index]').forEach(b=>b.onclick=()=>{state.project=projects[Number(b.dataset.projectIndex)];state.selected=[];draw();});
+    }else{
+      title.textContent='Tagelohnnachweise auswählen';
+      const docs=reports.map((r,i)=>({r,i})).filter(({r})=>String(r.contractor||'').trim()===String(state.customer?.name||'').trim()&&(String(r.project||'Ohne Bauvorhaben').trim()||'Ohne Bauvorhaben')===state.project).sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')));
+      body.innerHTML=docs.length?docs.map(({r,i})=>`<label class="transferDocumentChoice"><input type="checkbox" value="${i}" ${state.selected.includes(i)?'checked':''}><span><strong>${esc(formatDate(r.date)||'Ohne Datum')}</strong><small>${r.signed?'✓ Unterschrieben':'Nicht unterschrieben'}${r.pdfCreated?' · PDF erstellt':''}</small></span></label>`).join(''):'<p>Keine Nachweise vorhanden.</p>';
+      next.textContent='Per E-Mail senden';next.disabled=!state.selected.length;
+      body.querySelectorAll('input[type=checkbox]').forEach(ch=>ch.onchange=()=>{const i=Number(ch.value);state.selected=ch.checked?[...state.selected,i]:state.selected.filter(x=>x!==i);next.disabled=!state.selected.length;});
+    }
+  }
+  back.onclick=()=>{if(state.step>1){state.step--;draw();}};
+  next.onclick=()=>{
+    if(state.step<3){state.step++;draw();return;}
+    const selected=[...state.selected];overlay.remove();exportSelectedTagelohns(selected);
+  };
+  overlay.hidden=false;draw();
 }
 function downloadTransferFile(blob,name){
   const url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -1166,15 +1204,10 @@ function importTagelohnTransfer(file){
 }
 document.addEventListener('click',function(event){
   if(event.target.closest('#startDocumentSend')){
-    documentSendMode=true;archiveSelectedContractor=null;archiveSelectedProject=null;
-    render();show('archive');
-    alert('Bitte zuerst Kunde und Bauvorhaben auswählen. Danach kannst du einzelne Nachweise markieren.');
+    event.preventDefault();openSendWizard();
   }
   if(event.target.closest('#importTagelohnFile')){
     event.preventDefault();$('tagelohnTransferFile')?.click();
-  }
-  if(event.target.closest('#sendSelectedTagelohns')){
-    event.preventDefault();exportSelectedTagelohns();
   }
 });
 document.addEventListener('change',function(event){
@@ -1379,11 +1412,6 @@ function render(){
 
   /* Ebene 3: Nachweise des Bauvorhabens – neueste zuerst */
   const items=projects.get(archiveSelectedProject)||[];
-  if(documentSendMode){
-    const bar=document.createElement('div');bar.className='transferSelectionBar';
-    bar.innerHTML='<span>Ein oder mehrere Nachweise auswählen</span><button type="button" id="sendSelectedTagelohns" class="primary">Auswahl per E-Mail senden</button>';
-    l.append(bar);
-  }
   items
     .slice()
     .sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')))
@@ -1402,13 +1430,7 @@ function render(){
         updateTagelohnSummarySignatureStatus();
       };
       enableSwipeDelete(row,()=>removeReport(i));
-      if(documentSendMode){
-        const check=document.createElement('input');
-        check.type='checkbox';check.className='tagelohnTransferCheck';
-        check.dataset.reportIndex=String(i);check.setAttribute('aria-label','Nachweis auswählen');
-        row.prepend(check);
-      }
-      l.append(row);
+l.append(row);
     });
 
   if(!items.length){
