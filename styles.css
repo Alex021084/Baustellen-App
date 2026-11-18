@@ -3493,3 +3493,14 @@ body.home-screen #home.active .startChoices {
 .transferModalActions{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
 .transferModalActions button{flex:1;min-height:48px}
 #transferModalNext{background:#216bc0;color:white}
+
+/* v42: force fresh, centered native-looking modal on iPhone/iPad */
+.documentTransferHome{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+.documentTransferHome #startDocumentSend,
+#startDocumentSend{background:#e8f1ff!important;color:#1459a8!important;border:2px solid #9fc4f5!important;border-radius:16px!important;box-shadow:0 4px 12px rgba(25,75,130,.12)!important;font-weight:750!important}
+.documentTransferHome #importTagelohnFile,
+#importTagelohnFile{background:#e8f7ed!important;color:#18723d!important;border:2px solid #a5d8b6!important;border-radius:16px!important;box-shadow:0 4px 12px rgba(25,110,60,.10)!important;font-weight:750!important}
+#tagelohnSendWizard.transferModalOverlay{position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;z-index:2147483000!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;background:rgba(12,20,30,.58)!important;padding:20px!important;margin:0!important}
+#tagelohnSendWizard .transferModal{width:min(100%,520px)!important;max-height:calc(100dvh - 40px)!important;overflow-y:auto!important;margin:auto!important;background:#fff!important;border-radius:22px!important;padding:24px 18px 18px!important;box-shadow:0 18px 60px rgba(0,0,0,.30)!important}
+#tagelohnSendWizard .transferChoice{min-height:56px!important;border-radius:14px!important}
+#tagelohnSendWizard .transferModalActions button{border-radius:13px!important;font-weight:700!important}
