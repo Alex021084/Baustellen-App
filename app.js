@@ -1075,6 +1075,99 @@ function save(){
   if(countElement)countElement.textContent=reports.length+' Nachweis'+(reports.length===1?'':'e');
 }
 
+// Dokumentübergabe ohne Cloud: vollständiger Tagelohn-Datensatz als portable Datei.
+// _transferId bleibt über Hin- und Rückversand gleich, damit die Rückgabe den
+// ursprünglichen Datensatz aktualisiert statt einen zweiten anzulegen.
+function ensureTransferId(item){
+  if(!item._transferId){
+    item._transferId='tl_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
+  }
+  return item._transferId;
+}
+function exportCurrentTagelohn(){
+  let item;
+  if(editingReportIndex!==null && reports[editingReportIndex]){
+    item={...reports[editingReportIndex],...collect()};
+    item._transferId=ensureTransferId(reports[editingReportIndex]);
+    reports[editingReportIndex]={...reports[editingReportIndex],...item};
+  }else{
+    item={...collect()};
+    item._transferId=ensureTransferId(item);
+  }
+  // Unterschrift und weitere Bilddaten liegen als Data-URLs im Datensatz und
+  // werden vollständig mit exportiert.
+  save();
+  const payload={
+    format:'baustellen-app-tagelohn-transfer',
+    version:1,
+    exportedAt:new Date().toISOString(),
+    document:item
+  };
+  const blob=new Blob([JSON.stringify(payload)],{type:'application/vnd.baustellen-app+json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=String(item.date||new Date().toISOString().slice(0,10));
+  const safeDate=date.replace(/[^0-9-]/g,'-');
+  a.href=url;
+  a.download=`Tagelohn-${safeDate}-${String(item.contractor||'Nachweis').replace(/[\\/:*?"<>|]/g,'-').slice(0,45)}.baustelle`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  alert('Die Übergabedatei wurde erstellt. Du kannst sie jetzt per E-Mail oder Messenger an deinen Kollegen schicken.');
+}
+function importTagelohnTransfer(file){
+  return file.text().then(text=>{
+    const payload=JSON.parse(text);
+    if(payload?.format!=='baustellen-app-tagelohn-transfer'||payload?.version!==1||
+       !payload.document||typeof payload.document!=='object'||Array.isArray(payload.document)){
+      throw new Error('Diese Datei ist keine gültige Tagelohn-Übergabedatei.');
+    }
+    const incoming={...payload.document};
+    const transferId=ensureTransferId(incoming);
+    const found=reports.findIndex(r=>r?._transferId===transferId);
+    if(found>=0){
+      const current=reports[found];
+      // Eine bereits vorhandene Unterschrift nicht durch eine leere Signatur ersetzen.
+      const merged={...current,...incoming};
+      if(current.signed && !incoming.signed){
+        merged.signature=current.signature;
+        merged.signed=true;
+        merged.signedAt=current.signedAt;
+      }
+      reports[found]=merged;
+      save();
+      alert('Der übermittelte Nachweis wurde aktualisiert. Er ist weiterhin unter seinem bisherigen Eintrag gespeichert.');
+    }else{
+      reports.unshift(incoming);
+      save();
+      alert('Der Tagelohnnachweis wurde importiert und ist jetzt in der Dokumentenliste verfügbar.');
+    }
+    archiveSelectedContractor=null;
+    archiveSelectedProject=null;
+    render();
+    show('archive');
+  });
+}
+document.addEventListener('click',function(event){
+  if(event.target.closest('#exportTagelohnFile')){
+    event.preventDefault();
+    try{exportCurrentTagelohn();}catch(err){console.error(err);alert('Export fehlgeschlagen: '+(err?.message||err));}
+  }
+  if(event.target.closest('#importTagelohnFile')){
+    event.preventDefault();
+    $('tagelohnTransferFile')?.click();
+  }
+});
+document.addEventListener('change',function(event){
+  if(event.target?.id!=='tagelohnTransferFile')return;
+  const file=event.target.files?.[0];
+  event.target.value='';
+  if(!file)return;
+  importTagelohnTransfer(file).catch(err=>{
+    console.error(err);
+    alert('Import fehlgeschlagen: '+(err?.message||err));
+  });
+});
+
 // Merkt sich den zuletzt geöffneten/geschlossenen Zustand der Auftraggeber- und Baustellenordner.
 const archiveStateKey='tagelohnArchiveState';
 function getArchiveState(){

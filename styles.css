@@ -3462,3 +3462,6 @@ body.home-screen #home.active .startChoices {
     margin-top: 22px !important;
   }
 }
+
+.documentTransferActions{display:flex;justify-content:flex-end;gap:8px;margin:10px 0 14px}
+#exportTagelohnFile{width:100%;margin-top:6px}
