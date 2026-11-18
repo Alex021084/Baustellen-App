@@ -202,10 +202,6 @@ document.addEventListener('click', function(event){
         alert('Bitte zuerst einen Kunden auswählen.');
         return;
       }
-      if(!projectSelected){
-        alert('Bitte zuerst eine Baustelle auswählen oder eingeben.');
-        return;
-      }
       tagelohnWizardStep=2;
       renderTagelohnWizard();
       window.scrollTo(0,0);
@@ -1123,17 +1119,18 @@ function openSendWizard(){
   function draw(){
     step.textContent=`SCHRITT ${state.step} VON 3`;
     back.style.visibility=state.step===1?'hidden':'visible';
+    next.style.display=state.step===3?'':'none';
     if(state.step===1){
       title.textContent='Kunde auswählen';
       body.innerHTML=customersWithDocs.length?customersWithDocs.map((c,i)=>`<button type="button" class="transferChoice ${state.customer?.id===c.id?'selected':''}" data-customer-index="${i}">${esc(cleanCustomerDisplayName(c.name))}<span>›</span></button>`).join(''):'<p>Es gibt noch keine Kunden mit Tagelohnnachweisen.</p>';
       next.textContent='Weiter';next.disabled=!state.customer;
-      body.querySelectorAll('[data-customer-index]').forEach(b=>b.onclick=()=>{state.customer=customersWithDocs[Number(b.dataset.customerIndex)];state.project=null;state.selected=[];draw();});
+      body.querySelectorAll('[data-customer-index]').forEach(b=>b.onclick=()=>{state.customer=customersWithDocs[Number(b.dataset.customerIndex)];state.project=null;state.selected=[];state.step=2;draw();});
     }else if(state.step===2){
       title.textContent='Bauvorhaben auswählen';
       const projects=[...new Set(reports.filter(r=>String(r.contractor||'').trim()===String(state.customer?.name||'').trim()).map(r=>String(r.project||'Ohne Bauvorhaben').trim()||'Ohne Bauvorhaben'))].sort((a,b)=>a.localeCompare(b,'de'));
       body.innerHTML=projects.map((p,i)=>`<button type="button" class="transferChoice ${state.project===p?'selected':''}" data-project-index="${i}">${esc(p)}<span>›</span></button>`).join('')||'<p>Keine Bauvorhaben vorhanden.</p>';
       next.textContent='Weiter';next.disabled=!state.project;
-      body.querySelectorAll('[data-project-index]').forEach(b=>b.onclick=()=>{state.project=projects[Number(b.dataset.projectIndex)];state.selected=[];draw();});
+      body.querySelectorAll('[data-project-index]').forEach(b=>b.onclick=()=>{state.project=projects[Number(b.dataset.projectIndex)];state.selected=[];state.step=3;draw();});
     }else{
       title.textContent='Tagelohnnachweise auswählen';
       const docs=reports.map((r,i)=>({r,i})).filter(({r})=>String(r.contractor||'').trim()===String(state.customer?.name||'').trim()&&(String(r.project||'Ohne Bauvorhaben').trim()||'Ohne Bauvorhaben')===state.project).sort((a,b)=>String(b.r.date||'').localeCompare(String(a.r.date||'')));
