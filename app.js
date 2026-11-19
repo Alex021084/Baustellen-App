@@ -1467,7 +1467,7 @@ function pdfFilename(data){
     date=parts.length===3 ? `${parts[0]}.${parts[1]}.${parts[2].slice(-2)}` : fullDate;
   }
   const project=cleanFilenamePart(data.project)||'Bauvorhaben';
-  return `${customer} - ${date} - ${project}.pdf`;
+  return `${customer} - TL ${date} - ${project}.pdf`;
 }
 
 async function createPdf(options={}){
@@ -1709,7 +1709,7 @@ async function saveTagesberichtAndPdf(requireSignature=false){
 }
 function tagesberichtPdfFilename(data){
   const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
-  return `${customer} - ${shortDate(data.date).replaceAll('.','.') } - Tagesbericht - ${project}.pdf`;
+  return `${customer} - Tb ${shortDate(data.date)} - ${project}.pdf`;
 }
 async function createTagesberichtPdf(data){
   if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
