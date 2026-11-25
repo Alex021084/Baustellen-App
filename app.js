@@ -1597,11 +1597,15 @@ function renderTagesberichtArchive(){
  root.innerHTML='';
  const groups=new Map();
  saved.forEach((r,i)=>{
-   const customer=(r.customer||'Unbekannter Kunde').trim()||'Unbekannter Kunde';
-   const project=(r.project||'Ohne Bauvorhaben').trim()||'Ohne Bauvorhaben';
+   const customer=String(r.customer||'').trim();
+   const project=String(r.project||'').trim();
+   // Alte/ungültige Datensätze mit dem Platzhalter aus dem Auswahlfeld
+   // dürfen nicht als eigener Kunde in der Übersicht erscheinen.
+   if(!customer || /^[-–—]\s*Kunde auswählen\s*[-–—]$/i.test(customer)) return;
+   const safeProject=project||'Ohne Bauvorhaben';
    if(!groups.has(customer))groups.set(customer,new Map());
-   if(!groups.get(customer).has(project))groups.get(customer).set(project,[]);
-   groups.get(customer).get(project).push({r,i});
+   if(!groups.get(customer).has(safeProject))groups.get(customer).set(safeProject,[]);
+   groups.get(customer).get(safeProject).push({r,i});
  });
  const heading=document.createElement('div'); heading.className='archiveHint';
  heading.textContent=selectedReportProject||selectedReportCustomer||'Kunden und Baustellen';
@@ -1647,11 +1651,15 @@ function showSavedTagesbericht(r){
 }
 
 function collectTagesbericht(){
+  const customerId=$('reportCustomerSelect')?.value||'';
+  const selectedCustomer=customers.find(c=>String(c.id)===String(customerId));
+  const projectValue=$('reportProjectSelect')?.value||'';
   return {
     type:'tagesbericht',
     date:$('reportDate')?.value||today(),
-    customer:$('reportCustomerSelect')?.selectedOptions?.[0]?.textContent?.trim()||'',
-    project:$('reportProjectSelect')?.selectedOptions?.[0]?.textContent?.trim()||'',
+    // Niemals den sichtbaren Platzhaltertext als Kundennamen übernehmen.
+    customer:selectedCustomer?.name||'',
+    project:projectValue,
     temperature:$('reportTemperature')?.textContent?.trim()||'—',
     precipitation:$('reportPrecipitation')?.textContent?.trim()||'—',
     wind:$('reportTemperature')?.closest('.weatherGrid')?.dataset?.wind||'',
@@ -1682,6 +1690,9 @@ async function saveTagesberichtAndPdf(requireSignature=false){
   const signed=hasReportSignature();
   if(requireSignature&&!signed){alert('Bitte unterschreiben oder ohne Unterschrift speichern.');return;}
   const data=collectTagesbericht();
+  if(!data.customer){alert('Bitte zuerst einen Kunden auswählen.');return;}
+  if(!data.project){alert('Bitte zuerst ein Bauvorhaben auswählen.');return;}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(data.date||''))){alert('Bitte ein gültiges Berichtsdatum auswählen.');return;}
   const reportsSaved=JSON.parse(localStorage.getItem('tagesberichte')||'[]');
   const savedEntry={...data,signed,signedAt:signed?new Date().toISOString():null,pdfCreated:false,pdfCreatedAt:null};
   reportsSaved.unshift(savedEntry);
@@ -1708,11 +1719,19 @@ async function saveTagesberichtAndPdf(requireSignature=false){
   renderTagesberichtArchive?.();
 }
 function tagesberichtPdfFilename(data){
-  const customer=cleanFilenamePart(data.customer)||'Kunde', project=cleanFilenamePart(data.project)||'Bauvorhaben';
-  return `${customer} - Tb ${shortDate(data.date)} - ${project}.pdf`;
+  const customer=cleanFilenamePart(data.customer)||'Kunde';
+  const project=cleanFilenamePart(data.project)||'Bauvorhaben';
+  // Das Datum kommt ausschließlich aus dem Tagesbericht (YYYY-MM-DD),
+  // nicht aus dem heutigen Systemdatum oder dem Zeitpunkt des Speicherns.
+  const m=String(data.date||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const reportDate=m?`${m[3]}.${m[2]}.${m[1]}`:'Ohne-Datum';
+  return `${customer} - Tb ${reportDate} - ${project}.pdf`;
 }
+let tagesberichtPdfShareInProgress=false;
 async function createTagesberichtPdf(data){
-  if(!window.PDFLib){alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
+  if(tagesberichtPdfShareInProgress){alert('Der PDF-Speichervorgang läuft bereits. Bitte kurz warten.');return false;}
+  tagesberichtPdfShareInProgress=true;
+  if(!window.PDFLib){tagesberichtPdfShareInProgress=false;alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');return false}
   const {PDFDocument,StandardFonts,rgb}=PDFLib;
   let fileHandle=null;
   try{
@@ -1788,21 +1807,7 @@ async function createTagesberichtPdf(data){
       await writable.write(blob); await writable.close();
     }else if(navigator.share&&navigator.canShare){
       const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.canShare({files:[file]})){
-        try{
-          if(window.__tagesberichtNativeShareInProgress)throw new DOMException('Teilen ist bereits geöffnet','InvalidStateError');
-          window.__tagesberichtNativeShareInProgress=true;
-          await navigator.share({files:[file],title:filename});
-          return true;
-        }catch(shareError){
-          if(shareError?.name==='AbortError')return false;
-          if(shareError?.name!=='InvalidStateError')throw shareError;
-          // Wenn iOS bereits einen Teilen-Dialog geöffnet hat, auf Download ausweichen.
-        }finally{
-          window.__tagesberichtNativeShareInProgress=false;
-        }
-      }
-      const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
     }else{
       const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
@@ -1810,6 +1815,8 @@ async function createTagesberichtPdf(data){
   }catch(err){
     if(err?.name==='AbortError') return false;
     console.error(err);alert('Tagesbericht-PDF konnte nicht erstellt/gespeichert werden: '+err.message);return false;
+  }finally{
+    tagesberichtPdfShareInProgress=false;
   }
 }
 
