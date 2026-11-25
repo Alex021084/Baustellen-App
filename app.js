@@ -1788,7 +1788,21 @@ async function createTagesberichtPdf(data){
       await writable.write(blob); await writable.close();
     }else if(navigator.share&&navigator.canShare){
       const file=new File([blob],filename,{type:'application/pdf'});
-      if(navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
+      if(navigator.canShare({files:[file]})){
+        try{
+          if(window.__tagesberichtNativeShareInProgress)throw new DOMException('Teilen ist bereits geöffnet','InvalidStateError');
+          window.__tagesberichtNativeShareInProgress=true;
+          await navigator.share({files:[file],title:filename});
+          return true;
+        }catch(shareError){
+          if(shareError?.name==='AbortError')return false;
+          if(shareError?.name!=='InvalidStateError')throw shareError;
+          // Wenn iOS bereits einen Teilen-Dialog geöffnet hat, auf Download ausweichen.
+        }finally{
+          window.__tagesberichtNativeShareInProgress=false;
+        }
+      }
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     }else{
       const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
